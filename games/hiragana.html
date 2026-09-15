@@ -669,6 +669,19 @@
     { kana:'ん', word:'ぱんだ', emoji:'🐼' }
   ];
 
+  /* =========================================================
+     読み上げ専用マップ
+     音声合成が助詞として誤解釈する文字をカタカナに置換
+     ========================================================= */
+  var KANA_SPEAK_MAP = {
+    'は': 'ハ',
+    'へ': 'ヘ',
+    'を': 'ヲ'
+  };
+  function getKanaSpeech(kana){
+    return KANA_SPEAK_MAP[kana] || kana;
+  }
+
   /* ひらがな帳のレイアウト */
   var KANA_ROWS = [
     ['あ','い','う','え','お'],
@@ -816,7 +829,8 @@
     renderQuestion(choices);
 
     setTimeout(function(){
-      var text = kana.kana + '。' + kana.word + 'の ' + kana.kana;
+      var sk = getKanaSpeech(kana.kana);
+      var text = sk + '。' + kana.word + 'の ' + sk;
       Momo.speak(text, 0.85);
       var q = $('#kanaQuestion');
       q.classList.add('playing');
@@ -1052,7 +1066,8 @@
       var kana = state.current.kana, word = state.current.word;
 
       setTimeout(function(){
-        Momo.speakWithEnd(kana + '。' + word + 'の ' + kana, function(){
+        var sk = getKanaSpeech(kana);
+        Momo.speakWithEnd(sk + '。' + word + 'の ' + sk, function(){
           if (wasLevelUp){
             Momo.sfx.levelUp();
             showBubble('レベルアップ！');
@@ -1289,7 +1304,8 @@
     Momo.duckBGM(true);
 
     setTimeout(function(){
-      Momo.speak(data.word + 'の ' + data.kana, 0.85);
+      var sk = getKanaSpeech(data.kana);
+      Momo.speak(data.word + 'の ' + sk, 0.85);
     }, 320);
   }
 
@@ -1332,7 +1348,8 @@
   $('#kanaQuestion').addEventListener('click', function(){
     if (!state.current) return;
     Momo.sfx.tap();
-    var text = state.current.kana + '。' + state.current.word + 'の ' + state.current.kana;
+    var sk = getKanaSpeech(state.current.kana);
+    var text = sk + '。' + state.current.word + 'の ' + sk;
     Momo.speak(text, 0.85);
     var q = $('#kanaQuestion');
     q.classList.add('playing');
@@ -1353,7 +1370,8 @@
     }
     if (!data) return;
     Momo.sfx.star();
-    Momo.speak(data.word + 'の ' + data.kana, 0.85);
+    var sk = getKanaSpeech(data.kana);
+    Momo.speak(data.word + 'の ' + sk, 0.85);
   });
   $('#kanaDetailModal').addEventListener('click', function(e){
     if (e.target === this) closeKanaDetail();
