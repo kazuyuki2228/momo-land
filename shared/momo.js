@@ -52,6 +52,7 @@
   var audioUnlocked = false;
   var unlockListenerAttached = false;
   var screenTimeActive = false;
+  var bgmDisabled = false;
 
   function getBgmGainValue(quiet){ return (settings.bgmVol / 100) * (quiet ? 0.07 : 0.20); }
   function getSfxGainValue(){ return (settings.sfxVol / 100) * 0.70; }
@@ -143,6 +144,7 @@
   }
 
   function startBGM(){
+    if (bgmDisabled) return;
     if (!ctx || !settings.soundOn) return;
     stopBGM();
     bgmGain = ctx.createGain();
@@ -631,6 +633,9 @@
     options = options || {};
     loadSettings();
     loadScreenTime();
+
+    /* ★ noBGM オプション：ハブ画面など BGM を鳴らしたくない window で指定 */
+    if (options.noBGM === true) bgmDisabled = true;
 
     initAudio();
     attachUnlockListeners();
