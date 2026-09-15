@@ -188,79 +188,80 @@
   }
 
   /* =========================================================
-     効果音（基本セット）
+     汎用効果音（ゲーム固有の音を作るための基本API）
+     ========================================================= */
+  /* tone(freq, delay, dur, type, vol)
+     - freq  : 周波数 (Hz)
+     - delay : 現在時刻からの遅延 (秒)。0で即時
+     - dur   : 音の長さ (秒)
+     - type  : 'sine' | 'triangle' | 'sawtooth' | 'square'
+     - vol   : 0〜1 の音量（省略時 0.2） */
+  function sfxTone(freq, delay, dur, type, vol){
+    if (!settings.soundOn || !ctx || !sfxGain) return;
+    var t0 = ctx.currentTime + (delay || 0);
+    playNote(freq, t0, dur || 0.1, type || 'sine', sfxGain, (vol != null ? vol : 0.2));
+  }
+
+  /* =========================================================
+     基本効果音セット
      ========================================================= */
   function sfxTap(){
-    if (!settings.soundOn || !ctx) return;
-    playNote(880, ctx.currentTime, 0.09, 'sine', sfxGain, 0.22);
+    sfxTone(880, 0, 0.09, 'sine', 0.22);
   }
   function sfxPop(){
-    if (!settings.soundOn || !ctx) return;
-    playNote(1250 + Math.random()*250, ctx.currentTime, 0.07, 'sine', sfxGain, 0.10);
+    sfxTone(1250 + Math.random()*250, 0, 0.07, 'sine', 0.10);
   }
   function sfxGrab(){
-    if (!settings.soundOn || !ctx) return;
-    playNote(660, ctx.currentTime, 0.08, 'sine', sfxGain, 0.20);
+    sfxTone(660, 0, 0.08, 'sine', 0.20);
   }
   function sfxCorrect(){
-    if (!settings.soundOn || !ctx) return;
-    var t = ctx.currentTime;
-    [[F.C5,0],[F.E5,.10],[F.G5,.20],[F.C6,.30]].forEach(function(n){
-      playNote(n[0], t + n[1], 0.42, 'triangle', sfxGain, 0.34);
-    });
+    sfxTone(F.C5, 0,    0.42, 'triangle', 0.34);
+    sfxTone(F.E5, 0.10, 0.42, 'triangle', 0.34);
+    sfxTone(F.G5, 0.20, 0.42, 'triangle', 0.34);
+    sfxTone(F.C6, 0.30, 0.42, 'triangle', 0.34);
   }
   function sfxWrong(){
-    if (!settings.soundOn || !ctx) return;
-    var t = ctx.currentTime;
-    playNote(F.G4, t, 0.20, 'sine', sfxGain, 0.20);
-    playNote(F.DS4, t + 0.17, 0.30, 'sine', sfxGain, 0.20);
+    sfxTone(F.G4,  0,    0.20, 'sine', 0.20);
+    sfxTone(F.DS4, 0.17, 0.30, 'sine', 0.20);
   }
   function sfxLevelUp(){
-    if (!settings.soundOn || !ctx) return;
-    var t = ctx.currentTime;
-    [F.C5, F.E5, F.G5, F.C6, F.E6].forEach(function(f, i){
-      playNote(f, t + i * 0.09, 0.45, 'triangle', sfxGain, 0.30);
-    });
+    sfxTone(F.C5, 0,    0.45, 'triangle', 0.30);
+    sfxTone(F.E5, 0.09, 0.45, 'triangle', 0.30);
+    sfxTone(F.G5, 0.18, 0.45, 'triangle', 0.30);
+    sfxTone(F.C6, 0.27, 0.45, 'triangle', 0.30);
+    sfxTone(F.E6, 0.36, 0.45, 'triangle', 0.30);
   }
   function sfxStar(){
-    if (!settings.soundOn || !ctx) return;
-    var t = ctx.currentTime;
-    playNote(1319, t, 0.12, 'sine', sfxGain, 0.20);
-    playNote(1760, t + 0.08, 0.22, 'sine', sfxGain, 0.18);
+    sfxTone(1319, 0,    0.12, 'sine', 0.20);
+    sfxTone(1760, 0.08, 0.22, 'sine', 0.18);
   }
   function sfxShake(){
-    if (!settings.soundOn || !ctx) return;
-    var t = ctx.currentTime;
-    playNote(140, t, 0.35, 'sawtooth', sfxGain, 0.10);
-    playNote(170, t + 0.12, 0.28, 'sawtooth', sfxGain, 0.09);
-    playNote(200, t + 0.24, 0.22, 'sawtooth', sfxGain, 0.08);
+    sfxTone(140, 0,    0.35, 'sawtooth', 0.10);
+    sfxTone(170, 0.12, 0.28, 'sawtooth', 0.09);
+    sfxTone(200, 0.24, 0.22, 'sawtooth', 0.08);
   }
   function sfxReveal(){
-    if (!settings.soundOn || !ctx) return;
-    var t = ctx.currentTime;
-    playNote(523, t, 0.20, 'sine', sfxGain, 0.18);
-    playNote(784, t + 0.10, 0.25, 'sine', sfxGain, 0.16);
-    playNote(1047, t + 0.22, 0.28, 'sine', sfxGain, 0.14);
+    sfxTone(523,  0,    0.20, 'sine', 0.18);
+    sfxTone(784,  0.10, 0.25, 'sine', 0.16);
+    sfxTone(1047, 0.22, 0.28, 'sine', 0.14);
   }
   function sfxBookOpen(){
-    if (!settings.soundOn || !ctx) return;
-    var t = ctx.currentTime;
-    [F.C5, F.E5, F.G5, F.C6].forEach(function(f, i){
-      playNote(f, t + i * 0.06, 0.3, 'sine', sfxGain, 0.20);
-    });
+    sfxTone(F.C5, 0,    0.30, 'sine', 0.20);
+    sfxTone(F.E5, 0.06, 0.30, 'sine', 0.20);
+    sfxTone(F.G5, 0.12, 0.30, 'sine', 0.20);
+    sfxTone(F.C6, 0.18, 0.30, 'sine', 0.20);
   }
   function sfxStickerTap(){
-    if (!settings.soundOn || !ctx) return;
-    var t = ctx.currentTime;
-    playNote(F.G5, t, 0.16, 'triangle', sfxGain, 0.24);
-    playNote(F.C6, t + 0.09, 0.32, 'triangle', sfxGain, 0.22);
+    sfxTone(F.G5, 0,    0.16, 'triangle', 0.24);
+    sfxTone(F.C6, 0.09, 0.32, 'triangle', 0.22);
   }
   function sfxStart(){
-    if (!settings.soundOn || !ctx) return;
-    var t = ctx.currentTime;
-    [F.C5, F.G5, F.C6, F.G5, F.C6, F.E6].forEach(function(f, i){
-      playNote(f, t + i * 0.11, 0.4, 'triangle', sfxGain, 0.28);
-    });
+    sfxTone(F.C5, 0,    0.40, 'triangle', 0.28);
+    sfxTone(F.G5, 0.11, 0.40, 'triangle', 0.28);
+    sfxTone(F.C6, 0.22, 0.40, 'triangle', 0.28);
+    sfxTone(F.G5, 0.33, 0.40, 'triangle', 0.28);
+    sfxTone(F.C6, 0.44, 0.40, 'triangle', 0.28);
+    sfxTone(F.E6, 0.55, 0.40, 'triangle', 0.28);
   }
 
   /* =========================================================
@@ -291,7 +292,7 @@
     return u;
   }
 
-　function speak(text, rateOrOpts, pitch){
+  function speak(text, rateOrOpts, pitch){
     if (!settings.soundOn || !speechSupported) return;
     var opts = {};
     if (rateOrOpts && typeof rateOrOpts === 'object'){
@@ -440,7 +441,6 @@
     return getStickerCount() + getStampCount();
   }
 
-  /* 自分のゲームで獲得したシール/スタンプの絵文字一覧を取得 */
   function getMyStickerEmojis(from){
     var arr = normalizeArray(loadArray(STICKER_KEY));
     return arr.filter(function(it){ return it.from === from; })
@@ -507,18 +507,13 @@
     options = options || {};
     loadSettings();
 
-    // AudioContext を可能な限り早く準備
     initAudio();
-
-    // 初回タップでのアンロック設定
     attachUnlockListeners();
 
-    // タブ非表示時のBGM停止など
     if (options.visibility !== false){
       attachVisibilityHandler();
     }
 
-    // 既にAudioContextが動いていれば即BGM開始を試みる
     if (settings.soundOn){
       try {
         if (ctx && ctx.state === 'running'){
@@ -533,11 +528,9 @@
      公開API
      ========================================================= */
   var Momo = {
-    /* 初期化 */
     init: init,
     reloadSettings: loadSettings,
 
-    /* 設定（読み取り専用として参照可） */
     settings: settings,
 
     /* BGM */
@@ -546,12 +539,15 @@
     duckBGM: duckBGM,
     applyBgmGain: applyBgmGain,
 
-    /* AudioContext 時刻（ゲーム固有音の作成用） */
+    /* AudioContext 時刻（ゲーム固有音を作る際に使用） */
     now: function(){ return ctx ? ctx.currentTime : 0; },
-    playNote: playNote,
 
     /* 効果音 */
     sfx: {
+      /* ★ 汎用：ゲーム固有の音を作るための基本関数 */
+      tone: sfxTone,
+
+      /* 基本セット */
       tap: sfxTap,
       pop: sfxPop,
       grab: sfxGrab,
