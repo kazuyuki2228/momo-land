@@ -791,14 +791,13 @@
       playWrongAnim();
 
       setTimeout(function(){
-        Momo.speak('こっち だったね', 0.95, 1.3);
         showArrowHint(state.currentDir);
+        /* 読み上げが終わってから次の問題へ */
+        Momo.speakWithEnd('こっち だったね', function(){
+          state.questionIndex++;
+          newQuestion();
+        }, 0.95, 1.3);
       }, 500);
-
-      setTimeout(function(){
-        state.questionIndex++;
-        newQuestion();
-      }, 2400);
     }
   }
 
@@ -808,21 +807,18 @@
       state.locked = true;
       state.results.push('unknown');
 
-      Momo.speak('いっしょに みてみよう', 0.95, 1.3);
       showArrowHint(state.currentDir);
-
-      setTimeout(function(){
+      Momo.speakWithEnd('いっしょに みてみよう', function(){
         state.locked = false;
-        Momo.speak('もういちど きいてみよう。あいてる むきは どこかな', 0.95, 1.3);
-      }, 2600);
+        Momo.speakWithEnd('もういちど きいてみよう。あいてる むきは どこかな', null, 0.95, 1.3);
+      }, 0.95, 1.3);
     } else {
       state.locked = true;
-      Momo.speak('こっち だよ', 0.95, 1.3);
       showArrowHint(state.currentDir);
-      setTimeout(function(){
+      Momo.speakWithEnd('こっち だよ', function(){
         state.questionIndex++;
         newQuestion();
-      }, 2400);
+      }, 0.95, 1.3);
     }
   }
 
