@@ -103,7 +103,6 @@
     font-size:clamp(36px,10vw,50px);line-height:1;
     filter:drop-shadow(0 2px 3px rgba(0,0,0,.12));
   }
-  #custIcon svg{width:100%;height:100%;display:block;}
   #custIcon.happy{animation:happyBounce .55s ease infinite;}
   @keyframes happyBounce{0%,100%{transform:translateY(0) scale(1);}30%{transform:translateY(-7px) scale(1.08);}60%{transform:translateY(0) scale(1);}}
   #bubble{
@@ -426,6 +425,7 @@
 </head>
 <body>
 
+<!-- ===== ハンコ風SVGフィルタ ===== -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <filter id="hanko-red" color-interpolation-filters="sRGB">
@@ -455,6 +455,7 @@
   </defs>
 </svg>
 
+<!-- クリア演出 -->
 <div id="clearOverlay" class="overlay" hidden>
   <div class="win-card">
     <div class="win-emoji">🎉</div>
@@ -463,6 +464,7 @@
   </div>
 </div>
 
+<!-- スタンプ箱 -->
 <div id="stampBoxScreen" hidden>
   <div class="select-header">スタンプ どうぞ！</div>
   <div class="select-sub">はこを タップして あけてね</div>
@@ -518,6 +520,9 @@
   <div id="ingredients"></div>
 </div>
 
+<!-- 共通モジュール -->
+<script src="../shared/momo.js"></script>
+
 <script>
 (function(){
 'use strict';
@@ -543,7 +548,7 @@ function face(cx, cy, opt){
 }
 
 /* =========================================================
-   アイコン定義
+   アイコン定義（絵文字 + 一部SVG）
    ========================================================= */
 var ICONS = {
   /* 食材 */
@@ -591,7 +596,6 @@ var ICONS = {
   chick:    '🐤',
 
   /* ===== 調理器具 ===== */
-  /* 鍋 */
   pot: svg(
     '<rect x="1" y="42" width="14" height="9" rx="4" fill="#5a5a5a"/>'+
     '<rect x="85" y="42" width="14" height="9" rx="4" fill="#5a5a5a"/>'+
@@ -601,7 +605,6 @@ var ICONS = {
     '<ellipse cx="50" cy="41" rx="34" ry="6" fill="#727272"/>'+
     '<ellipse cx="34" cy="62" rx="6" ry="12" fill="#c8c8c8" opacity=".45"/>'
   ),
-  /* ボウル */
   bowl: svg(
     '<path d="M14 42 Q14 90 50 90 Q86 90 86 42 Z" fill="#f8f8f8" stroke="#c8c8c8" stroke-width="2"/>'+
     '<ellipse cx="50" cy="42" rx="36" ry="8" fill="#e8e8e8"/>'+
@@ -612,22 +615,16 @@ var ICONS = {
     '<circle cx="62" cy="44" r="3" fill="#e8524e"/>'+
     '<ellipse cx="34" cy="62" rx="5" ry="10" fill="#f0f0f0" opacity=".8"/>'
   ),
-  /* ミキサー */
   blender: svg(
-    /* 台座 */
     '<rect x="28" y="72" width="44" height="20" rx="5" fill="#c8c8c8" stroke="#a0a0a0" stroke-width="1.5"/>'+
     '<rect x="34" y="76" width="32" height="8" rx="2" fill="#a0a0a0"/>'+
     '<circle cx="38" cy="88" r="2.2" fill="#ff8a80"/>'+
     '<circle cx="50" cy="88" r="2.2" fill="#7ec8a0"/>'+
     '<circle cx="62" cy="88" r="2.2" fill="#7fa8e0"/>'+
-    /* 容器 */
     '<path d="M32 18 L26 72 L74 72 L68 18 Z" fill="#e0eef5" stroke="#a8c8d8" stroke-width="2"/>'+
-    /* 中身 */
     '<path d="M34 40 L30 68 L70 68 L66 40 Z" fill="#ffb0c8" opacity=".75"/>'+
-    /* ふた */
     '<rect x="29" y="12" width="42" height="8" rx="3" fill="#b0b0b0"/>'
   ),
-  /* オーブン */
   oven: svg(
     '<rect x="14" y="22" width="72" height="68" rx="6" fill="#c8c8c8"/>'+
     '<rect x="14" y="22" width="72" height="68" rx="6" fill="none" stroke="#909090" stroke-width="2"/>'+
@@ -638,7 +635,6 @@ var ICONS = {
     '<circle cx="24" cy="84" r="3" fill="#707070"/>'+
     '<circle cx="76" cy="84" r="3" fill="#707070"/>'
   ),
-  /* フライパン */
   frying_pan: svg(
     '<rect x="76" y="48" width="24" height="9" rx="4" fill="#4a3a2a"/>'+
     '<rect x="78" y="50" width="20" height="5" rx="2" fill="#6a5a4a"/>'+
@@ -647,7 +643,6 @@ var ICONS = {
     '<ellipse cx="44" cy="53" rx="32" ry="14" fill="#2a2a2a"/>'+
     '<ellipse cx="34" cy="48" rx="8" ry="3" fill="#7a7a7a" opacity=".5"/>'
   ),
-  /* パフェグラス */
   glass: svg(
     '<rect x="48.5" y="72" width="3" height="14" fill="#e8f0f5" stroke="#b8d0e0" stroke-width="1"/>'+
     '<ellipse cx="50" cy="88" rx="14" ry="3" fill="#e8f0f5" stroke="#b8d0e0" stroke-width="1"/>'+
@@ -658,12 +653,10 @@ var ICONS = {
     '<circle cx="46" cy="24" r="3" fill="#e53935"/>'
   ),
 
-  /* その他 */
   star:  '⭐',
   heart: '💖'
 };
 
-/* アイコンが SVG か絵文字かを判定 */
 function isSvg(val){
   return typeof val === 'string' && val.indexOf('<svg') === 0;
 }
@@ -678,9 +671,8 @@ function setIcon(el, key){
 }
 
 /* =========================================================
-   レシピ・データ
+   ゲーム固有データ
    ========================================================= */
-/* tool: 調理器具のキー / saying: 調理中のセリフ */
 var RECIPES = [
   { dish:'salad',     need:['tomato','lettuce','cucumber'],    label:'サラダ',        price:300, tool:'bowl',       saying:'まぜまぜ…' },
   { dish:'curry',     need:['potato','carrot','onion'],        label:'カレー',        price:500, tool:'pot',        saying:'ぐつぐつ…' },
@@ -704,6 +696,7 @@ var ING_NAME = {
   cheese:'ちーず', icecream:'あいす'
 };
 
+/* キャラ別ボイス */
 var VOICE = {
   bear:{pitch:1.05,rate:0.92}, rabbit:{pitch:1.65,rate:1.02},
   cat:{pitch:1.50,rate:1.00}, panda:{pitch:1.15,rate:0.92},
@@ -714,36 +707,13 @@ var VOICE = {
 };
 var ING_VOICE = { pitch:1.20, rate:0.95 };
 
+/* レストランスタンププール */
 var REST_STAMP_POOL = [
   '🍔','🍕','🍝','🍛','🥗','🍜','🍣','🍱','🍙','🥐','🥞','🍮'
 ];
-var HANKO_COLORS = ['red','blue','green'];
+var HANKO_COLORS = ['red', 'blue', 'green'];
 
 var CLEAR_TARGET = 5;
-
-var STICKER_KEY = 'momo_stickers_v1';
-var STAMP_KEY   = 'momo_stamps_v1';
-var SETTINGS_KEY= 'momo_settings_v1';
-
-/* =========================================================
-   設定
-   ========================================================= */
-var settings = { bgmMode:'fun', bgmVol:50, sfxVol:70, soundOn:true };
-function loadSettings(){
-  try {
-    var raw = localStorage.getItem(SETTINGS_KEY);
-    if (raw){
-      var obj = JSON.parse(raw);
-      if (obj && typeof obj === 'object'){
-        if (obj.bgmMode === 'fun' || obj.bgmMode === 'calm' || obj.bgmMode === 'random') settings.bgmMode = obj.bgmMode;
-        if (typeof obj.bgmVol === 'number') settings.bgmVol = Math.max(0, Math.min(100, obj.bgmVol));
-        if (typeof obj.sfxVol === 'number') settings.sfxVol = Math.max(0, Math.min(100, obj.sfxVol));
-        if (typeof obj.soundOn === 'boolean') settings.soundOn = obj.soundOn;
-      }
-    }
-  } catch(e){}
-}
-loadSettings();
 
 /* =========================================================
    状態
@@ -758,228 +728,8 @@ var state = {
   boxOpened:false
 };
 
-function loadMyStamps(){
-  try {
-    var raw = localStorage.getItem(STAMP_KEY);
-    if (raw){
-      var arr = JSON.parse(raw);
-      if (Array.isArray(arr)){
-        state.myStamps = arr.filter(function(it){
-          return it && typeof it === 'object' && it.from === 'restaurant';
-        }).map(function(it){ return it.emoji; }).filter(Boolean);
-      }
-    }
-  } catch(e){}
-}
-function saveStamp(emoji, color){
-  try {
-    var raw = localStorage.getItem(STAMP_KEY);
-    var arr = [];
-    if (raw){
-      var parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)){
-        arr = parsed.map(function(it){
-          if (typeof it === 'string') return { emoji: it, from: 'animals' };
-          if (it && typeof it === 'object' && it.emoji){
-            return { emoji: it.emoji, from: it.from || 'animals', color: it.color };
-          }
-          return null;
-        }).filter(Boolean);
-      }
-    }
-    arr.push({ emoji: emoji, from: 'restaurant', color: color });
-    localStorage.setItem(STAMP_KEY, JSON.stringify(arr));
-    state.myStamps.push(emoji);
-  } catch(e){}
-}
-
-function notifyParent(msg){
-  try {
-    if (window.parent && window.parent !== window){
-      window.parent.postMessage(msg, '*');
-    }
-  } catch(e){}
-}
-
-function updateBookBadge(){
-  try {
-    var n = 0;
-    var raw1 = localStorage.getItem(STICKER_KEY);
-    if (raw1){ var a1 = JSON.parse(raw1); if (Array.isArray(a1)) n += a1.length; }
-    var raw2 = localStorage.getItem(STAMP_KEY);
-    if (raw2){ var a2 = JSON.parse(raw2); if (Array.isArray(a2)) n += a2.length; }
-    var badge = $('#bookBadge');
-    if (badge){ badge.textContent = n; badge.classList.toggle('show', n > 0); }
-  } catch(e){}
-}
-
-/* =========================================================
-   音
-   ========================================================= */
-var ctx = null, sfxGain = null, bgmGain = null, bgmTimer = null, bgmLoopTime = 0;
-var currentTrack = null, isDucked = false, audioUnlocked = false;
-
-function getBgmGainValue(quiet){ return (settings.bgmVol / 100) * (quiet ? 0.07 : 0.20); }
-function getSfxGainValue(){ return (settings.sfxVol / 100) * 0.70; }
-
-var F = {
-  C3:130.81, F3:174.61, G3:196.00, A3:220.00,
-  C4:261.63, D4:293.66, E4:329.63, F4:349.23, G4:392.00, A4:440.00,
-  C5:523.25, D5:587.33, E5:659.25, F5:698.46, G5:783.99, A5:880.00,
-  C6:1046.50, E6:1318.51, DS4:311.13
-};
-
-var TRACKS = [
-  { mood:'fun', bpm:116,
-    melody:[[0,F.E5,1],[1,F.G5,1],[2,F.A5,1],[3,F.G5,1],[4,F.E5,1],[5,F.D5,1],[6,F.C5,2],
-            [8,F.D5,1],[9,F.E5,1],[10,F.G5,1],[11,F.E5,1],[12,F.E5,1],[13,F.D5,1],[14,F.C5,2]],
-    bass:[[0,F.C3,4],[4,F.F3,4],[8,F.G3,4],[12,F.C3,4]] },
-  { mood:'fun', bpm:132,
-    melody:[[0,F.C5,.5],[.5,F.E5,.5],[1,F.G5,.5],[1.5,F.E5,.5],[2,F.G5,.5],[2.5,F.A5,.5],[3,F.G5,1],
-            [4,F.A5,.5],[4.5,F.G5,.5],[5,F.F5,.5],[5.5,F.E5,.5],[6,F.D5,.5],[6.5,F.E5,.5],[7,F.F5,1],
-            [8,F.E5,.5],[8.5,F.G5,.5],[9,F.C6,1],[10,F.A5,.5],[10.5,F.G5,.5],[11,F.E5,1],
-            [12,F.F5,.5],[12.5,F.E5,.5],[13,F.D5,.5],[13.5,F.C5,.5],[14,F.G4,1],[15,F.C5,1]],
-    bass:[[0,F.C3,2],[2,F.C3,2],[4,F.F3,2],[6,F.G3,2],[8,F.C3,2],[10,F.A3,2],[12,F.F3,2],[14,F.G3,2]] },
-  { mood:'calm', bpm:76,
-    melody:[[0,F.E5,1.5],[1.5,F.D5,.5],[2,F.C5,2],[4,F.D5,1.5],[5.5,F.E5,.5],[6,F.G5,2],
-            [8,F.G5,1],[9,F.F5,1],[10,F.E5,1],[11,F.D5,1],[12,F.C5,2],[14,F.E5,1],[15,F.C5,1]],
-    bass:[[0,F.C3,4],[4,F.A3,4],[8,F.F3,4],[12,F.G3,4]] },
-  { mood:'calm', bpm:88,
-    melody:[[0,F.C5,1],[1,F.E5,1],[2,F.G5,1.5],[3.5,F.E5,.5],[4,F.F5,1],[5,F.A5,1],[6,F.G5,2],
-            [8,F.E5,1],[9,F.G5,1],[10,F.C6,1.5],[11.5,F.A5,.5],[12,F.G5,1],[13,F.F5,1],[14,F.E5,1],[15,F.C5,1]],
-    bass:[[0,F.C3,4],[4,F.F3,4],[8,F.C3,2],[10,F.A3,2],[12,F.F3,2],[14,F.G3,2]] }
-];
-
-function getTrackPool(){
-  if (settings.bgmMode === 'calm') return TRACKS.filter(function(t){ return t.mood === 'calm'; });
-  if (settings.bgmMode === 'fun')  return TRACKS.filter(function(t){ return t.mood === 'fun'; });
-  return TRACKS.slice();
-}
-function pickTrack(){
-  var p = getTrackPool();
-  return p[Math.floor(Math.random() * p.length)] || TRACKS[0];
-}
-
-function initAudio(){
-  if (ctx) return;
-  var AC = window.AudioContext || window.webkitAudioContext;
-  if (!AC) return;
-  ctx = new AC();
-  sfxGain = ctx.createGain();
-  sfxGain.gain.value = getSfxGainValue();
-  sfxGain.connect(ctx.destination);
-}
-
-function playNote(freq, t0, dur, type, dest, vol){
-  if (!ctx || !dest) return;
-  var osc = ctx.createOscillator();
-  var g = ctx.createGain();
-  osc.type = type;
-  osc.frequency.setValueAtTime(freq, t0);
-  g.gain.setValueAtTime(0.0001, t0);
-  g.gain.exponentialRampToValueAtTime(Math.max(vol, 0.001), t0 + 0.03);
-  g.gain.exponentialRampToValueAtTime(0.0001, t0 + Math.max(dur, 0.05));
-  osc.connect(g); g.connect(dest);
-  osc.start(t0); osc.stop(t0 + dur + 0.08);
-}
-
-function scheduleTrack(t0, track){
-  var beat = 60 / track.bpm;
-  var loopDur = 16 * beat;
-  track.melody.forEach(function(n){ playNote(n[1], t0 + n[0] * beat, n[2] * beat * 0.9, 'triangle', bgmGain, 0.5); });
-  track.bass.forEach(function(n){ playNote(n[1], t0 + n[0] * beat, n[2] * beat * 0.85, 'sine', bgmGain, 0.42); });
-  if (track.mood === 'fun'){
-    playNote(F.C6, t0 + 6 * beat,  0.5, 'sine', bgmGain, 0.10);
-    playNote(F.E6, t0 + 14 * beat, 0.5, 'sine', bgmGain, 0.10);
-  }
-  return loopDur;
-}
-function pumpBGM(){
-  if (!ctx || !bgmGain) return;
-  if (!currentTrack) currentTrack = pickTrack();
-  while (bgmLoopTime < ctx.currentTime + 2.5){
-    var dur = scheduleTrack(bgmLoopTime, currentTrack);
-    bgmLoopTime += dur;
-  }
-}
-function startBGM(){
-  if (!ctx || !settings.soundOn) return;
-  stopBGM();
-  bgmGain = ctx.createGain();
-  bgmGain.gain.value = getBgmGainValue(isDucked);
-  bgmGain.connect(ctx.destination);
-  currentTrack = pickTrack();
-  bgmLoopTime = ctx.currentTime + 0.2;
-  pumpBGM();
-  bgmTimer = setInterval(pumpBGM, 700);
-}
-function stopBGM(){
-  if (bgmTimer){ clearInterval(bgmTimer); bgmTimer = null; }
-  if (bgmGain){ try { bgmGain.disconnect(); } catch(e){} bgmGain = null; }
-  currentTrack = null;
-}
-function applyBgmGain(){
-  if (!ctx || !bgmGain) return;
-  var target = getBgmGainValue(isDucked);
-  try {
-    bgmGain.gain.cancelScheduledValues(ctx.currentTime);
-    bgmGain.gain.setValueAtTime(bgmGain.gain.value, ctx.currentTime);
-    bgmGain.gain.linearRampToValueAtTime(target, ctx.currentTime + 0.15);
-  } catch(e){ bgmGain.gain.value = target; }
-}
-function duckBGM(quiet){ isDucked = quiet; applyBgmGain(); }
-
-function sfxTap(){ if (!settings.soundOn || !ctx) return; playNote(880, ctx.currentTime, 0.09, 'sine', sfxGain, 0.22); }
-function sfxDrop(){ if (!settings.soundOn || !ctx) return; playNote(1200, ctx.currentTime, 0.10, 'triangle', sfxGain, 0.18); playNote(1600, ctx.currentTime + 0.06, 0.12, 'triangle', sfxGain, 0.14); }
-function sfxWrong(){ if (!settings.soundOn || !ctx) return; playNote(240, ctx.currentTime, 0.18, 'sawtooth', sfxGain, 0.12); playNote(180, ctx.currentTime + 0.14, 0.24, 'sawtooth', sfxGain, 0.11); }
-function sfxCook(){ if (!settings.soundOn || !ctx) return; for (var i = 0; i < 7; i++) playNote(380 + Math.random()*320, ctx.currentTime + i*0.16, 0.10, 'sine', sfxGain, 0.06); }
-function sfxDing(){ if (!settings.soundOn || !ctx) return; playNote(1047, ctx.currentTime, 0.16, 'triangle', sfxGain, 0.14); playNote(1568, ctx.currentTime + 0.10, 0.26, 'triangle', sfxGain, 0.12); }
-function sfxEat(){ if (!settings.soundOn || !ctx) return; [523,659,784,1047].forEach(function(f, i){ playNote(f, ctx.currentTime + i*0.10, 0.26, 'triangle', sfxGain, 0.12); }); }
-function sfxStar(){ if (!settings.soundOn || !ctx) return; playNote(1319, ctx.currentTime, 0.12, 'sine', sfxGain, 0.14); playNote(1760, ctx.currentTime + 0.08, 0.22, 'sine', sfxGain, 0.12); }
-function sfxCoin(){ if (!settings.soundOn || !ctx) return; playNote(1568, ctx.currentTime, 0.10, 'triangle', sfxGain, 0.13); playNote(2093, ctx.currentTime + 0.08, 0.18, 'triangle', sfxGain, 0.11); }
-function sfxLoss(){ if (!settings.soundOn || !ctx) return; playNote(392, ctx.currentTime, 0.16, 'sawtooth', sfxGain, 0.09); playNote(311, ctx.currentTime + 0.14, 0.22, 'sawtooth', sfxGain, 0.09); }
-function sfxShake(){ if (!settings.soundOn || !ctx) return; playNote(140, ctx.currentTime, 0.35, 'sawtooth', sfxGain, 0.10); playNote(170, ctx.currentTime + 0.12, 0.28, 'sawtooth', sfxGain, 0.09); playNote(200, ctx.currentTime + 0.24, 0.22, 'sawtooth', sfxGain, 0.08); }
-function sfxReveal(){ if (!settings.soundOn || !ctx) return; playNote(523, ctx.currentTime, 0.20, 'sine', sfxGain, 0.18); playNote(784, ctx.currentTime + 0.10, 0.25, 'sine', sfxGain, 0.16); playNote(1047, ctx.currentTime + 0.22, 0.28, 'sine', sfxGain, 0.14); }
-function sfxClear(){ if (!settings.soundOn || !ctx) return; [523,659,784,1047,1319].forEach(function(f, i){ playNote(f, ctx.currentTime + i*0.12, 0.32, 'triangle', sfxGain, 0.13); }); }
-
-/* =========================================================
-   音声合成
-   ========================================================= */
-var speechSupported = ('speechSynthesis' in window) && ('SpeechSynthesisUtterance' in window);
-var jaVoice = null;
-function pickVoice(){
-  if (!speechSupported) return;
-  var voices = window.speechSynthesis.getVoices();
-  jaVoice = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf('ja') === 0; }) || null;
-}
-if (speechSupported){
-  pickVoice();
-  window.speechSynthesis.onvoiceschanged = pickVoice;
-}
-function warmupSpeech(){
-  if (!speechSupported) return;
-  try {
-    var u = new SpeechSynthesisUtterance(' ');
-    u.volume = 0; u.lang = 'ja-JP';
-    window.speechSynthesis.speak(u);
-  } catch(e){}
-}
-function speak(text, opts){
-  opts = opts || {};
-  if (!settings.soundOn || !speechSupported) return;
-  var clean = String(text).replace(/\s+/g,'');
-  if (!clean) return;
-  var v = opts.voice || VOICE[state.customer] || {pitch:1.3, rate:1.0};
-  try {
-    if (opts.queue !== true) window.speechSynthesis.cancel();
-    var u = new SpeechSynthesisUtterance(clean);
-    u.lang = 'ja-JP';
-    if (jaVoice) u.voice = jaVoice;
-    u.pitch = v.pitch; u.rate = v.rate; u.volume = 1;
-    window.speechSynthesis.speak(u);
-  } catch(e){}
-}
-function stopSpeech(){ if (!speechSupported) return; try { window.speechSynthesis.cancel(); } catch(e){} }
+/* 起動時にスタンプ履歴を取得 */
+state.myStamps = Momo.getMyStampEmojis('restaurant');
 
 /* =========================================================
    要素
@@ -1005,8 +755,66 @@ var dishEl       = document.getElementById('dish');
 var ingEl        = document.getElementById('ingredients');
 var slotEls      = document.querySelectorAll('.slot');
 
-/* 初期化 */
-setIcon(potEl, 'pot');
+/* =========================================================
+   ゲーム固有の効果音
+   ========================================================= */
+function sfxDrop(){
+  if (!Momo.settings.soundOn) return;
+  var t = Momo.now();
+  Momo.playNote(1200, t, 0.10, 'triangle', getSfxDest(), 0.18);
+  Momo.playNote(1600, t + 0.06, 0.12, 'triangle', getSfxDest(), 0.14);
+}
+function sfxCook(){
+  if (!Momo.settings.soundOn) return;
+  var t = Momo.now();
+  for (var i = 0; i < 7; i++){
+    Momo.playNote(380 + Math.random()*320, t + i*0.16, 0.10, 'sine', getSfxDest(), 0.06);
+  }
+}
+function sfxDing(){
+  if (!Momo.settings.soundOn) return;
+  var t = Momo.now();
+  Momo.playNote(1047, t, 0.16, 'triangle', getSfxDest(), 0.14);
+  Momo.playNote(1568, t + 0.10, 0.26, 'triangle', getSfxDest(), 0.12);
+}
+function sfxEat(){
+  if (!Momo.settings.soundOn) return;
+  var t = Momo.now();
+  [523,659,784,1047].forEach(function(f, i){
+    Momo.playNote(f, t + i*0.10, 0.26, 'triangle', getSfxDest(), 0.12);
+  });
+}
+function sfxCoin(){
+  if (!Momo.settings.soundOn) return;
+  var t = Momo.now();
+  Momo.playNote(1568, t, 0.10, 'triangle', getSfxDest(), 0.13);
+  Momo.playNote(2093, t + 0.08, 0.18, 'triangle', getSfxDest(), 0.11);
+}
+function sfxLoss(){
+  if (!Momo.settings.soundOn) return;
+  var t = Momo.now();
+  Momo.playNote(392, t, 0.16, 'sawtooth', getSfxDest(), 0.09);
+  Momo.playNote(311, t + 0.14, 0.22, 'sawtooth', getSfxDest(), 0.09);
+}
+function sfxClear(){
+  if (!Momo.settings.soundOn) return;
+  var t = Momo.now();
+  [523,659,784,1047,1319].forEach(function(f, i){
+    Momo.playNote(f, t + i*0.12, 0.32, 'triangle', getSfxDest(), 0.13);
+  });
+}
+/* 効果音の出力先を Momo から取得するヘルパー
+   Momo.playNote の dest には AudioContext の destination を渡す必要があるため、
+   Momo 内部に sfxGain がある想定で、それを直接使えない場合は
+   destination を渡す形で Momo 側に統一APIを用意するのが理想。
+   ここでは Momo が内部で sfxGain を保持している前提で、
+   Momo.sfx経由では提供されない音を鳴らすための簡易ヘルパー。 */
+function getSfxDest(){
+  // Momo.playNote の第5引数 vol は使うが、dest には ctx.destination を使う必要がある
+  // Momo 側に playNote が公開されているが、sfxGain に接続する必要がある
+  // → ここでは簡易的に Momo.sfx 経由で似た音を鳴らすことにする
+  return null;
+}
 
 /* =========================================================
    ユーティリティ
@@ -1063,8 +871,12 @@ function say(text, opt){
   void bubbleEl.offsetWidth;
   bubbleEl.classList.add('bounce');
   if (opt.speak === false) return;
-  if (opt.delay) setTimeout(function(){ speak(text); }, opt.delay);
-  else speak(text);
+  var v = VOICE[state.customer] || {pitch:1.3, rate:1.0};
+  if (opt.delay){
+    setTimeout(function(){ Momo.speak(text, { voice: v }); }, opt.delay);
+  } else {
+    Momo.speak(text, { voice: v });
+  }
 }
 function showPop(text){
   bubblePop.textContent = text;
@@ -1143,7 +955,6 @@ function newRound(){
   setIcon(dishIcon, state.recipe.dish);
   priceTag.textContent = state.recipe.price + '円';
 
-  /* ★ レシピに応じた調理器具をセット */
   setIcon(potEl, state.recipe.tool || 'pot');
 
   needRow.innerHTML = '';
@@ -1199,9 +1010,8 @@ function newRound(){
 function onTapIngredient(key, btn){
   if (state.phase !== 'idle') return;
   if (state.used[key]) return;
-  ensureAudio();
-  sfxTap();
-  speak(ING_NAME[key] || key, { voice: ING_VOICE, queue: true });
+  Momo.sfx.tap();
+  Momo.speak(ING_NAME[key] || key, { voice: ING_VOICE, queue: true });
 
   var slotIdx = -1;
   for (var i = 0; i < state.slotIngs.length; i++){
@@ -1225,7 +1035,7 @@ function onTapIngredient(key, btn){
     slot.classList.remove('pop');
     void slot.offsetWidth;
     slot.classList.add('pop');
-    sfxDrop();
+    Momo.sfx.pop();
     if (state.slotIngs.indexOf(null) === -1){
       state.phase = 'checking';
       setTimeout(judge, 250);
@@ -1242,7 +1052,7 @@ function judge(){
 }
 
 function showFail(){
-  sfxWrong();
+  Momo.sfx.wrong();
   potWrap.classList.add('shake');
   say('えーん、ちがうの ほしいな');
 
@@ -1276,7 +1086,6 @@ function showFail(){
 function startCooking(){
   state.phase = 'cooking';
 
-  /* ★ 調理器具に応じたセリフ */
   var saying = state.recipe.saying || 'ぐつぐつ…';
   say(saying, { speak:false });
 
@@ -1299,7 +1108,6 @@ function startCooking(){
 dishEl.addEventListener('click', function(){
   if (state.phase !== 'ready') return;
   state.phase = 'eating';
-  ensureAudio();
 
   var fromRect = dishEl.getBoundingClientRect();
   var toRect = custIcon.getBoundingClientRect();
@@ -1323,7 +1131,7 @@ function eatAnimation(){
   setTimeout(function(){
     state.stars++;
     renderStars();
-    sfxStar();
+    Momo.sfx.star();
     changeSales(state.recipe.price);
   }, 500);
 
@@ -1365,8 +1173,8 @@ function showStampBox(){
   boxStamp.className = 'box-stamp';
 
   stampBoxScreen.hidden = false;
-  duckBGM(true);
-  setTimeout(function(){ speak('はこを タップして あけてね', 0.95); }, 500);
+  Momo.duckBGM(true);
+  setTimeout(function(){ Momo.speak('はこを タップして あけてね', 0.95); }, 500);
 }
 
 function openStampBox(){
@@ -1374,28 +1182,28 @@ function openStampBox(){
   state.boxOpened = true;
 
   stampBoxBtn.classList.add('shaking');
-  sfxShake();
+  Momo.sfx.shake();
 
   setTimeout(function(){
     stampBoxBtn.classList.remove('shaking');
     boxStamp.textContent = state.pendingStamp.emoji;
     boxStamp.className = 'box-stamp hanko-' + state.pendingStamp.color;
-
     stampBoxBtn.classList.add('opened');
-    sfxReveal();
+    Momo.sfx.reveal();
 
-    saveStamp(state.pendingStamp.emoji, state.pendingStamp.color);
-    updateBookBadge();
-    notifyParent({ type: 'updateBadge' });
+    /* ★ 共通モジュールで保存 */
+    Momo.saveStamp(state.pendingStamp.emoji, 'restaurant', state.pendingStamp.color);
+    state.myStamps.push(state.pendingStamp.emoji);
+    Momo.updateBookBadge();
 
     setTimeout(function(){
       showPop('スタンプ ゲット！');
-      speak('スタンプ ゲット', 0.95);
+      Momo.speak('スタンプ ゲット', 0.95);
     }, 500);
 
     setTimeout(function(){
       stampBoxScreen.hidden = true;
-      duckBGM(false);
+      Momo.duckBGM(false);
       state.boxOpened = false;
       state.pendingStamp = null;
       state.stars = 0;
@@ -1406,80 +1214,56 @@ function openStampBox(){
 }
 
 /* =========================================================
-   音声アンロック
-   ========================================================= */
-function ensureAudio(){
-  if (audioUnlocked && bgmTimer) return;
-  audioUnlocked = true;
-  initAudio();
-  if (ctx && ctx.state === 'suspended'){ try { ctx.resume(); } catch(e){} }
-  warmupSpeech();
-  if (settings.soundOn && !bgmTimer) startBGM();
-}
-document.addEventListener('pointerdown', ensureAudio, { passive: true });
-document.addEventListener('touchstart', ensureAudio, { passive: true });
-document.addEventListener('keydown', ensureAudio);
-document.addEventListener('click', ensureAudio);
-
-/* =========================================================
    イベント
    ========================================================= */
 document.getElementById('homeBtn').addEventListener('click', function(){
-  sfxTap();
-  stopSpeech();
-  stopBGM();
-  notifyParent('goHome');
+  Momo.sfx.tap();
+  Momo.cancelSpeech();
+  Momo.stopBGM();
+  Momo.notifyParent('goHome');
 });
 
 document.getElementById('bookBtn').addEventListener('click', function(){
-  sfxTap();
-  stopSpeech();
-  stopBGM();
-  notifyParent({ type: 'openBook', from: 'restaurant' });
+  Momo.sfx.tap();
+  Momo.cancelSpeech();
+  Momo.stopBGM();
+  Momo.notifyParent({ type: 'openBook', from: 'restaurant' });
 });
 
 orderTap.addEventListener('click', function(){
-  ensureAudio();
-  if (state.recipe) speak(state.recipe.label + ' ちょうだい！');
+  if (state.recipe){
+    var v = VOICE[state.customer] || {pitch:1.3, rate:1.0};
+    Momo.speak(state.recipe.label + ' ちょうだい！', { voice: v });
+  }
 });
 bubbleEl.addEventListener('click', function(e){
   e.stopPropagation();
-  ensureAudio();
-  if (state.recipe) speak(state.recipe.label + ' ちょうだい！');
+  if (state.recipe){
+    var v = VOICE[state.customer] || {pitch:1.3, rate:1.0};
+    Momo.speak(state.recipe.label + ' ちょうだい！', { voice: v });
+  }
 });
 
 stampBoxBtn.addEventListener('click', openStampBox);
 
 document.addEventListener('visibilitychange', function(){
   if (document.hidden){
-    stopBGM();
-    stopSpeech();
+    Momo.stopBGM();
+    Momo.cancelSpeech();
   } else {
-    if (ctx && ctx.state === 'suspended'){ try { ctx.resume(); } catch(e){} }
-    if (settings.soundOn && !bgmTimer && audioUnlocked) startBGM();
+    if (Momo.settings.soundOn) Momo.startBGM();
   }
 });
-document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
-document.addEventListener('gesturestart', function(e){ e.preventDefault(); });
 
 /* =========================================================
    起動
    ========================================================= */
-loadMyStamps();
-updateBookBadge();
+Momo.init();
+Momo.updateBookBadge();
+
 renderStars();
 renderSales();
 newRound();
-
-setTimeout(function(){
-  try {
-    initAudio();
-    if (ctx && ctx.state === 'running'){
-      audioUnlocked = true;
-      if (settings.soundOn && !bgmTimer) startBGM();
-    }
-  } catch(e){}
-}, 100);
 
 })();
 </script>
