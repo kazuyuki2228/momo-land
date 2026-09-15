@@ -23,7 +23,7 @@
   .screen{position:fixed;inset:0;z-index:1;display:flex;flex-direction:column;}
   .hidden{display:none!important;}
 
-  /* ===== 遊園地の背景装飾 ===== */
+  /* 遊園地の背景装飾 */
   .park-deco{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0;}
   .park-item{position:absolute;font-size:clamp(48px,14vw,90px);line-height:1;opacity:.55;filter:drop-shadow(0 6px 8px rgba(0,0,0,.1));}
   .p-wheel{top:6%;left:4%;animation:spin 24s linear infinite;}
@@ -45,7 +45,7 @@
   @keyframes float{0%,100%{transform:translateY(0) rotate(-3deg);}50%{transform:translateY(-14px) rotate(3deg);}}
   @keyframes drift{to{transform:translateX(calc(100vw + 200px));}}
 
-  /* ===== ハブ画面 ===== */
+  /* ハブ画面 */
   #hub{
     align-items:center;justify-content:center;
     padding:14px;text-align:center;
@@ -76,6 +76,7 @@
     animation:mascotBounce 2s ease-in-out infinite;
     filter:drop-shadow(0 10px 14px rgba(255,120,160,.35));
     position:relative;
+    transition:filter .4s;
   }
   .mascot::after{
     content:"✨";
@@ -103,98 +104,57 @@
     letter-spacing:1px;
   }
 
-  /* ===== アトラクションボタン ===== */
+  /* アトラクションボタン */
   .attractions-main{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px;
-    width:100%;
-    margin-top:4px;
+    display:grid;grid-template-columns:1fr 1fr;
+    gap:12px;width:100%;margin-top:4px;
   }
   .attractions-sub{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:10px;
-    width:88%;
-    margin:2px auto 0;
+    display:grid;grid-template-columns:1fr 1fr;
+    gap:10px;width:88%;margin:2px auto 0;
   }
   .attr{
     font-family:inherit;
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
-    border:none;
-    color:#fff;
-    cursor:pointer;
-    transition:transform .1s,box-shadow .1s;
-    letter-spacing:1px;
-    position:relative;
-    overflow:hidden;
+    border:none;color:#fff;cursor:pointer;
+    transition:transform .1s,box-shadow .1s,opacity .3s,filter .3s;
+    letter-spacing:1px;position:relative;overflow:hidden;
     padding:14px 8px 12px;
     min-height:clamp(126px,33vw,158px);
     border-radius:22px;
   }
   .attr::before{
-    content:"";
-    position:absolute;top:0;left:0;right:0;height:36%;
+    content:"";position:absolute;top:0;left:0;right:0;height:36%;
     background:linear-gradient(180deg,rgba(255,255,255,.35),transparent);
     border-radius:22px 22px 50% 50%/22px 22px 30% 30%;
-    pointer-events:none;
-    z-index:0;
+    pointer-events:none;z-index:0;
   }
   .attr-icon{
-    font-size:clamp(38px,11vw,52px);
-    line-height:1;
+    font-size:clamp(38px,11vw,52px);line-height:1;
     filter:drop-shadow(0 4px 6px rgba(0,0,0,.2));
-    z-index:1;
-    position:relative;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
+    z-index:1;position:relative;
+    display:inline-flex;align-items:center;justify-content:center;
   }
   .attr-name{
-    font-size:clamp(12px,3.4vw,15px);
-    font-weight:900;
+    font-size:clamp(12px,3.4vw,15px);font-weight:900;
     text-shadow:1px 1px 0 rgba(0,0,0,.18);
-    z-index:1;
-    line-height:1.15;
-    position:relative;
+    z-index:1;line-height:1.15;position:relative;
   }
   .attr:active{transform:translateY(6px);}
 
-  /* ===== シール/スタンプ バッジ ===== */
+  /* シール/スタンプ バッジ */
   .reward-badge{
-    position:absolute;
-    top:8px;
-    left:8px;
-    width:24px;
-    height:24px;
-    border-radius:50%;
+    position:absolute;top:8px;left:8px;
+    width:24px;height:24px;border-radius:50%;
     background:#fff;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:15px;
-    line-height:1;
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px;line-height:1;
     box-shadow:0 1px 3px rgba(0,0,0,.25), 0 0 0 1.5px rgba(255,255,255,.95);
-    z-index:5;
-    pointer-events:none;
+    z-index:5;pointer-events:none;
   }
-  .reward-badge .badge-emoji{
-    display:block;
-    line-height:1;
-  }
-  /* スタンプ用：単色シルエット */
-  .reward-badge.reward-stamp .badge-emoji{
-    filter:brightness(0);
-    opacity:.55;
-  }
-
-  .attr.small .reward-badge{
-    top:6px;
-    left:6px;
-    width:20px;
-    height:20px;
-    font-size:12px;
-  }
+  .reward-badge .badge-emoji{display:block;line-height:1;}
+  .reward-badge.reward-stamp .badge-emoji{filter:brightness(0);opacity:.55;}
+  .attr.small .reward-badge{top:6px;left:6px;width:20px;height:20px;font-size:12px;}
 
   /* 学習ゲーム（大） */
   .attr-kazu{background:linear-gradient(180deg,#ffb74d,#ff8a3d);box-shadow:0 6px 0 #d96a1f,0 10px 18px rgba(217,106,31,.3);}
@@ -202,66 +162,33 @@
   .attr-hira{background:linear-gradient(180deg,#7ed957,#4cb842);box-shadow:0 6px 0 #378a1f,0 10px 18px rgba(55,138,31,.3);}
   .attr-hira:active{box-shadow:0 1px 0 #378a1f;}
 
-  /* ひらがなボタン：りんご＋「あ」重ね */
-  .attr-icon-hira{
-    position:relative;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    line-height:1;
-  }
-  .attr-icon-hira .hira-apple{
-    display:block;
-    line-height:1;
-  }
+  .attr-icon-hira{position:relative;display:inline-flex;align-items:center;justify-content:center;line-height:1;}
+  .attr-icon-hira .hira-apple{display:block;line-height:1;}
   .attr-icon-hira .hira-overlay{
-    position:absolute;
-    top:50%;
-    left:50%;
-    transform:translate(-50%, -42%);
-    font-size:.62em;
-    font-weight:900;
-    color:#fff;
+    position:absolute;top:50%;left:50%;
+    transform:translate(-50%,-42%);
+    font-size:.62em;font-weight:900;color:#fff;
     font-family:"Hiragino Maru Gothic ProN","Yu Gothic",Meiryo,sans-serif;
     line-height:1;
     text-shadow:
-      1.5px 1.5px 0 #6b1a08,
-      -1.5px 1.5px 0 #6b1a08,
-      1.5px -1.5px 0 #6b1a08,
-      -1.5px -1.5px 0 #6b1a08,
-      0 2px 0 #6b1a08,
-      0 -2px 0 #6b1a08,
-      2px 0 0 #6b1a08,
-      -2px 0 0 #6b1a08;
+      1.5px 1.5px 0 #6b1a08, -1.5px 1.5px 0 #6b1a08,
+      1.5px -1.5px 0 #6b1a08, -1.5px -1.5px 0 #6b1a08,
+      0 2px 0 #6b1a08, 0 -2px 0 #6b1a08,
+      2px 0 0 #6b1a08, -2px 0 0 #6b1a08;
     pointer-events:none;
   }
 
-  /* ランドルト環アイコン */
-  .landolt-icon{
-    width:1em;
-    height:1em;
-    display:block;
-    filter:drop-shadow(0 4px 6px rgba(0,0,0,.2));
-  }
+  .landolt-icon{width:1em;height:1em;display:block;filter:drop-shadow(0 4px 6px rgba(0,0,0,.2));}
 
   /* 遊びゲーム（小） */
   .attr.small{
     padding:10px 6px 8px;
     min-height:clamp(84px,22vw,106px);
-    border-radius:18px;
-    gap:2px;
+    border-radius:18px;gap:2px;
   }
-  .attr.small::before{
-    border-radius:18px 18px 50% 50%/18px 18px 30% 30%;
-  }
-  .attr.small .attr-icon{
-    font-size:clamp(28px,8vw,38px);
-    filter:drop-shadow(0 3px 4px rgba(0,0,0,.18));
-  }
-  .attr.small .attr-name{
-    font-size:clamp(11px,3.1vw,13px);
-    line-height:1.15;
-  }
+  .attr.small::before{border-radius:18px 18px 50% 50%/18px 18px 30% 30%;}
+  .attr.small .attr-icon{font-size:clamp(28px,8vw,38px);filter:drop-shadow(0 3px 4px rgba(0,0,0,.18));}
+  .attr.small .attr-name{font-size:clamp(11px,3.1vw,13px);line-height:1.15;}
   .attr-animal{background:linear-gradient(180deg,#ff9ec0,#ff6b9d);box-shadow:0 5px 0 #cc4a7a,0 8px 14px rgba(204,74,122,.28);}
   .attr-animal:active{box-shadow:0 1px 0 #cc4a7a;}
   .attr-rest{background:linear-gradient(180deg,#7fd6ff,#4ab3e8);box-shadow:0 5px 0 #2a8ec4,0 8px 14px rgba(42,142,196,.28);}
@@ -271,50 +198,71 @@
   .attr-eye{background:linear-gradient(180deg,#80deea,#26c6da);box-shadow:0 5px 0 #00838f,0 8px 14px rgba(0,131,143,.28);}
   .attr-eye:active{box-shadow:0 1px 0 #00838f;}
 
-  /* ===== シール帳ボタン ===== */
+  /* ★ 休憩モード */
+  #hub.resting .attr,
+  #hub.resting #bookBtn{
+    opacity:0.4;
+    filter:grayscale(0.4);
+    pointer-events:none;
+  }
+  #hub.resting .mascot{
+    filter:drop-shadow(0 6px 12px rgba(80,100,150,.3));
+  }
+  #hub.resting .mascot::after{
+    content:"";
+  }
+  .resting-message{
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    margin-top:2px;
+    margin-bottom:6px;
+    padding:10px 18px;
+    background:rgba(255,255,255,.85);
+    border-radius:18px;
+    box-shadow:0 4px 12px rgba(100,120,160,.2);
+  }
+  #hub.resting .resting-message{display:flex;}
+  .resting-message .rm-1{
+    font-size:clamp(13px,3.8vw,16px);
+    font-weight:900;color:#5a6a95;
+    letter-spacing:1px;
+  }
+  .resting-message .rm-2{
+    font-size:clamp(15px,4.4vw,19px);
+    font-weight:900;color:#8a6ac8;
+    letter-spacing:1px;
+  }
+
+  /* シール帳ボタン */
   #bookBtn{
     font-family:inherit;
     font-size:clamp(15px,4.4vw,19px);
-    font-weight:900;
-    color:#fff;
+    font-weight:900;color:#fff;
     background:linear-gradient(180deg,#c48cff,#9b6bef);
     border:none;border-radius:999px;
     padding:12px 34px;
     box-shadow:0 6px 0 #6f45c4,0 10px 20px rgba(111,69,196,.3);
-    cursor:pointer;
-    letter-spacing:2px;
-    position:relative;
-    margin-top:6px;
+    cursor:pointer;letter-spacing:2px;
+    position:relative;margin-top:6px;
+    transition:opacity .3s,filter .3s;
   }
   #bookBtn:active{transform:translateY(5px);box-shadow:0 1px 0 #6f45c4;}
   #bookBtn .badge{
     display:inline-block;
     background:#fff;color:#9b6bef;
-    border-radius:999px;
-    padding:1px 9px;
-    margin-left:6px;
-    font-size:.85em;
-    min-width:26px;
-    text-align:center;
+    border-radius:999px;padding:1px 9px;
+    margin-left:6px;font-size:.85em;
+    min-width:26px;text-align:center;
   }
-  .hint{
-    margin-top:8px;
-    font-size:clamp(10px,3vw,12px);
-    color:#a890a8;font-weight:800;
-  }
+  .hint{margin-top:8px;font-size:clamp(10px,3vw,12px);color:#a890a8;font-weight:800;}
 
-  /* ===== iframe ゲーム画面 ===== */
-  #gameFrame{
-    z-index:10;
-    background:#fff;
-    padding:0;
-  }
-  #gameIframe{
-    width:100%;height:100%;border:none;display:block;
-    background:transparent;
-  }
+  /* iframe ゲーム画面 */
+  #gameFrame{z-index:10;background:#fff;padding:0;}
+  #gameIframe{width:100%;height:100%;border:none;display:block;background:transparent;}
 
-  /* ===== シール帳 ===== */
+  /* シール帳 */
   #bookScreen{
     z-index:20;
     background:linear-gradient(180deg,#ffe6c8 0%,#ffd6ea 100%);
@@ -327,8 +275,7 @@
   .hud-title{
     font-size:clamp(18px,5.2vw,24px);
     font-weight:900;color:#ff6b9d;
-    letter-spacing:2px;
-    text-shadow:2px 2px 0 #fff;
+    letter-spacing:2px;text-shadow:2px 2px 0 #fff;
   }
   .icon-btn{
     width:50px;height:50px;border-radius:50%;border:none;
@@ -340,31 +287,19 @@
   }
   .icon-btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.14);}
 
-  /* タブ切替 */
-  .book-tabs{
-    display:flex;gap:8px;justify-content:center;
-    flex:0 0 auto;margin-bottom:8px;
-  }
+  .book-tabs{display:flex;gap:8px;justify-content:center;flex:0 0 auto;margin-bottom:8px;}
   .tab-btn{
-    font-family:inherit;
-    flex:1;max-width:160px;
-    font-size:clamp(13px,3.7vw,15px);
-    font-weight:900;
-    padding:10px 8px;
-    border-radius:999px;
-    border:none;
-    cursor:pointer;
-    letter-spacing:1px;
-    transition:all .2s;
-    color:#a890a8;
-    background:#fff;
+    font-family:inherit;flex:1;max-width:160px;
+    font-size:clamp(13px,3.7vw,15px);font-weight:900;
+    padding:10px 8px;border-radius:999px;border:none;
+    cursor:pointer;letter-spacing:1px;transition:all .2s;
+    color:#a890a8;background:#fff;
     box-shadow:0 3px 0 rgba(0,0,0,.08);
   }
   .tab-btn.active{
     color:#fff;
     background:linear-gradient(180deg,#ffb74d,#ff8a3d);
-    box-shadow:0 3px 0 #d96a1f;
-    transform:translateY(-1px);
+    box-shadow:0 3px 0 #d96a1f;transform:translateY(-1px);
   }
 
   .book-main{
@@ -376,36 +311,24 @@
     --cell: min(24vw, 14vh, 140px);
     --gap: calc(var(--cell) * 0.12);
     --pad: calc(var(--cell) * 0.22);
-    background:#fffbf0;
-    border-radius:22px;
+    background:#fffbf0;border-radius:22px;
     box-shadow:inset 0 0 32px rgba(200,150,100,.14),0 10px 30px rgba(0,0,0,.18);
-    padding:var(--pad);
-    position:relative;
+    padding:var(--pad);position:relative;
   }
   .book-page::before{
     content:"";position:absolute;inset:6px;
     border:2px dashed rgba(200,150,100,.22);
-    border-radius:16px;
-    pointer-events:none;
+    border-radius:16px;pointer-events:none;
   }
-  .book-page.stamp-mode::before{
-    border-color:rgba(255,150,190,.35);
-  }
-  .book-grid{
-    display:grid;
-    grid-template-columns:repeat(3, var(--cell));
-    gap:var(--gap);
-    position:relative;z-index:1;
-  }
+  .book-page.stamp-mode::before{border-color:rgba(255,150,190,.35);}
+  .book-grid{display:grid;grid-template-columns:repeat(3, var(--cell));gap:var(--gap);position:relative;z-index:1;}
   .book-cell{
     width:var(--cell);height:var(--cell);
-    border-radius:50%;
-    border:2px dashed #e0c8a8;
+    border-radius:50%;border:2px dashed #e0c8a8;
     background:rgba(255,255,255,.45);
     display:flex;align-items:center;justify-content:center;
     font-size:calc(var(--cell) * 0.62);
-    line-height:1;padding:0;
-    font-family:inherit;
+    line-height:1;padding:0;font-family:inherit;
     transition:transform .2s,box-shadow .2s;
   }
   .book-cell.filled{
@@ -417,33 +340,25 @@
   .book-cell.filled.from-hiragana{background:radial-gradient(circle at 35% 30%, #ffe8f4, #ffc0d8);box-shadow:0 3px 8px rgba(255,150,190,.45);}
   .book-cell.filled:active{transform:scale(.92);}
 
-  /* ===== スタンプ：ハンコ風 ===== */
   .book-cell.filled.is-stamp{
-    border:2px dashed #c8b8a8;
-    background:#faf5e8;
+    border:2px dashed #c8b8a8;background:#faf5e8;
     box-shadow:0 2px 6px rgba(150,120,80,.18);
     cursor:default;
     animation:stampPop .5s cubic-bezier(.34,1.56,.64,1);
   }
   .book-cell.filled.is-stamp .cell-text{
     font-size:calc(var(--cell) * 0.52);
-    display:inline-block;
-    line-height:1;
-    transform:rotate(-4deg);
+    display:inline-block;line-height:1;transform:rotate(-4deg);
   }
   .book-cell.is-stamp.hanko-red .cell-text{ filter:url(#hanko-red); }
   .book-cell.is-stamp.hanko-blue .cell-text{ filter:url(#hanko-blue); }
   .book-cell.is-stamp.hanko-green .cell-text{ filter:url(#hanko-green); }
-  .book-cell.filled.is-stamp:active{
-    transform:none;
-    box-shadow:0 2px 6px rgba(150,120,80,.18);
-  }
+  .book-cell.filled.is-stamp:active{transform:none;box-shadow:0 2px 6px rgba(150,120,80,.18);}
   @keyframes stampPop{
     0%{transform:scale(0) rotate(-30deg);opacity:0;}
     60%{transform:scale(1.1) rotate(2deg);opacity:1;}
     100%{transform:scale(1) rotate(0);opacity:1;}
   }
-
   @keyframes stickerPop{
     0%{transform:scale(0) rotate(-180deg);}
     100%{transform:scale(1) rotate(0);}
@@ -453,15 +368,10 @@
     font-weight:800;color:#8a7a68;
     text-align:center;line-height:1.5;
   }
-  .book-hint .legend{
-    display:inline-flex;align-items:center;gap:4px;
-    margin:0 4px;
-    font-size:clamp(10px,2.9vw,12px);
-  }
+  .book-hint .legend{display:inline-flex;align-items:center;gap:4px;margin:0 4px;font-size:clamp(10px,2.9vw,12px);}
   .book-hint .swatch{
     display:inline-block;width:12px;height:12px;border-radius:50%;
-    border:1.5px solid #fff;
-    box-shadow:0 1px 2px rgba(0,0,0,.15);
+    border:1.5px solid #fff;box-shadow:0 1px 2px rgba(0,0,0,.15);
   }
   .sw-kazu{background:linear-gradient(180deg,#fff8dc,#ffe2b8);}
   .sw-hira{background:linear-gradient(180deg,#ffe8f4,#ffc0d8);}
@@ -469,10 +379,7 @@
   .sw-rest{background:#faf5e8;border:1.5px dashed #c8b8a8;}
   .sw-eye{background:#faf5e8;border:1.5px dashed #c8b8a8;}
 
-  .book-nav{
-    display:flex;align-items:center;justify-content:center;gap:18px;
-    flex:0 0 auto;padding-top:6px;
-  }
+  .book-nav{display:flex;align-items:center;justify-content:center;gap:18px;flex:0 0 auto;padding-top:6px;}
   .nav-btn{
     width:48px;height:48px;border-radius:50%;border:none;
     background:#fff;font-size:20px;
@@ -482,12 +389,9 @@
   }
   .nav-btn:disabled{opacity:.3;cursor:default;}
   .nav-btn:not(:disabled):active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.14);}
-  #pageIndicator{
-    font-size:16px;font-weight:900;color:#7a6a58;
-    min-width:70px;text-align:center;
-  }
+  #pageIndicator{font-size:16px;font-weight:900;color:#7a6a58;min-width:70px;text-align:center;}
 
-  /* ===== 設定画面 ===== */
+  /* 設定画面 */
   #settingsScreen{
     z-index:20;
     background:linear-gradient(180deg,#e8f4ff 0%,#ffe8f5 100%);
@@ -512,8 +416,14 @@
   }
   .setting-row{display:flex;align-items:center;justify-content:space-between;gap:12px;}
   .segmented{display:flex;gap:6px;background:#f1ece4;padding:5px;border-radius:999px;}
+  .segmented.grid-3{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:6px;
+    border-radius:16px;
+  }
   .seg-btn{
-    flex:1;font-family:inherit;
+    font-family:inherit;
     font-size:clamp(11px,3.2vw,13px);font-weight:900;
     color:#7a6a58;background:transparent;border:none;
     border-radius:999px;padding:10px 4px;
@@ -525,78 +435,67 @@
     color:#fff;box-shadow:0 3px 8px rgba(255,138,61,.4);
   }
   .slider-row{display:flex;align-items:center;gap:12px;}
-  .slider{
-    flex:1;-webkit-appearance:none;appearance:none;
-    height:30px;background:transparent;cursor:pointer;padding:0;
-  }
-  .slider::-webkit-slider-runnable-track{
-    height:14px;border-radius:999px;
-    background:linear-gradient(90deg,#ffd166,#ffb74d);
-    box-shadow:inset 0 2px 4px rgba(0,0,0,.15);
-  }
-  .slider::-moz-range-track{
-    height:14px;border-radius:999px;
-    background:linear-gradient(90deg,#ffd166,#ffb74d);
-    box-shadow:inset 0 2px 4px rgba(0,0,0,.15);
-  }
-  .slider::-webkit-slider-thumb{
-    -webkit-appearance:none;appearance:none;
-    width:34px;height:34px;border-radius:50%;
-    background:#fff;border:5px solid #ff8a3d;
-    box-shadow:0 4px 8px rgba(0,0,0,.22);
-    margin-top:-10px;
-  }
-  .slider::-moz-range-thumb{
-    width:34px;height:34px;border-radius:50%;
-    background:#fff;border:5px solid #ff8a3d;
-    box-shadow:0 4px 8px rgba(0,0,0,.22);
-  }
-  .slider-value{
-    font-size:clamp(14px,3.8vw,17px);font-weight:900;
-    color:#ff8a3d;min-width:54px;text-align:right;
-  }
+  .slider{flex:1;-webkit-appearance:none;appearance:none;height:30px;background:transparent;cursor:pointer;padding:0;}
+  .slider::-webkit-slider-runnable-track{height:14px;border-radius:999px;background:linear-gradient(90deg,#ffd166,#ffb74d);box-shadow:inset 0 2px 4px rgba(0,0,0,.15);}
+  .slider::-moz-range-track{height:14px;border-radius:999px;background:linear-gradient(90deg,#ffd166,#ffb74d);box-shadow:inset 0 2px 4px rgba(0,0,0,.15);}
+  .slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:34px;height:34px;border-radius:50%;background:#fff;border:5px solid #ff8a3d;box-shadow:0 4px 8px rgba(0,0,0,.22);margin-top:-10px;}
+  .slider::-moz-range-thumb{width:34px;height:34px;border-radius:50%;background:#fff;border:5px solid #ff8a3d;box-shadow:0 4px 8px rgba(0,0,0,.22);}
+  .slider-value{font-size:clamp(14px,3.8vw,17px);font-weight:900;color:#ff8a3d;min-width:54px;text-align:right;}
   .toggle-btn{
     font-family:inherit;
-    font-size:clamp(15px,4.2vw,18px);font-weight:900;
-    color:#fff;
+    font-size:clamp(15px,4.2vw,18px);font-weight:900;color:#fff;
     background:linear-gradient(180deg,#7ed957,#5cb832);
-    border:none;border-radius:999px;
-    padding:11px 30px;
+    border:none;border-radius:999px;padding:11px 30px;
     box-shadow:0 5px 0 #3f8a1f,0 8px 16px rgba(63,138,31,.25);
     cursor:pointer;letter-spacing:3px;min-width:100px;
     transition:all .2s;
   }
-  .toggle-btn.off{
-    background:linear-gradient(180deg,#c4c4c4,#9e9e9e);
-    box-shadow:0 5px 0 #6b6b6b;
-  }
+  .toggle-btn.off{background:linear-gradient(180deg,#c4c4c4,#9e9e9e);box-shadow:0 5px 0 #6b6b6b;}
   .toggle-btn:active{transform:translateY(4px);}
   .danger-btn{
     font-family:inherit;
-    font-size:clamp(13px,3.6vw,15px);font-weight:900;
-    color:#fff;
+    font-size:clamp(13px,3.6vw,15px);font-weight:900;color:#fff;
     background:linear-gradient(180deg,#ff8a8a,#e74c3c);
-    border:none;border-radius:999px;
-    padding:11px 24px;
+    border:none;border-radius:999px;padding:11px 24px;
     box-shadow:0 5px 0 #b03a2e;
     cursor:pointer;letter-spacing:1px;width:100%;
   }
   .danger-btn:active{transform:translateY(4px);box-shadow:0 1px 0 #b03a2e;}
+  .reset-mini-btn{
+    font-family:inherit;
+    font-size:clamp(12px,3.4vw,14px);font-weight:900;
+    color:#8a6ac8;
+    background:#f0e8ff;
+    border:2px solid #d8c8f8;
+    border-radius:999px;
+    padding:10px 20px;
+    cursor:pointer;
+    margin-top:10px;
+    width:100%;
+    transition:all .2s;
+  }
+  .reset-mini-btn:active{transform:translateY(3px);background:#e8dcff;}
   .setting-note{
     font-size:clamp(10px,2.9vw,12px);
     color:#a89684;font-weight:800;
     margin-top:8px;line-height:1.5;
   }
+  #screentimeStatus{
+    display:block;
+    margin-top:6px;
+    font-size:clamp(11px,3.1vw,13px);
+    font-weight:900;
+    color:#7a6ac8;
+  }
 
-  /* ===== モーダル ===== */
+  /* モーダル */
   .modal-bg{
     position:fixed;inset:0;z-index:220;
     background:rgba(60,40,20,.55);
     display:flex;align-items:center;justify-content:center;
     padding:24px;
     animation:modalFade .25s ease-out;
-    -webkit-backdrop-filter:blur(3px);
-    backdrop-filter:blur(3px);
+    -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
   }
   @keyframes modalFade{from{opacity:0;}to{opacity:1;}}
   .modal-card{
@@ -617,16 +516,14 @@
   }
   .modal-text{
     font-size:clamp(15px,4.4vw,19px);font-weight:900;
-    color:#5b4a38;line-height:1.6;
-    margin:10px 0 6px;
+    color:#5b4a38;line-height:1.6;margin:10px 0 6px;
   }
   .modal-close{
     position:absolute;top:-16px;right:-16px;
     width:52px;height:52px;border-radius:50%;
     border:5px solid #fff;color:#fff;
     font-size:24px;font-weight:900;
-    cursor:pointer;font-family:inherit;padding:0;
-    line-height:1;
+    cursor:pointer;font-family:inherit;padding:0;line-height:1;
     background:linear-gradient(180deg,#ffb74d,#ff8a3d);
     box-shadow:0 6px 0 #d96a1f,0 10px 20px rgba(0,0,0,.28);
     display:flex;align-items:center;justify-content:center;
@@ -637,8 +534,7 @@
     width:52px;height:52px;border-radius:50%;
     border:5px solid #fff;color:#fff;
     font-size:22px;font-weight:900;
-    cursor:pointer;font-family:inherit;padding:0;
-    line-height:1;
+    cursor:pointer;font-family:inherit;padding:0;line-height:1;
     background:linear-gradient(180deg,#7fd6ff,#4ab3e8);
     box-shadow:0 6px 0 #2a8ec4,0 10px 20px rgba(0,0,0,.28);
     display:flex;align-items:center;justify-content:center;
@@ -656,6 +552,109 @@
   .confirm-btn.danger{background:linear-gradient(180deg,#ff8a8a,#e74c3c);box-shadow:0 5px 0 #b03a2e;}
   .confirm-btn:active{transform:translateY(4px);}
 
+  /* ★ スクリーンタイム：警告トースト */
+  .screentime-warning{
+    position:fixed;
+    bottom:calc(20px + env(safe-area-inset-bottom));
+    left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:linear-gradient(180deg,#c8b8e8,#a890d8);
+    color:#fff;
+    font-size:clamp(13px,3.8vw,16px);
+    font-weight:900;
+    letter-spacing:1px;
+    padding:12px 24px;
+    border-radius:999px;
+    box-shadow:0 6px 0 #6a4a9a, 0 10px 24px rgba(90,60,140,.4);
+    z-index:600;
+    opacity:0;
+    transition:opacity .4s ease, transform .4s ease;
+    pointer-events:none;
+    white-space:nowrap;
+  }
+  .screentime-warning.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(0);
+  }
+
+  /* ★ スクリーンタイム：時間切れオーバーレイ */
+  #screentimeOverlay{
+    position:fixed;inset:0;z-index:800;
+    background:
+      radial-gradient(circle at 50% 30%, rgba(255,240,200,.35), transparent 55%),
+      linear-gradient(180deg,#1a2444 0%,#2d3460 45%,#4a3b6b 100%);
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    gap:20px;
+    padding:30px 20px;
+    text-align:center;
+    animation:stFadeIn .9s ease-out;
+  }
+  #screentimeOverlay[hidden]{display:none;}
+  @keyframes stFadeIn{from{opacity:0;}to{opacity:1;}}
+
+  .st-stars{
+    position:absolute;inset:0;
+    pointer-events:none;overflow:hidden;
+  }
+  .st-star{
+    position:absolute;
+    color:#fff;
+    font-size:14px;
+    opacity:.7;
+    animation:stTwinkle 3s ease-in-out infinite;
+  }
+  @keyframes stTwinkle{
+    0%,100%{opacity:.3;transform:scale(.85);}
+    50%{opacity:1;transform:scale(1.1);}
+  }
+
+  .st-moon{
+    font-size:clamp(90px,26vw,140px);
+    line-height:1;
+    animation:stMoonFloat 3s ease-in-out infinite;
+    filter:drop-shadow(0 10px 22px rgba(255,240,180,.4));
+    position:relative;z-index:1;
+  }
+  @keyframes stMoonFloat{
+    0%,100%{transform:translateY(0) rotate(-3deg);}
+    50%{transform:translateY(-14px) rotate(3deg);}
+  }
+
+  .st-text-1{
+    font-size:clamp(20px,5.8vw,28px);
+    font-weight:900;
+    color:#ffffff;
+    letter-spacing:3px;
+    text-shadow:0 2px 8px rgba(0,0,0,.4);
+    position:relative;z-index:1;
+  }
+  .st-text-2{
+    font-size:clamp(16px,4.6vw,22px);
+    font-weight:900;
+    color:#ffe08a;
+    letter-spacing:2px;
+    text-shadow:0 2px 8px rgba(0,0,0,.4);
+    position:relative;z-index:1;
+    margin-top:-6px;
+  }
+  .st-btn{
+    font-family:inherit;
+    margin-top:14px;
+    font-size:clamp(16px,4.6vw,20px);
+    font-weight:900;
+    color:#5a4a95;
+    background:linear-gradient(180deg,#fff5d8,#ffd88a);
+    border:none;border-radius:999px;
+    padding:16px 46px;
+    box-shadow:0 6px 0 #b08840, 0 10px 24px rgba(0,0,0,.3);
+    cursor:pointer;
+    letter-spacing:3px;
+    transition:transform .1s, box-shadow .1s;
+    position:relative;z-index:1;
+  }
+  .st-btn:active{transform:translateY(5px);box-shadow:0 1px 0 #b08840;}
+
   @media (max-width:360px){
     .attr{min-height:112px;}
     .attr.small{min-height:78px;}
@@ -666,13 +665,14 @@
     .attr.small .reward-badge{width:18px;height:18px;font-size:11px;top:5px;left:5px;}
   }
   @media (prefers-reduced-motion: reduce){
-    .park-item,.mascot,.mascot::after,#settingsBtn,.modal-emoji{animation:none!important;}
+    .park-item,.mascot,.mascot::after,#settingsBtn,.modal-emoji,
+    .st-moon,.st-star{animation:none!important;}
   }
 </style>
 </head>
 <body>
 
-<!-- ===== ハンコ風SVGフィルタ + ランドルト環マスク ===== -->
+<!-- ハンコ風SVGフィルタ + ランドルト環マスク -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <filter id="hanko-red" color-interpolation-filters="sRGB">
@@ -699,7 +699,6 @@
         0 0 0 0.72 0
       "/>
     </filter>
-    <!-- ランドルト環の切れ目用マスク（右方向） -->
     <mask id="landoltGapMask" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
       <rect width="100" height="100" fill="white"/>
       <rect x="74" y="42" width="30" height="16" fill="black"/>
@@ -707,7 +706,7 @@
   </defs>
 </svg>
 
-<!-- ===== 遊園地の背景装飾 ===== -->
+<!-- 遊園地の背景装飾 -->
 <div class="park-deco" aria-hidden="true">
   <div class="p-cloud pc1"></div>
   <div class="p-cloud pc2"></div>
@@ -720,14 +719,20 @@
   <div class="park-item p-tent">🎪</div>
 </div>
 
-<!-- ===== ハブ画面 ===== -->
+<!-- ハブ画面 -->
 <div id="hub" class="screen">
   <button id="settingsBtn" aria-label="せってい">⚙️</button>
 
   <div class="hub-inner">
-    <div class="mascot">🍑</div>
-    <h1 class="title"><span class="momo">ももちゃん</span>の<br>あそぼうランド</h1>
-    <p class="subtitle">すきな アトラクションを えらんでね</p>
+    <div class="mascot" id="mascot">🍑</div>
+    <h1 class="title" id="hubTitle"><span class="momo">ももちゃん</span>の<br>あそぼうランド</h1>
+    <p class="subtitle" id="hubSubtitle">すきな アトラクションを えらんでね</p>
+
+    <!-- 休憩モード用メッセージ -->
+    <div class="resting-message">
+      <div class="rm-1">きょうは おしまい。</div>
+      <div class="rm-2">あした また あそぼうね</div>
+    </div>
 
     <!-- 学習ゲーム（大きく） -->
     <div class="attractions-main">
@@ -780,12 +785,12 @@
   </div>
 </div>
 
-<!-- ===== iframe ゲーム画面 ===== -->
+<!-- iframe ゲーム画面 -->
 <div id="gameFrame" class="screen hidden">
   <iframe id="gameIframe" title="ゲーム"></iframe>
 </div>
 
-<!-- ===== シール帳 ===== -->
+<!-- シール帳 -->
 <div id="bookScreen" class="screen hidden">
   <header class="hud">
     <button id="closeBookBtn" class="icon-btn" aria-label="とじる">✖</button>
@@ -812,7 +817,7 @@
   </div>
 </div>
 
-<!-- ===== 設定画面 ===== -->
+<!-- 設定画面 -->
 <div id="settingsScreen" class="screen hidden">
   <header class="hud">
     <button id="closeSettingsBtn" class="icon-btn" aria-label="とじる">✖</button>
@@ -855,6 +860,22 @@
       </div>
     </div>
 
+    <!-- ★ スクリーンタイム設定 -->
+    <div class="setting-card">
+      <div class="setting-label">⏱️ スクリーンタイム</div>
+      <div class="segmented grid-3" id="screentimeSeg">
+        <button class="seg-btn" data-min="0" type="button">なし</button>
+        <button class="seg-btn" data-min="5" type="button">5分</button>
+        <button class="seg-btn" data-min="10" type="button">10分</button>
+        <button class="seg-btn" data-min="15" type="button">15分</button>
+        <button class="seg-btn" data-min="20" type="button">20分</button>
+        <button class="seg-btn" data-min="30" type="button">30分</button>
+      </div>
+      <div class="setting-note">こどもが あそべる じかんを きめられます。じかんに なると、やさしく おしまいに なります。</div>
+      <div id="screentimeStatus"></div>
+      <button id="screentimeResetBtn" class="reset-mini-btn" type="button">きょうの じかんを リセット</button>
+    </div>
+
     <div class="setting-card">
       <div class="setting-label">📖 コレクション</div>
       <button id="resetBtn" class="danger-btn" type="button">シールと スタンプを ぜんぶ けす</button>
@@ -863,7 +884,7 @@
   </main>
 </div>
 
-<!-- ===== 詳細モーダル（シール用） ===== -->
+<!-- 詳細モーダル（シール用） -->
 <div id="detailModal" class="modal-bg hidden">
   <div class="modal-card" id="detailCard">
     <button class="modal-speaker" id="detailSpeakerBtn" aria-label="もういちど きく">🔊</button>
@@ -873,7 +894,7 @@
   </div>
 </div>
 
-<!-- ===== 確認モーダル ===== -->
+<!-- 確認モーダル -->
 <div id="confirmModal" class="modal-bg hidden">
   <div class="modal-card">
     <div class="modal-emoji">📖</div>
@@ -885,6 +906,23 @@
   </div>
 </div>
 
+<!-- ★ スクリーンタイム：警告トースト -->
+<div id="screentimeWarning" class="screentime-warning hidden">
+  🌙 もうすぐ おしまいだよ
+</div>
+
+<!-- ★ スクリーンタイム：時間切れオーバーレイ -->
+<div id="screentimeOverlay" hidden>
+  <div class="st-stars" id="stStars"></div>
+  <div class="st-moon">🌙</div>
+  <div class="st-text-1">きょうは おしまい</div>
+  <div class="st-text-2">あした また あそぼうね</div>
+  <button class="st-btn" id="screentimeOkBtn" type="button">わかった</button>
+</div>
+
+<!-- 共通モジュール -->
+<script src="shared/momo.js"></script>
+
 <script>
 (function(){
   "use strict";
@@ -895,14 +933,12 @@
      ========================================================= */
   var STICKER_KEY = 'momo_stickers_v1';
   var STAMP_KEY   = 'momo_stamps_v1';
-  var SETTINGS_KEY= 'momo_settings_v1';
   var PER_PAGE    = 12;
 
   /* =========================================================
      シールの説明文
      ========================================================= */
   var STICKER_DESCS = {
-    /* かずシール */
     '🌈':'にじ。あめの あとで、そらに でる カラフルな かたち。',
     '⭐':'おほしさま。よるの そらで、きらきら ひかるよ。',
     '🌸':'さくら。はるに さく、ピンクの おはな。',
@@ -943,7 +979,6 @@
     '🐙':'たこ。あしが、8ぽん あるよ。',
     '🍀':'よつばの クローバー。みつけると、いいことが あるよ。',
     '🧁':'カップケーキ。ちいさな、あまい ケーキ。',
-    /* ひらがなシール */
     '🐳':'くじら。うみの なかで いちばん おおきい どうぶつ。',
     '🐬':'いるか。うみを ぴょんぴょん はねるよ。',
     '🦈':'さめ。うみの つよい さかな。',
@@ -979,40 +1014,21 @@
     '🌲':'もみの き。ふゆでも みどり。',
     '🌴':'やしの き。あつい くにに はえる。',
     '🍄':'きのこ。あめの あとで はえる。',
-    '🌵':'サボテン。さばくに はえる とげとげ。'
+    '🌵':'サボテン。さばくに はえる とげとげ。',
+    '👁️':'め。ものの かたちや いろを みる ところ。',
+    '👓':'めがね。かけると よく みえるよ。',
+    '🔍':'むしめがね。ちいさい ものを おおきく みる。',
+    '🕶️':'サングラス。まぶしい ひを ふせぐ。',
+    '🔭':'ぼうえんきょう。とおい ものを みる。',
+    '💡':'でんきゅう。あかるく してくれる。',
+    '🔦':'かいちゅうでんとう。くらやみで つかう。',
+    '🧿':'まよけ。わるい ものを はらう。',
+    '🎯':'まと。めがけて なげる あそび。',
+    '🪞':'かがみ。じぶんの かおが うつる。'
   };
 
   /* =========================================================
-     設定
-     ========================================================= */
-  var settings = {
-    bgmMode: 'fun',
-    bgmVol: 50,
-    sfxVol: 70,
-    soundOn: true
-  };
-
-  function loadSettings(){
-    try {
-      var raw = localStorage.getItem(SETTINGS_KEY);
-      if (raw){
-        var obj = JSON.parse(raw);
-        if (obj && typeof obj === 'object'){
-          if (obj.bgmMode === 'fun' || obj.bgmMode === 'calm' || obj.bgmMode === 'random') settings.bgmMode = obj.bgmMode;
-          if (typeof obj.bgmVol === 'number') settings.bgmVol = Math.max(0, Math.min(100, obj.bgmVol));
-          if (typeof obj.sfxVol === 'number') settings.sfxVol = Math.max(0, Math.min(100, obj.sfxVol));
-          if (typeof obj.soundOn === 'boolean') settings.soundOn = obj.soundOn;
-        }
-      }
-    } catch(e){}
-  }
-  function saveSettings(){
-    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch(e){}
-  }
-  loadSettings();
-
-  /* =========================================================
-     コレクションデータ
+     状態
      ========================================================= */
   var state = {
     stickers: [],
@@ -1020,9 +1036,15 @@
     bookTab: 'sticker',
     currentPage: 0,
     detailOpen: false,
-    detailEmoji: ''
+    detailEmoji: '',
+    resting: false,
+    screentimeTimer: null,
+    warningTimer: null
   };
 
+  /* =========================================================
+     コレクション
+     ========================================================= */
   function normalizeItems(arr){
     return arr.map(function(item){
       if (typeof item === 'string') return { emoji: item, from: 'kazu' };
@@ -1047,185 +1069,10 @@
       }
     } catch(e){}
   }
-  function saveCollection(){
-    try {
-      localStorage.setItem(STICKER_KEY, JSON.stringify(state.stickers));
-      localStorage.setItem(STAMP_KEY, JSON.stringify(state.stamps));
-    } catch(e){}
-  }
-
-  function getActiveList(){
-    return state.bookTab === 'sticker' ? state.stickers : state.stamps;
-  }
 
   function updateBadge(){
     var n = state.stickers.length + state.stamps.length;
     $('#bookBadge').textContent = n;
-  }
-
-  /* =========================================================
-     音（ハブ画面のBGM）
-     ========================================================= */
-  var ctx = null, bgmGain = null, bgmTimer = null, bgmLoopTime = 0;
-  var currentTrack = null, isDucked = false;
-
-  function getBgmGainValue(quiet){
-    return (settings.bgmVol / 100) * (quiet ? 0.07 : 0.20);
-  }
-
-  var F = {
-    C3:130.81, F3:174.61, G3:196.00, A3:220.00,
-    C4:261.63, D4:293.66, E4:329.63, F4:349.23, G4:392.00, A4:440.00,
-    C5:523.25, D5:587.33, E5:659.25, F5:698.46, G5:783.99, A5:880.00,
-    C6:1046.50, E6:1318.51
-  };
-
-  var TRACKS = [
-    { mood:'fun', bpm:116,
-      melody:[[0,F.E5,1],[1,F.G5,1],[2,F.A5,1],[3,F.G5,1],[4,F.E5,1],[5,F.D5,1],[6,F.C5,2],
-              [8,F.D5,1],[9,F.E5,1],[10,F.G5,1],[11,F.E5,1],[12,F.E5,1],[13,F.D5,1],[14,F.C5,2]],
-      bass:[[0,F.C3,4],[4,F.F3,4],[8,F.G3,4],[12,F.C3,4]] },
-    { mood:'fun', bpm:132,
-      melody:[[0,F.C5,.5],[.5,F.E5,.5],[1,F.G5,.5],[1.5,F.E5,.5],[2,F.G5,.5],[2.5,F.A5,.5],[3,F.G5,1],
-              [4,F.A5,.5],[4.5,F.G5,.5],[5,F.F5,.5],[5.5,F.E5,.5],[6,F.D5,.5],[6.5,F.E5,.5],[7,F.F5,1],
-              [8,F.E5,.5],[8.5,F.G5,.5],[9,F.C6,1],[10,F.A5,.5],[10.5,F.G5,.5],[11,F.E5,1],
-              [12,F.F5,.5],[12.5,F.E5,.5],[13,F.D5,.5],[13.5,F.C5,.5],[14,F.G4,1],[15,F.C5,1]],
-      bass:[[0,F.C3,2],[2,F.C3,2],[4,F.F3,2],[6,F.G3,2],[8,F.C3,2],[10,F.A3,2],[12,F.F3,2],[14,F.G3,2]] },
-    { mood:'calm', bpm:76,
-      melody:[[0,F.E5,1.5],[1.5,F.D5,.5],[2,F.C5,2],[4,F.D5,1.5],[5.5,F.E5,.5],[6,F.G5,2],
-              [8,F.G5,1],[9,F.F5,1],[10,F.E5,1],[11,F.D5,1],[12,F.C5,2],[14,F.E5,1],[15,F.C5,1]],
-      bass:[[0,F.C3,4],[4,F.A3,4],[8,F.F3,4],[12,F.G3,4]] },
-    { mood:'calm', bpm:88,
-      melody:[[0,F.C5,1],[1,F.E5,1],[2,F.G5,1.5],[3.5,F.E5,.5],[4,F.F5,1],[5,F.A5,1],[6,F.G5,2],
-              [8,F.E5,1],[9,F.G5,1],[10,F.C6,1.5],[11.5,F.A5,.5],[12,F.G5,1],[13,F.F5,1],[14,F.E5,1],[15,F.C5,1]],
-      bass:[[0,F.C3,4],[4,F.F3,4],[8,F.C3,2],[10,F.A3,2],[12,F.F3,2],[14,F.G3,2]] }
-  ];
-
-  function getTrackPool(){
-    if (settings.bgmMode === 'calm') return TRACKS.filter(function(t){ return t.mood === 'calm'; });
-    if (settings.bgmMode === 'fun')  return TRACKS.filter(function(t){ return t.mood === 'fun'; });
-    return TRACKS.slice();
-  }
-  function pickTrack(){
-    var p = getTrackPool();
-    return p[Math.floor(Math.random() * p.length)] || TRACKS[0];
-  }
-
-  function initAudio(){
-    if (ctx) return;
-    var AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return;
-    ctx = new AC();
-  }
-
-  function playNote(freq, t0, dur, type, dest, vol){
-    if (!ctx || !dest) return;
-    var osc = ctx.createOscillator();
-    var g = ctx.createGain();
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, t0);
-    g.gain.setValueAtTime(0.0001, t0);
-    g.gain.exponentialRampToValueAtTime(Math.max(vol, 0.001), t0 + 0.03);
-    g.gain.exponentialRampToValueAtTime(0.0001, t0 + Math.max(dur, 0.05));
-    osc.connect(g); g.connect(dest);
-    osc.start(t0); osc.stop(t0 + dur + 0.08);
-  }
-
-  function scheduleTrack(t0, track){
-    var beat = 60 / track.bpm;
-    var loopDur = 16 * beat;
-    track.melody.forEach(function(n){ playNote(n[1], t0 + n[0] * beat, n[2] * beat * 0.9, 'triangle', bgmGain, 0.5); });
-    track.bass.forEach(function(n){ playNote(n[1], t0 + n[0] * beat, n[2] * beat * 0.85, 'sine', bgmGain, 0.42); });
-    return loopDur;
-  }
-
-  function pumpBGM(){
-    if (!ctx || !bgmGain) return;
-    if (!currentTrack) currentTrack = pickTrack();
-    while (bgmLoopTime < ctx.currentTime + 2.5){
-      var dur = scheduleTrack(bgmLoopTime, currentTrack);
-      bgmLoopTime += dur;
-    }
-  }
-
-  function startBGM(){
-    if (!ctx || !settings.soundOn) return;
-    stopBGM();
-    bgmGain = ctx.createGain();
-    bgmGain.gain.value = getBgmGainValue(false);
-    bgmGain.connect(ctx.destination);
-    currentTrack = pickTrack();
-    bgmLoopTime = ctx.currentTime + 0.2;
-    pumpBGM();
-    bgmTimer = setInterval(pumpBGM, 700);
-  }
-  function stopBGM(){
-    if (bgmTimer){ clearInterval(bgmTimer); bgmTimer = null; }
-    if (bgmGain){ try { bgmGain.disconnect(); } catch(e){} bgmGain = null; }
-    currentTrack = null;
-  }
-  function applyBgmGain(){
-    if (!ctx || !bgmGain) return;
-    var target = getBgmGainValue(isDucked);
-    try {
-      bgmGain.gain.cancelScheduledValues(ctx.currentTime);
-      bgmGain.gain.setValueAtTime(bgmGain.gain.value, ctx.currentTime);
-      bgmGain.gain.linearRampToValueAtTime(target, ctx.currentTime + 0.15);
-    } catch(e){ bgmGain.gain.value = target; }
-  }
-  function duckBGM(quiet){
-    isDucked = quiet;
-    applyBgmGain();
-  }
-
-  function sfxTap(){
-    if (!settings.soundOn || !ctx) return;
-    playNote(880, ctx.currentTime, 0.09, 'sine', ctx.destination, 0.15);
-  }
-  function sfxBookOpen(){
-    if (!settings.soundOn || !ctx) return;
-    var t = ctx.currentTime;
-    [F.C5, F.E5, F.G5, F.C6].forEach(function(f, i){
-      playNote(f, t + i * 0.06, 0.3, 'sine', ctx.destination, 0.14);
-    });
-  }
-  function sfxStickerTap(){
-    if (!settings.soundOn || !ctx) return;
-    var t = ctx.currentTime;
-    playNote(F.G5, t, 0.16, 'triangle', ctx.destination, 0.18);
-    playNote(F.C6, t + 0.09, 0.32, 'triangle', ctx.destination, 0.16);
-  }
-
-  /* =========================================================
-     読み上げ
-     ========================================================= */
-  var jaVoice = null;
-  function pickVoice(){
-    if (!('speechSynthesis' in window)) return;
-    var voices = window.speechSynthesis.getVoices();
-    jaVoice = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf('ja') === 0; }) || null;
-  }
-  if ('speechSynthesis' in window){
-    pickVoice();
-    window.speechSynthesis.onvoiceschanged = pickVoice;
-  }
-  function speak(text, rate){
-    if (!settings.soundOn || !('speechSynthesis' in window)) return;
-    try {
-      window.speechSynthesis.cancel();
-      setTimeout(function(){
-        var u = new SpeechSynthesisUtterance(text);
-        u.lang = 'ja-JP';
-        if (jaVoice) u.voice = jaVoice;
-        u.rate = rate || 0.95;
-        u.pitch = 1.35;
-        u.volume = 1;
-        window.speechSynthesis.speak(u);
-      }, 60);
-    } catch(e){}
-  }
-  function cancelSpeech(){
-    if ('speechSynthesis' in window){ try { window.speechSynthesis.cancel(); } catch(e){} }
   }
 
   /* =========================================================
@@ -1241,10 +1088,14 @@
   };
 
   function openGame(name){
+    if (state.resting){
+      showRestingBubble();
+      return;
+    }
     var url = GAME_URLS[name];
     if (!url) return;
-    stopBGM();
-    cancelSpeech();
+    Momo.stopBGM();
+    Momo.cancelSpeech();
     $('#gameIframe').src = url;
     $('#gameFrame').classList.remove('hidden');
     $('#hub').classList.add('hidden');
@@ -1254,9 +1105,9 @@
     try { $('#gameIframe').src = 'about:blank'; } catch(e){}
     $('#gameFrame').classList.add('hidden');
     $('#hub').classList.remove('hidden');
-    initAudio();
-    if (ctx && ctx.state === 'suspended'){ try { ctx.resume(); } catch(e){} }
-    if (settings.soundOn) startBGM();
+    if (!state.resting){
+      if (Momo.settings.soundOn) Momo.startBGM();
+    }
     loadCollection();
     updateBadge();
   }
@@ -1285,15 +1136,13 @@
     renderBook();
     updateTabs();
     $('#bookScreen').classList.remove('hidden');
-    initAudio();
-    if (ctx && ctx.state === 'suspended'){ try { ctx.resume(); } catch(e){} }
-    duckBGM(true);
-    sfxBookOpen();
+    Momo.duckBGM(true);
+    Momo.sfx.bookOpen();
   }
   function closeBook(){
     closeDetail(true);
     $('#bookScreen').classList.add('hidden');
-    duckBGM(false);
+    Momo.duckBGM(false);
   }
   function updateTabs(){
     $('#tabSticker').classList.toggle('active', state.bookTab === 'sticker');
@@ -1302,7 +1151,7 @@
   }
 
   function renderBook(){
-    var list = getActiveList();
+    var list = state.bookTab === 'sticker' ? state.stickers : state.stamps;
     var total = list.length;
     var totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
     if (state.currentPage >= totalPages) state.currentPage = totalPages - 1;
@@ -1319,7 +1168,6 @@
       cell.className = 'book-cell';
       if (idx < total){
         var item = list[idx];
-
         if (state.bookTab === 'stamp'){
           cell.classList.add('filled', 'is-stamp');
           var color = item.color;
@@ -1340,7 +1188,7 @@
           cell.textContent = item.emoji;
           (function(em){
             cell.addEventListener('click', function(){
-              sfxStickerTap();
+              Momo.sfx.stickerTap();
               showDetail(em);
             });
           })(item.emoji);
@@ -1385,16 +1233,16 @@
     $('#detailEmoji').textContent = emoji;
     $('#detailText').textContent = desc;
     $('#detailModal').classList.remove('hidden');
-    duckBGM(true);
-    setTimeout(function(){ speak(desc); }, 320);
+    Momo.duckBGM(true);
+    setTimeout(function(){ Momo.speak(desc); }, 320);
   }
   function closeDetail(silent){
     if (!state.detailOpen && !silent) return;
     state.detailOpen = false;
     $('#detailModal').classList.add('hidden');
-    cancelSpeech();
-    if (!$('#bookScreen').classList.contains('hidden')) duckBGM(true);
-    else duckBGM(false);
+    Momo.cancelSpeech();
+    if (!$('#bookScreen').classList.contains('hidden')) Momo.duckBGM(true);
+    else Momo.duckBGM(false);
   }
 
   /* =========================================================
@@ -1402,26 +1250,182 @@
      ========================================================= */
   function openSettings(){
     updateSettingsUI();
+    updateScreenTimeUI();
     $('#settingsScreen').classList.remove('hidden');
-    duckBGM(true);
-    initAudio();
-    if (ctx && ctx.state === 'suspended'){ try { ctx.resume(); } catch(e){} }
+    Momo.duckBGM(true);
   }
   function closeSettings(){
     $('#settingsScreen').classList.add('hidden');
-    duckBGM(false);
+    Momo.duckBGM(false);
   }
   function updateSettingsUI(){
-    $('#bgmVolSlider').value = String(settings.bgmVol);
-    $('#bgmVolVal').textContent = String(settings.bgmVol);
-    $('#sfxVolSlider').value = String(settings.sfxVol);
-    $('#sfxVolVal').textContent = String(settings.sfxVol);
+    $('#bgmVolSlider').value = String(Momo.settings.bgmVol);
+    $('#bgmVolVal').textContent = String(Momo.settings.bgmVol);
+    $('#sfxVolSlider').value = String(Momo.settings.sfxVol);
+    $('#sfxVolVal').textContent = String(Momo.settings.sfxVol);
     document.querySelectorAll('#bgmModeSeg .seg-btn').forEach(function(b){
-      b.classList.toggle('active', b.dataset.mode === settings.bgmMode);
+      b.classList.toggle('active', b.dataset.mode === Momo.settings.bgmMode);
     });
     var st = $('#soundToggle');
-    st.textContent = settings.soundOn ? 'ON' : 'OFF';
-    st.classList.toggle('off', !settings.soundOn);
+    st.textContent = Momo.settings.soundOn ? 'ON' : 'OFF';
+    st.classList.toggle('off', !Momo.settings.soundOn);
+  }
+
+  function updateScreenTimeUI(){
+    var min = Momo.screenTime.getLimitMin();
+    document.querySelectorAll('#screentimeSeg .seg-btn').forEach(function(b){
+      b.classList.toggle('active', parseInt(b.dataset.min, 10) === min);
+    });
+
+    var status = $('#screentimeStatus');
+    var resetBtn = $('#screentimeResetBtn');
+    if (min <= 0){
+      status.textContent = 'じかん せいげんは ありません。';
+      resetBtn.style.display = 'none';
+    } else {
+      var remainMs = Momo.screenTime.getRemainingMs();
+      var remainMin = Math.ceil(remainMs / 60000);
+      if (remainMs <= 0){
+        status.textContent = 'きょうの じかんは おわりました。';
+      } else {
+        status.textContent = 'きょうは あと ' + remainMin + '分 あそべます。';
+      }
+      resetBtn.style.display = 'block';
+    }
+  }
+
+  /* =========================================================
+     スクリーンタイム：休憩モード
+     ========================================================= */
+  function enterRestingMode(){
+    state.resting = true;
+    $('#hub').classList.add('resting');
+    $('#mascot').textContent = '🌙';
+    $('#hubTitle').innerHTML = 'きょうは おしまい';
+    $('#hubSubtitle').textContent = 'また あした あそぼうね';
+    Momo.stopBGM();
+  }
+
+  function exitRestingMode(){
+    state.resting = false;
+    $('#hub').classList.remove('resting');
+    $('#mascot').textContent = '🍑';
+    $('#hubTitle').innerHTML = '<span class="momo">ももちゃん</span>の<br>あそぼうランド';
+    $('#hubSubtitle').textContent = 'すきな アトラクションを えらんでね';
+    if (Momo.settings.soundOn) Momo.startBGM();
+  }
+
+  function showRestingBubble(){
+    showBubble('きょうは おしまい。あした また あそぼうね');
+    Momo.speak('きょうは おしまい。あした また あそぼうね', 0.9, 1.15);
+  }
+
+  /* 吹き出し */
+  var bubbleTimer = null;
+  function showBubble(text){
+    var b = document.getElementById('bubble') || createBubble();
+    b.textContent = text;
+    b.classList.remove('show');
+    void b.offsetWidth;
+    b.classList.add('show');
+    clearTimeout(bubbleTimer);
+    bubbleTimer = setTimeout(function(){ b.classList.remove('show'); }, 2400);
+  }
+  function createBubble(){
+    var b = document.createElement('div');
+    b.id = 'bubble';
+    b.className = 'st-text-2';
+    b.style.position = 'fixed';
+    b.style.bottom = '60px';
+    b.style.left = '50%';
+    b.style.transform = 'translateX(-50%)';
+    b.style.background = 'rgba(255,255,255,.95)';
+    b.style.color = '#7a6ac8';
+    b.style.fontWeight = '900';
+    b.style.fontSize = 'clamp(14px,4vw,18px)';
+    b.style.padding = '12px 24px';
+    b.style.borderRadius = '999px';
+    b.style.boxShadow = '0 4px 12px rgba(0,0,0,.2)';
+    b.style.zIndex = '900';
+    b.style.whiteSpace = 'nowrap';
+    b.style.opacity = '0';
+    b.style.transition = 'opacity .3s, transform .3s';
+    document.body.appendChild(b);
+    var style = document.createElement('style');
+    style.textContent = '#bubble.show{opacity:1!important;transform:translateX(-50%) translateY(-8px)!important;}';
+    document.head.appendChild(style);
+    return b;
+  }
+
+  /* =========================================================
+     スクリーンタイム：演出
+     ========================================================= */
+  function showWarningToast(){
+    var el = $('#screentimeWarning');
+    el.classList.remove('hidden');
+    void el.offsetWidth;
+    el.classList.add('show');
+    clearTimeout(state.warningTimer);
+    state.warningTimer = setTimeout(function(){
+      el.classList.remove('show');
+      setTimeout(function(){ el.classList.add('hidden'); }, 500);
+    }, 2200);
+  }
+
+  function showExpiredOverlay(){
+    /* 星空を生成 */
+    var starsBox = $('#stStars');
+    starsBox.innerHTML = '';
+    for (var i = 0; i < 20; i++){
+      var s = document.createElement('div');
+      s.className = 'st-star';
+      s.textContent = '✨';
+      s.style.left = (Math.random() * 100) + '%';
+      s.style.top = (Math.random() * 80) + '%';
+      s.style.animationDelay = (Math.random() * 3) + 's';
+      s.style.fontSize = (10 + Math.random() * 10) + 'px';
+      starsBox.appendChild(s);
+    }
+
+    Momo.stopBGM();
+    Momo.cancelSpeech();
+    $('#screentimeOverlay').hidden = false;
+
+    /* 優しい読み上げ */
+    setTimeout(function(){
+      Momo.speak('きょうは おしまい。あした また あそぼうね', 0.85, 1.15);
+    }, 600);
+  }
+
+  function hideExpiredOverlay(){
+    $('#screentimeOverlay').hidden = true;
+  }
+
+  /* =========================================================
+     スクリーンタイム：状態チェック
+     ========================================================= */
+  function refreshRestingState(){
+    /* 起動時、または復帰時に呼ぶ：時間切れなら休憩モードへ */
+    if (Momo.screenTime.isExpired() && !state.resting){
+      enterRestingMode();
+    } else if (!Momo.screenTime.isExpired() && state.resting){
+      exitRestingMode();
+    }
+  }
+
+  /* 定期チェック（残り時間表示更新 + 時間切れ判定） */
+  function startHubScreenTimeLoop(){
+    if (state.screentimeTimer) return;
+    state.screentimeTimer = setInterval(function(){
+      /* 設定画面が開いていれば残り時間を更新 */
+      if (!$('#settingsScreen').classList.contains('hidden')){
+        updateScreenTimeUI();
+      }
+      /* 時間切れなら休憩モードへ */
+      if (Momo.screenTime.isExpired() && !state.resting){
+        enterRestingMode();
+      }
+    }, 3000);
   }
 
   /* =========================================================
@@ -1429,103 +1433,128 @@
      ========================================================= */
   document.querySelectorAll('.attr').forEach(function(btn){
     btn.addEventListener('click', function(){
-      initAudio();
-      if (ctx && ctx.state === 'suspended'){ try { ctx.resume(); } catch(e){} }
-      sfxTap();
+      if (state.resting){ showRestingBubble(); return; }
+      Momo.sfx.tap();
       openGame(btn.dataset.game);
     });
   });
 
   $('#bookBtn').addEventListener('click', function(){
-    initAudio();
-    if (ctx && ctx.state === 'suspended'){ try { ctx.resume(); } catch(e){} }
-    sfxTap();
+    if (state.resting){ showRestingBubble(); return; }
+    Momo.sfx.tap();
     openBook();
   });
-  $('#closeBookBtn').addEventListener('click', function(){ sfxTap(); closeBook(); });
+  $('#closeBookBtn').addEventListener('click', function(){ Momo.sfx.tap(); closeBook(); });
   $('#tabSticker').addEventListener('click', function(){
     if (state.bookTab === 'sticker') return;
-    state.bookTab = 'sticker';
-    state.currentPage = 0;
-    sfxTap();
-    updateTabs();
-    renderBook();
+    state.bookTab = 'sticker'; state.currentPage = 0;
+    Momo.sfx.tap(); updateTabs(); renderBook();
   });
   $('#tabStamp').addEventListener('click', function(){
     if (state.bookTab === 'stamp') return;
-    state.bookTab = 'stamp';
-    state.currentPage = 0;
-    sfxTap();
-    updateTabs();
-    renderBook();
+    state.bookTab = 'stamp'; state.currentPage = 0;
+    Momo.sfx.tap(); updateTabs(); renderBook();
   });
   $('#prevPageBtn').addEventListener('click', function(){
-    if (state.currentPage > 0){ state.currentPage--; sfxTap(); renderBook(); }
+    if (state.currentPage > 0){ state.currentPage--; Momo.sfx.tap(); renderBook(); }
   });
   $('#nextPageBtn').addEventListener('click', function(){
-    var total = getActiveList().length;
+    var total = state.bookTab === 'sticker' ? state.stickers.length : state.stamps.length;
     var totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
-    if (state.currentPage < totalPages - 1){ state.currentPage++; sfxTap(); renderBook(); }
+    if (state.currentPage < totalPages - 1){ state.currentPage++; Momo.sfx.tap(); renderBook(); }
   });
 
   $('#settingsBtn').addEventListener('click', function(){
-    initAudio();
-    if (ctx && ctx.state === 'suspended'){ try { ctx.resume(); } catch(e){} }
-    sfxTap();
+    Momo.sfx.tap();
     openSettings();
   });
-  $('#closeSettingsBtn').addEventListener('click', function(){ sfxTap(); closeSettings(); });
+  $('#closeSettingsBtn').addEventListener('click', function(){ Momo.sfx.tap(); closeSettings(); });
 
   document.querySelectorAll('#bgmModeSeg .seg-btn').forEach(function(btn){
     btn.addEventListener('click', function(){
       var mode = this.dataset.mode;
-      if (!mode || mode === settings.bgmMode){ sfxTap(); return; }
-      settings.bgmMode = mode;
-      saveSettings();
+      if (!mode || mode === Momo.settings.bgmMode){ Momo.sfx.tap(); return; }
+      Momo.settings.bgmMode = mode;
+      try { localStorage.setItem('momo_settings_v1', JSON.stringify(Momo.settings)); } catch(e){}
       updateSettingsUI();
-      sfxTap();
-      if (bgmTimer){ stopBGM(); if (settings.soundOn) startBGM(); }
+      Momo.sfx.tap();
+      Momo.stopBGM();
+      if (Momo.settings.soundOn) Momo.startBGM();
     });
   });
   $('#bgmVolSlider').addEventListener('input', function(){
-    settings.bgmVol = Math.max(0, Math.min(100, parseInt(this.value, 10) || 0));
-    $('#bgmVolVal').textContent = String(settings.bgmVol);
-    saveSettings();
-    applyBgmGain();
+    Momo.settings.bgmVol = Math.max(0, Math.min(100, parseInt(this.value, 10) || 0));
+    $('#bgmVolVal').textContent = String(Momo.settings.bgmVol);
+    try { localStorage.setItem('momo_settings_v1', JSON.stringify(Momo.settings)); } catch(e){}
+    Momo.applyBgmGain();
   });
   $('#sfxVolSlider').addEventListener('input', function(){
-    settings.sfxVol = Math.max(0, Math.min(100, parseInt(this.value, 10) || 0));
-    $('#sfxVolVal').textContent = String(settings.sfxVol);
-    saveSettings();
+    Momo.settings.sfxVol = Math.max(0, Math.min(100, parseInt(this.value, 10) || 0));
+    $('#sfxVolVal').textContent = String(Momo.settings.sfxVol);
+    try { localStorage.setItem('momo_settings_v1', JSON.stringify(Momo.settings)); } catch(e){}
   });
-  $('#sfxVolSlider').addEventListener('change', function(){ sfxTap(); });
+  $('#sfxVolSlider').addEventListener('change', function(){ Momo.sfx.tap(); });
   $('#soundToggle').addEventListener('click', function(){
-    settings.soundOn = !settings.soundOn;
-    saveSettings();
+    Momo.settings.soundOn = !Momo.settings.soundOn;
+    try { localStorage.setItem('momo_settings_v1', JSON.stringify(Momo.settings)); } catch(e){}
     updateSettingsUI();
-    if (settings.soundOn){
-      initAudio();
-      if (ctx && ctx.state === 'suspended'){ try { ctx.resume(); } catch(e){} }
-      sfxTap();
-      if (!bgmTimer) startBGM();
+    if (Momo.settings.soundOn){
+      Momo.sfx.tap();
+      if (!state.resting) Momo.startBGM();
     } else {
-      stopBGM();
-      cancelSpeech();
+      Momo.stopBGM();
+      Momo.cancelSpeech();
     }
   });
+
+  /* スクリーンタイム選択 */
+  document.querySelectorAll('#screentimeSeg .seg-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var min = parseInt(this.dataset.min, 10) || 0;
+      Momo.screenTime.setLimitMin(min);
+      updateScreenTimeUI();
+      Momo.sfx.tap();
+      if (min > 0){
+        Momo.speak('スクリーンタイムを ' + min + 'ふんに しました', 0.95);
+      } else {
+        Momo.speak('じかん せいげんを なくしました', 0.95);
+      }
+      /* リセット後は休憩モード解除 */
+      exitRestingMode();
+    });
+  });
+  $('#screentimeResetBtn').addEventListener('click', function(){
+    Momo.screenTime.reset();
+    updateScreenTimeUI();
+    exitRestingMode();
+    Momo.sfx.tap();
+    Momo.speak('じかんを リセットしました', 0.95);
+  });
+
+  /* 時間切れオーバーレイのOKボタン */
+  $('#screentimeOkBtn').addEventListener('click', function(){
+    Momo.sfx.tap();
+    hideExpiredOverlay();
+    /* 休憩モードは維持される（reset するまで遊べない） */
+  });
+
+  /* シール/スタンプリセット */
   $('#resetBtn').addEventListener('click', function(){
-    sfxTap();
+    Momo.sfx.tap();
     $('#confirmModal').classList.remove('hidden');
   });
   $('#confirmNoBtn').addEventListener('click', function(){
-    sfxTap();
+    Momo.sfx.tap();
     $('#confirmModal').classList.add('hidden');
   });
   $('#confirmYesBtn').addEventListener('click', function(){
-    sfxTap();
+    Momo.sfx.tap();
     state.stickers = [];
     state.stamps = [];
-    saveCollection();
+    try {
+      localStorage.setItem(STICKER_KEY, JSON.stringify([]));
+      localStorage.setItem(STAMP_KEY, JSON.stringify([]));
+    } catch(e){}
     updateBadge();
     if (!$('#bookScreen').classList.contains('hidden')) renderBook();
     $('#confirmModal').classList.add('hidden');
@@ -1533,13 +1562,13 @@
 
   $('#detailCloseBtn').addEventListener('click', function(e){
     e.stopPropagation();
-    sfxTap();
+    Momo.sfx.tap();
     closeDetail();
   });
   $('#detailSpeakerBtn').addEventListener('click', function(e){
     e.stopPropagation();
     var desc = STICKER_DESCS[state.detailEmoji] || '';
-    if (desc){ sfxStickerTap(); speak(desc); }
+    if (desc){ Momo.sfx.stickerTap(); Momo.speak(desc); }
   });
   $('#detailModal').addEventListener('click', function(e){
     if (e.target === this) closeDetail();
@@ -1548,34 +1577,40 @@
 
   document.addEventListener('visibilitychange', function(){
     if (document.hidden){
-      stopBGM();
-      cancelSpeech();
+      Momo.stopBGM();
+      Momo.cancelSpeech();
     } else {
-      if (ctx && ctx.state === 'suspended'){ try { ctx.resume(); } catch(e){} }
-      if (!$('#hub').classList.contains('hidden') && settings.soundOn && !bgmTimer) startBGM();
+      if (!state.resting && Momo.settings.soundOn) Momo.startBGM();
+      refreshRestingState();
     }
   });
-  document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
-  document.addEventListener('gesturestart', function(e){ e.preventDefault(); });
-
-  function unlockAudio(){
-    initAudio();
-    if (ctx && ctx.state === 'suspended'){ try { ctx.resume(); } catch(e){} }
-    if (settings.soundOn && !bgmTimer) startBGM();
-    document.removeEventListener('pointerdown', unlockAudio);
-    document.removeEventListener('touchstart', unlockAudio);
-  }
-  document.addEventListener('pointerdown', unlockAudio, { passive: true });
-  document.addEventListener('touchstart', unlockAudio, { passive: true });
 
   /* =========================================================
-     起動時
+     起動
      ========================================================= */
+  Momo.init({ screenTime: true });
   loadCollection();
   updateBadge();
 
-  initAudio();
-  if (ctx && ctx.state === 'running' && settings.soundOn) startBGM();
+  /* スクリーンタイムのコールバックを登録 */
+  Momo.screenTime.setCallbacks({
+    onWarning: function(){
+      /* ハブ画面が表示されているときだけ警告を出す */
+      if (!$('#hub').classList.contains('hidden')){
+        showWarningToast();
+      }
+    },
+    onExpired: function(){
+      showExpiredOverlay();
+      enterRestingMode();
+    }
+  });
+
+  /* 起動時に既に時間切れなら休憩モードへ */
+  refreshRestingState();
+
+  /* ハブ画面の定期チェック開始 */
+  startHubScreenTimeLoop();
 
 })();
 </script>
