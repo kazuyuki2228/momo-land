@@ -756,64 +756,38 @@ var ingEl        = document.getElementById('ingredients');
 var slotEls      = document.querySelectorAll('.slot');
 
 /* =========================================================
-   ゲーム固有の効果音
+   ゲーム固有の効果音（Momo.sfx.tone を使用）
    ========================================================= */
 function sfxDrop(){
-  if (!Momo.settings.soundOn) return;
-  var t = Momo.now();
-  Momo.playNote(1200, t, 0.10, 'triangle', getSfxDest(), 0.18);
-  Momo.playNote(1600, t + 0.06, 0.12, 'triangle', getSfxDest(), 0.14);
+  Momo.sfx.tone(1200, 0,    0.10, 'triangle', 0.18);
+  Momo.sfx.tone(1600, 0.06, 0.12, 'triangle', 0.14);
 }
 function sfxCook(){
-  if (!Momo.settings.soundOn) return;
-  var t = Momo.now();
   for (var i = 0; i < 7; i++){
-    Momo.playNote(380 + Math.random()*320, t + i*0.16, 0.10, 'sine', getSfxDest(), 0.06);
+    Momo.sfx.tone(380 + Math.random()*320, i*0.16, 0.10, 'sine', 0.06);
   }
 }
 function sfxDing(){
-  if (!Momo.settings.soundOn) return;
-  var t = Momo.now();
-  Momo.playNote(1047, t, 0.16, 'triangle', getSfxDest(), 0.14);
-  Momo.playNote(1568, t + 0.10, 0.26, 'triangle', getSfxDest(), 0.12);
+  Momo.sfx.tone(1047, 0,    0.16, 'triangle', 0.14);
+  Momo.sfx.tone(1568, 0.10, 0.26, 'triangle', 0.12);
 }
 function sfxEat(){
-  if (!Momo.settings.soundOn) return;
-  var t = Momo.now();
   [523,659,784,1047].forEach(function(f, i){
-    Momo.playNote(f, t + i*0.10, 0.26, 'triangle', getSfxDest(), 0.12);
+    Momo.sfx.tone(f, i*0.10, 0.26, 'triangle', 0.12);
   });
 }
 function sfxCoin(){
-  if (!Momo.settings.soundOn) return;
-  var t = Momo.now();
-  Momo.playNote(1568, t, 0.10, 'triangle', getSfxDest(), 0.13);
-  Momo.playNote(2093, t + 0.08, 0.18, 'triangle', getSfxDest(), 0.11);
+  Momo.sfx.tone(1568, 0,    0.10, 'triangle', 0.13);
+  Momo.sfx.tone(2093, 0.08, 0.18, 'triangle', 0.11);
 }
 function sfxLoss(){
-  if (!Momo.settings.soundOn) return;
-  var t = Momo.now();
-  Momo.playNote(392, t, 0.16, 'sawtooth', getSfxDest(), 0.09);
-  Momo.playNote(311, t + 0.14, 0.22, 'sawtooth', getSfxDest(), 0.09);
+  Momo.sfx.tone(392, 0,    0.16, 'sawtooth', 0.09);
+  Momo.sfx.tone(311, 0.14, 0.22, 'sawtooth', 0.09);
 }
 function sfxClear(){
-  if (!Momo.settings.soundOn) return;
-  var t = Momo.now();
   [523,659,784,1047,1319].forEach(function(f, i){
-    Momo.playNote(f, t + i*0.12, 0.32, 'triangle', getSfxDest(), 0.13);
+    Momo.sfx.tone(f, i*0.12, 0.32, 'triangle', 0.13);
   });
-}
-/* 効果音の出力先を Momo から取得するヘルパー
-   Momo.playNote の dest には AudioContext の destination を渡す必要があるため、
-   Momo 内部に sfxGain がある想定で、それを直接使えない場合は
-   destination を渡す形で Momo 側に統一APIを用意するのが理想。
-   ここでは Momo が内部で sfxGain を保持している前提で、
-   Momo.sfx経由では提供されない音を鳴らすための簡易ヘルパー。 */
-function getSfxDest(){
-  // Momo.playNote の第5引数 vol は使うが、dest には ctx.destination を使う必要がある
-  // Momo 側に playNote が公開されているが、sfxGain に接続する必要がある
-  // → ここでは簡易的に Momo.sfx 経由で似た音を鳴らすことにする
-  return null;
 }
 
 /* =========================================================
