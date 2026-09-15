@@ -20,10 +20,10 @@
   .hidden{display:none!important;}
 
   /* HUD */
-  .hud{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;gap:8px;flex:0 0 auto;}
+  .hud{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;gap:5px;flex:0 0 auto;}
   .icon-btn{
-    width:52px;height:52px;border-radius:50%;border:none;
-    background:#fff;font-size:24px;line-height:1;
+    width:46px;height:46px;border-radius:50%;border:none;
+    background:#fff;font-size:22px;line-height:1;
     box-shadow:0 4px 0 rgba(0,0,0,.14),0 6px 14px rgba(0,0,0,.1);
     cursor:pointer;font-family:inherit;
     display:flex;align-items:center;justify-content:center;
@@ -42,17 +42,17 @@
   .badge.show{display:flex;}
   .hud-center{display:flex;align-items:center;justify-content:center;flex:1;min-width:0;}
   .stars{
-    display:flex;align-items:center;gap:8px;
-    background:#fff;border-radius:999px;padding:6px 18px 6px 16px;
+    display:flex;align-items:center;gap:6px;
+    background:#fff;border-radius:999px;padding:5px 16px 5px 14px;
     box-shadow:0 4px 0 rgba(0,0,0,.12),0 6px 14px rgba(0,0,0,.1);
-    font-size:clamp(20px,5.5vw,26px);font-weight:900;color:#f5a623;
+    font-size:clamp(18px,5vw,22px);font-weight:900;color:#f5a623;
   }
-  .star-icon{font-size:clamp(20px,5.5vw,26px);}
+  .star-icon{font-size:clamp(18px,5vw,22px);}
   .stars.bump{animation:bump .45s;}
   @keyframes bump{0%{transform:scale(1);}40%{transform:scale(1.28);}100%{transform:scale(1);}}
-  .sticker-progress{display:flex;gap:4px;margin-left:6px;}
+  .sticker-progress{display:flex;gap:4px;margin-left:4px;}
   .dot{
-    width:11px;height:11px;border-radius:50%;
+    width:10px;height:10px;border-radius:50%;
     background:#e8e0d5;
     transition:background .3s, box-shadow .3s;
   }
@@ -61,7 +61,7 @@
   /* 音声読み上げパネル */
   .kana-question{
     flex:0 0 auto;
-    display:flex;align-items:center;justify-content:center;gap:14px;
+    display:flex;align-items:center;justify-content:center;gap:12px;
     padding:6px 14px 4px;
     cursor:pointer;
     position:relative;
@@ -224,7 +224,7 @@
     padding:16px 36px;border-radius:999px;
     border:5px solid #ffd9e6;
     box-shadow:0 8px 0 rgba(255,107,157,.35),0 14px 34px rgba(0,0,0,.2);
-    pointer-events:none;z-index:80;opacity:0;white-space:nowrap;
+    pointer-events:none;z-index:190;opacity:0;white-space:nowrap;
   }
   .bubble.show{animation:bubblePop 1.3s ease-out forwards;}
   @keyframes bubblePop{
@@ -235,7 +235,7 @@
     100%{opacity:0;transform:translate(-50%,-72%) scale(1);}
   }
   .confetti{
-    position:fixed;top:-50px;z-index:70;pointer-events:none;
+    position:fixed;top:-50px;z-index:170;pointer-events:none;
     animation:fall linear forwards;
     will-change:transform;
   }
@@ -309,8 +309,191 @@
   .sticker-option.fade-out{animation:fadeOutShrink .6s forwards;}
   @keyframes fadeOutShrink{to{opacity:.15;transform:scale(.7);}}
 
+  /* =========================================================
+     ひらがな帳
+     ========================================================= */
+  #kanaChartScreen{
+    z-index:60;
+    background:linear-gradient(180deg,#fff8e8 0%,#fff0f8 100%);
+    padding:10px 12px 16px;
+  }
+  .chart-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:4px 0 10px;gap:10px;flex:0 0 auto;
+  }
+  .chart-title{
+    font-size:clamp(17px,5vw,22px);
+    font-weight:900;color:#ff6b9d;
+    letter-spacing:2px;
+    text-shadow:2px 2px 0 #fff;
+    display:flex;align-items:center;gap:6px;
+  }
+  .chart-main{
+    flex:1;min-height:0;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    padding:4px 0 8px;
+  }
+  .kana-chart-grid{
+    display:grid;
+    grid-template-columns:repeat(5, 1fr);
+    gap:6px;
+    max-width:480px;
+    margin:0 auto;
+  }
+  .kana-cell{
+    aspect-ratio:1;
+    border-radius:14px;
+    border:2.5px solid #fff;
+    background:#f5f0ea;
+    color:#d0c0b8;
+    font-size:clamp(22px,6.5vw,34px);
+    font-weight:900;
+    font-family:"Hiragino Maru Gothic ProN",Meiryo,sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    padding:0;
+    transition:transform .1s, box-shadow .1s;
+    box-shadow:0 2px 4px rgba(0,0,0,.06);
+    line-height:1;
+  }
+  .kana-cell:active:not(.empty){
+    transform:translateY(2px);
+    box-shadow:0 0 0 rgba(0,0,0,.06);
+  }
+  .kana-cell.empty{
+    visibility:hidden;
+    pointer-events:none;
+  }
+  .kana-cell.count-1-2{
+    background:linear-gradient(180deg,#fffdf5,#ffe8c8);
+    color:#8a5a10;
+    box-shadow:0 2px 4px rgba(200,150,100,.22);
+  }
+  .kana-cell.count-3-4{
+    background:linear-gradient(180deg,#ffe8f4,#ffc0d8);
+    color:#a04a70;
+    box-shadow:0 2px 4px rgba(255,150,190,.3);
+  }
+  .kana-cell.count-5plus{
+    background:linear-gradient(180deg,#fff5c8,#ffd93d);
+    color:#8a5a10;
+    box-shadow:0 2px 4px rgba(255,200,60,.4), 0 0 14px rgba(255,217,61,.55);
+    animation:goldGlow 2.4s ease-in-out infinite;
+  }
+  @keyframes goldGlow{
+    0%,100%{box-shadow:0 2px 4px rgba(255,200,60,.4), 0 0 14px rgba(255,217,61,.55);}
+    50%{box-shadow:0 2px 4px rgba(255,200,60,.4), 0 0 20px rgba(255,217,61,.9);}
+  }
+  .chart-summary{
+    flex:0 0 auto;
+    text-align:center;
+    font-size:clamp(13px,3.7vw,15px);
+    font-weight:900;
+    color:#a890a8;
+    padding:8px 0 4px;
+    letter-spacing:1px;
+  }
+  .chart-summary.all-done{
+    color:#e8a000;
+    animation:summaryPop .8s ease;
+  }
+  @keyframes summaryPop{
+    0%{transform:scale(1);}
+    40%{transform:scale(1.15);}
+    100%{transform:scale(1);}
+  }
+
+  /* =========================================================
+     かな詳細モーダル
+     ========================================================= */
+  .modal-bg{
+    position:fixed;inset:0;z-index:220;
+    background:rgba(60,40,20,.55);
+    display:flex;align-items:center;justify-content:center;
+    padding:24px;
+    animation:modalFade .25s ease-out;
+    -webkit-backdrop-filter:blur(3px);
+    backdrop-filter:blur(3px);
+  }
+  @keyframes modalFade{from{opacity:0;}to{opacity:1;}}
+  .modal-card{
+    background:linear-gradient(180deg,#fffbf0 0%,#ffe8f5 100%);
+    border-radius:32px;border:6px solid #fff;
+    padding:30px 26px 26px;text-align:center;
+    max-width:340px;width:100%;
+    box-shadow:0 24px 60px rgba(0,0,0,.45),0 0 0 8px rgba(255,255,255,.25);
+    animation:popIn .4s cubic-bezier(.34,1.56,.64,1);
+    position:relative;
+  }
+  @keyframes popIn{
+    from{transform:scale(.6) rotate(-8deg);opacity:0;}
+    to{transform:scale(1) rotate(0);opacity:1;}
+  }
+  .kana-detail-char{
+    font-size:clamp(72px,22vw,110px);
+    font-weight:900;
+    color:#ff6b9d;
+    line-height:1;
+    text-shadow:3px 3px 0 #ffe0ec;
+    font-family:"Hiragino Maru Gothic ProN",Meiryo,sans-serif;
+  }
+  .kana-detail-emoji{
+    font-size:clamp(64px,20vw,96px);
+    line-height:1;
+    margin:6px 0 4px;
+    animation:float 2s ease-in-out infinite;
+    filter:drop-shadow(0 8px 12px rgba(0,0,0,.18));
+  }
+  .kana-detail-text{
+    font-size:clamp(16px,4.8vw,21px);
+    font-weight:900;
+    color:#5b4a38;
+    letter-spacing:1px;
+    margin:6px 0 4px;
+  }
+  .kana-detail-count{
+    font-size:clamp(12px,3.5vw,14px);
+    font-weight:800;
+    color:#a890a8;
+    margin-top:2px;
+  }
+  .modal-close{
+    position:absolute;top:-16px;right:-16px;
+    width:52px;height:52px;border-radius:50%;
+    border:5px solid #fff;color:#fff;
+    font-size:24px;font-weight:900;
+    cursor:pointer;font-family:inherit;padding:0;
+    line-height:1;
+    background:linear-gradient(180deg,#ffb74d,#ff8a3d);
+    box-shadow:0 6px 0 #d96a1f,0 10px 20px rgba(0,0,0,.28);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .modal-close:active{transform:translateY(5px);box-shadow:0 1px 0 #d96a1f;}
+  .modal-speaker{
+    position:absolute;top:-16px;left:-16px;
+    width:52px;height:52px;border-radius:50%;
+    border:5px solid #fff;color:#fff;
+    font-size:22px;font-weight:900;
+    cursor:pointer;font-family:inherit;padding:0;
+    line-height:1;
+    background:linear-gradient(180deg,#7fd6ff,#4ab3e8);
+    box-shadow:0 6px 0 #2a8ec4,0 10px 20px rgba(0,0,0,.28);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .modal-speaker:active{transform:translateY(5px);box-shadow:0 1px 0 #2a8ec4;}
+
+  @media (max-width:360px){
+    .icon-btn{width:42px;height:42px;font-size:20px;}
+    .hud{padding:6px 8px;gap:4px;}
+    .stars{padding:4px 12px 4px 10px;gap:4px;}
+    .modal-close,.modal-speaker{width:48px;height:48px;font-size:22px;}
+  }
   @media (prefers-reduced-motion: reduce){
-    .kana-card.hint,.basket.happy,.replay-icon,.sticker-option,.select-header{animation:none!important;}
+    .kana-card.hint,.basket.happy,.replay-icon,.sticker-option,.select-header,
+    .kana-detail-emoji,.kana-cell.count-5plus{animation:none!important;}
   }
 </style>
 </head>
@@ -327,9 +510,11 @@
         <span class="sticker-progress" id="progressDots"></span>
       </div>
     </div>
+    <button id="chartBtn" class="icon-btn" aria-label="ひらがなちょう">📔</button>
     <button id="bookBtn" class="icon-btn" aria-label="シール帳">
       📖<span class="badge" id="bookBadge">0</span>
     </button>
+    <button id="soundBtn" class="icon-btn" aria-label="おと">🔊</button>
   </header>
 
   <div class="kana-question" id="kanaQuestion">
@@ -345,11 +530,36 @@
   </div>
 </div>
 
+<!-- ひらがな帳 -->
+<div id="kanaChartScreen" class="screen hidden">
+  <header class="chart-header">
+    <button id="closeChartBtn" class="icon-btn" aria-label="とじる">✖</button>
+    <div class="chart-title">📔 ひらがなちょう</div>
+    <div style="width:46px;flex:0 0 auto;"></div>
+  </header>
+  <main class="chart-main">
+    <div class="kana-chart-grid" id="kanaChartGrid"></div>
+  </main>
+  <div class="chart-summary" id="chartSummary"></div>
+</div>
+
 <!-- シール選択画面 -->
 <div id="stickerSelectScreen" class="screen hidden">
   <div class="select-header">シールを えらんでね！</div>
   <div class="select-sub">すきな シールを 1つ タップしてね</div>
   <div class="sticker-options" id="stickerOptions"></div>
+</div>
+
+<!-- かな詳細モーダル -->
+<div id="kanaDetailModal" class="modal-bg hidden">
+  <div class="modal-card" id="kanaDetailCard">
+    <button class="modal-speaker" id="kanaDetailSpeakerBtn" aria-label="もういちど きく">🔊</button>
+    <button class="modal-close" id="kanaDetailCloseBtn" aria-label="とじる">✖</button>
+    <div class="kana-detail-char" id="kanaDetailChar">り</div>
+    <div class="kana-detail-emoji" id="kanaDetailEmoji">🍎</div>
+    <div class="kana-detail-text" id="kanaDetailText">りんごの り</div>
+    <div class="kana-detail-count" id="kanaDetailCount">あそんだ かいすう：0 かい</div>
+  </div>
 </div>
 
 <div id="bubble" class="bubble" role="status" aria-live="polite"></div>
@@ -365,6 +575,7 @@
   var STICKERS_PER_UNLOCK = 3;
   var STICKER_KEY = 'momo_stickers_v1';
   var SETTINGS_KEY = 'momo_settings_v1';
+  var PROGRESS_KEY = 'momo_hiragana_progress_v1';
 
   var TIMING = {
     STICKER_BACK: 2400,
@@ -424,11 +635,23 @@
     { kana:'わ', word:'わに', emoji:'🐊' }
   ];
 
+  /* ひらがな帳のレイアウト（5列×10行、44字+空欄6） */
+  var KANA_ROWS = [
+    ['あ','い','う','え','お'],
+    ['か','き','く','け','こ'],
+    ['さ','し','す','せ','そ'],
+    ['た','ち','つ','て','と'],
+    ['な','に','ぬ','ね','の'],
+    ['は','ひ','ふ','へ','ほ'],
+    ['ま','み','む','め','も'],
+    ['や','ゆ','よ',null,null],
+    ['ら','り','る','れ','ろ'],
+    ['わ',null,null,null,null]
+  ];
+
   var KANA_STARTERS = ['り','く','ね','さ','と','は'];
 
-  /* =========================================================
-     ひらがなシールプール（ハブ画面と共通）
-     ========================================================= */
+  /* ひらがなシールプール */
   var HIRAGANA_STICKER_POOL = [
     '🐳','🐬','🦈','🐙','🦑','🦀','🦞','🐚','🐠','🐡',
     '☁️','🌤️','🌦️','⛈️','🌪️','❄️','💧','🌊',
@@ -440,14 +663,9 @@
   var PRAISE = ['せいかい！', 'すごい！', 'やったね！', 'じょうず！', 'あたり！'];
 
   /* =========================================================
-     設定（ハブ画面と共通）
+     設定
      ========================================================= */
-  var settings = {
-    bgmMode: 'fun',
-    bgmVol: 50,
-    sfxVol: 70,
-    soundOn: true
-  };
+  var settings = { bgmMode:'fun', bgmVol:50, sfxVol:70, soundOn:true };
   function loadSettings(){
     try {
       var raw = localStorage.getItem(SETTINGS_KEY);
@@ -465,7 +683,66 @@
   loadSettings();
 
   /* =========================================================
-     シール保存（ハブ画面と共有）
+     学習進捗
+     ========================================================= */
+  var progress = {
+    counts: {},
+    totalPlayed: 0,
+    uniqueKana: 0
+  };
+
+  function loadProgress(){
+    try {
+      var raw = localStorage.getItem(PROGRESS_KEY);
+      if (raw){
+        var obj = JSON.parse(raw);
+        if (obj && typeof obj === 'object'){
+          if (obj.counts && typeof obj.counts === 'object') progress.counts = obj.counts;
+          if (typeof obj.totalPlayed === 'number') progress.totalPlayed = obj.totalPlayed;
+          if (typeof obj.uniqueKana === 'number') progress.uniqueKana = obj.uniqueKana;
+        }
+      }
+    } catch(e){}
+  }
+  function saveProgress(){
+    try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress)); } catch(e){}
+  }
+  function incrementKanaCount(kana){
+    progress.counts[kana] = (progress.counts[kana] || 0) + 1;
+    progress.totalPlayed++;
+    var unique = 0;
+    for (var key in progress.counts){
+      if (progress.counts[key] > 0) unique++;
+    }
+    progress.uniqueKana = unique;
+    saveProgress();
+  }
+
+  /* 出題の重み */
+  function getWeight(count){
+    if (count === 0) return 10;
+    if (count === 1) return 6;
+    if (count === 2) return 3;
+    if (count === 3) return 2;
+    return 1;
+  }
+
+  function pickWeightedKana(prevKana){
+    var pool = [];
+    KANA_DATA.forEach(function(k){
+      if (k.kana === prevKana) return;
+      var count = progress.counts[k.kana] || 0;
+      var w = getWeight(count);
+      for (var i = 0; i < w; i++) pool.push(k);
+    });
+    if (pool.length === 0){
+      pool = KANA_DATA.slice();
+    }
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  /* =========================================================
+     シール保存
      ========================================================= */
   var state = {
     stars: 0,
@@ -480,7 +757,7 @@
     cards: [],
     draggingCard: null,
     pendingStickers: null,
-    myStickers: []     // このゲームで獲得したひらがなシール
+    myStickers: []
   };
 
   function loadMyStickers(){
@@ -489,13 +766,9 @@
       if (raw){
         var arr = JSON.parse(raw);
         if (Array.isArray(arr)){
-          state.myStickers = arr
-            .filter(function(it){
-              if (it && typeof it === 'object' && it.from === 'hiragana') return true;
-              return false;
-            })
-            .map(function(it){ return it.emoji; })
-            .filter(Boolean);
+          state.myStickers = arr.filter(function(it){
+            return it && typeof it === 'object' && it.from === 'hiragana';
+          }).map(function(it){ return it.emoji; }).filter(Boolean);
         }
       }
     } catch(e){}
@@ -521,7 +794,6 @@
       state.myStickers.push(emoji);
     } catch(e){}
   }
-
   function notifyParent(msg){
     try {
       if (window.parent && window.parent !== window){
@@ -529,7 +801,6 @@
       }
     } catch(e){}
   }
-
   function updateBookBadge(){
     try {
       var raw = localStorage.getItem(STICKER_KEY);
@@ -552,21 +823,11 @@
   /* =========================================================
      音
      ========================================================= */
-  var ctx = null;
-  var sfxGain = null;
-  var bgmGain = null;
-  var bgmTimer = null;
-  var bgmLoopTime = 0;
-  var currentTrack = null;
-  var isDucked = false;
-  var audioUnlocked = false;
+  var ctx = null, sfxGain = null, bgmGain = null, bgmTimer = null, bgmLoopTime = 0;
+  var currentTrack = null, isDucked = false, audioUnlocked = false;
 
-  function getBgmGainValue(quiet){
-    return (settings.bgmVol / 100) * (quiet ? 0.07 : 0.20);
-  }
-  function getSfxGainValue(){
-    return (settings.sfxVol / 100) * 0.70;
-  }
+  function getBgmGainValue(quiet){ return (settings.bgmVol / 100) * (quiet ? 0.07 : 0.20); }
+  function getSfxGainValue(){ return (settings.sfxVol / 100) * 0.70; }
 
   var F = {
     C3:130.81, F3:174.61, G3:196.00, A3:220.00,
@@ -615,7 +876,6 @@
     sfxGain.gain.value = getSfxGainValue();
     sfxGain.connect(ctx.destination);
   }
-
   function playNote(freq, t0, dur, type, dest, vol){
     if (!ctx || !dest) return;
     var osc = ctx.createOscillator();
@@ -628,7 +888,6 @@
     osc.connect(g); g.connect(dest);
     osc.start(t0); osc.stop(t0 + dur + 0.08);
   }
-
   function scheduleTrack(t0, track){
     var beat = 60 / track.bpm;
     var loopDur = 16 * beat;
@@ -640,7 +899,6 @@
     }
     return loopDur;
   }
-
   function pumpBGM(){
     if (!ctx || !bgmGain) return;
     if (!currentTrack) currentTrack = pickTrack();
@@ -676,15 +934,8 @@
   }
   function duckBGM(quiet){ isDucked = quiet; applyBgmGain(); }
 
-  /* 効果音 */
-  function sfxTap(){
-    if (!settings.soundOn || !ctx) return;
-    playNote(880, ctx.currentTime, 0.09, 'sine', sfxGain, 0.22);
-  }
-  function sfxGrab(){
-    if (!settings.soundOn || !ctx) return;
-    playNote(660, ctx.currentTime, 0.08, 'sine', sfxGain, 0.20);
-  }
+  function sfxTap(){ if (!settings.soundOn || !ctx) return; playNote(880, ctx.currentTime, 0.09, 'sine', sfxGain, 0.22); }
+  function sfxGrab(){ if (!settings.soundOn || !ctx) return; playNote(660, ctx.currentTime, 0.08, 'sine', sfxGain, 0.20); }
   function sfxCorrect(){
     if (!settings.soundOn || !ctx) return;
     var t = ctx.currentTime;
@@ -725,7 +976,6 @@
     pickVoice();
     window.speechSynthesis.onvoiceschanged = pickVoice;
   }
-
   function buildUtterance(text, rate){
     var u = new SpeechSynthesisUtterance(text);
     u.lang = 'ja-JP';
@@ -789,9 +1039,8 @@
       var unused = starters.filter(function(k){ return state.usedKana.indexOf(k.kana) < 0; });
       kana = unused.length > 0 ? pick(unused) : pick(starters);
     } else {
-      var unusedAll = KANA_DATA.filter(function(k){ return state.usedKana.indexOf(k.kana) < 0; });
-      if (unusedAll.length === 0){ state.usedKana = []; kana = pick(KANA_DATA); }
-      else kana = pick(unusedAll);
+      var prev = state.current ? state.current.kana : null;
+      kana = pickWeightedKana(prev);
     }
     state.usedKana.push(kana.kana);
     state.current = kana;
@@ -815,7 +1064,6 @@
   }
 
   function renderQuestion(choices){
-    // 既存カードをクリア
     state.cards.forEach(function(c){ if (c.el.parentNode) c.el.parentNode.removeChild(c.el); });
     state.cards = [];
     state.draggingCard = null;
@@ -860,7 +1108,7 @@
   }
 
   /* =========================================================
-     カードの浮遊アニメーション
+     カードの浮遊
      ========================================================= */
   var floatingLastTime = 0;
 
@@ -1018,7 +1266,9 @@
       setTimeout(function(){ $('#basket').classList.remove('happy'); }, 700);
       confetti(20);
 
-      // カードをカゴに吸い込む
+      /* ★ 進捗カウント：正解時にその字を「遊んだ」としてカウント */
+      incrementKanaCount(state.current.kana);
+
       var pfRect = $('#playfield').getBoundingClientRect();
       var bRect = $('#basket').getBoundingClientRect();
       var targetX = bRect.left + bRect.width/2 - pfRect.left - card.el.offsetWidth/2;
@@ -1128,9 +1378,7 @@
       el.style.animationDuration = (1.7 + Math.random() * 1.3) + 's';
       el.style.animationDelay = (Math.random() * 0.35) + 's';
       document.body.appendChild(el);
-      (function(node){
-        setTimeout(function(){ node.remove(); }, 3600);
-      })(el);
+      (function(node){ setTimeout(function(){ node.remove(); }, 3600); })(el);
     }
   }
 
@@ -1181,7 +1429,6 @@
     state.correctSinceSticker = 0;
     updateProgress();
     updateBookBadge();
-
     notifyParent({ type: 'updateBadge' });
 
     setTimeout(function(){ showBubble('シール ゲット！'); }, 200);
@@ -1196,9 +1443,111 @@
   }
 
   /* =========================================================
+     ひらがな帳
+     ========================================================= */
+  function openChart(){
+    renderChart();
+    $('#kanaChartScreen').classList.remove('hidden');
+    duckBGM(true);
+    cancelSpeech();
+    setTimeout(function(){ speak('あそんだ もじが ふえて いくよ', 0.95); }, 300);
+  }
+  function closeChart(){
+    $('#kanaChartScreen').classList.add('hidden');
+    duckBGM(false);
+    cancelSpeech();
+  }
+
+  function renderChart(){
+    var grid = $('#kanaChartGrid');
+    grid.innerHTML = '';
+
+    KANA_ROWS.forEach(function(row){
+      row.forEach(function(kana){
+        var cell = document.createElement('button');
+        cell.type = 'button';
+        cell.className = 'kana-cell';
+
+        if (kana === null){
+          cell.classList.add('empty');
+          cell.disabled = true;
+          cell.tabIndex = -1;
+        } else {
+          var count = progress.counts[kana] || 0;
+          if (count === 0) cell.classList.add('count-0');
+          else if (count <= 2) cell.classList.add('count-1-2');
+          else if (count <= 4) cell.classList.add('count-3-4');
+          else cell.classList.add('count-5plus');
+
+          cell.textContent = kana;
+          cell.setAttribute('aria-label', kana);
+
+          (function(k){
+            cell.addEventListener('click', function(){
+              sfxTap();
+              showKanaDetail(k);
+            });
+          })(kana);
+        }
+        grid.appendChild(cell);
+      });
+    });
+
+    var total = progress.uniqueKana;
+    var maxTotal = KANA_DATA.length;
+    var summary = $('#chartSummary');
+    if (total >= maxTotal){
+      summary.textContent = '🎉 ぜんぶの もじ あそんだね！ すごい！';
+      summary.classList.add('all-done');
+    } else {
+      summary.textContent = '⭐ ' + total + ' / ' + maxTotal + ' もじ あそんだよ！';
+      summary.classList.remove('all-done');
+    }
+  }
+
+  /* =========================================================
+     かな詳細モーダル
+     ========================================================= */
+  var currentDetailKana = null;
+
+  function showKanaDetail(kana){
+    var data = null;
+    for (var i = 0; i < KANA_DATA.length; i++){
+      if (KANA_DATA[i].kana === kana){ data = KANA_DATA[i]; break; }
+    }
+    if (!data) return;
+
+    currentDetailKana = kana;
+    $('#kanaDetailChar').textContent = data.kana;
+    $('#kanaDetailEmoji').textContent = data.emoji;
+    $('#kanaDetailText').textContent = data.word + 'の ' + data.kana;
+
+    var count = progress.counts[kana] || 0;
+    $('#kanaDetailCount').textContent = 'あそんだ かいすう：' + count + ' かい';
+
+    $('#kanaDetailModal').classList.remove('hidden');
+    duckBGM(true);
+
+    setTimeout(function(){
+      speak(data.word + 'の ' + data.kana, 0.85);
+    }, 320);
+  }
+
+  function closeKanaDetail(){
+    if (!currentDetailKana) return;
+    currentDetailKana = null;
+    $('#kanaDetailModal').classList.add('hidden');
+    cancelSpeech();
+    /* ひらがな帳が開いていればBGMは小さめのまま */
+    if ($('#kanaChartScreen').classList.contains('hidden')){
+      duckBGM(false);
+    }
+  }
+
+  /* =========================================================
      音声アンロック
      ========================================================= */
-  function unlockAudio(){
+  function ensureAudio(){
     if (audioUnlocked && bgmTimer) return;
     audioUnlocked = true;
     initAudio();
@@ -1213,10 +1562,10 @@
     } catch(e){}
     if (settings.soundOn && !bgmTimer) startBGM();
   }
-  document.addEventListener('pointerdown', unlockAudio, { passive: true });
-  document.addEventListener('touchstart', unlockAudio, { passive: true });
-  document.addEventListener('keydown', unlockAudio);
-  document.addEventListener('click', unlockAudio);
+  document.addEventListener('pointerdown', ensureAudio, { passive: true });
+  document.addEventListener('touchstart', ensureAudio, { passive: true });
+  document.addEventListener('keydown', ensureAudio);
+  document.addEventListener('click', ensureAudio);
 
   /* =========================================================
      イベント
@@ -1235,7 +1584,15 @@
     notifyParent({ type: 'openBook', from: 'hiragana' });
   });
 
-  // かなパネルをタップで読み上げ
+  $('#chartBtn').addEventListener('click', function(){
+    sfxTap();
+    openChart();
+  });
+  $('#closeChartBtn').addEventListener('click', function(){
+    sfxTap();
+    closeChart();
+  });
+
   $('#kanaQuestion').addEventListener('click', function(){
     if (!state.current) return;
     sfxTap();
@@ -1245,6 +1602,28 @@
     q.classList.add('playing');
     setTimeout(function(){ q.classList.remove('playing'); }, 2200);
   });
+
+  /* かな詳細モーダル */
+  $('#kanaDetailCloseBtn').addEventListener('click', function(e){
+    e.stopPropagation();
+    sfxTap();
+    closeKanaDetail();
+  });
+  $('#kanaDetailSpeakerBtn').addEventListener('click', function(e){
+    e.stopPropagation();
+    if (!currentDetailKana) return;
+    var data = null;
+    for (var i = 0; i < KANA_DATA.length; i++){
+      if (KANA_DATA[i].kana === currentDetailKana){ data = KANA_DATA[i]; break; }
+    }
+    if (!data) return;
+    sfxStar();
+    speak(data.word + 'の ' + data.kana, 0.85);
+  });
+  $('#kanaDetailModal').addEventListener('click', function(e){
+    if (e.target === this) closeKanaDetail();
+  });
+  $('#kanaDetailCard').addEventListener('click', function(e){ e.stopPropagation(); });
 
   window.addEventListener('resize', function(){
     computeFloatBounds();
@@ -1279,18 +1658,16 @@
     }
   })();
 
+  loadProgress();
   loadMyStickers();
   updateStars();
   updateProgress();
   updateBookBadge();
 
-  // 浮遊アニメーション開始
   requestAnimationFrame(floatingLoop);
 
-  // ゲーム開始
   setTimeout(newQuestion, 500);
 
-  // 早期アンロック試行
   setTimeout(function(){
     try {
       initAudio();
