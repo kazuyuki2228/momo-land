@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>かずの ぼうけん</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;margin:0;padding:0;overflow:hidden;}
+  body{
+    font-family:"Hiragino Maru Gothic ProN","ヒラギノ丸ゴ ProN","Yu Gothic Medium","游ゴシック Medium",YuGothic,Meiryo,sans-serif;
+    background:linear-gradient(180deg,#8ed7ff 0%,#b9e8ff 40%,#ffe3f1 100%);
+    color:#4a3b2a;
+    user-select:none;-webkit-user-select:none;
+    touch-action:manipulation;
+  }
+
+  .cloud-layer{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0;}
+  .cloud{position:absolute;background:#fff;border-radius:100px;opacity:.72;}
+  .cloud::before,.cloud::after{content:"";position:absolute;background:#fff;border-radius:50%;}
+  .cloud::before{width:55%;height:150%;left:10%;bottom:22%;}
+  .cloud::after{width:42%;height:120%;right:12%;bottom:28%;}
+  .c1{width:140px;height:46px;top:6%;left:-200px;animation:drift 40s linear infinite;}
+  .c2{width:100px;height:34px;top:20%;left:-160px;animation:drift 54s linear infinite 7s;}
+  .c3{width:170px;height:54px;top:58%;left:-240px;animation:drift 66s linear infinite 15s;}
+  .c4{width:90px;height:30px;top:78%;left:-160px;animation:drift 48s linear infinite 22s;}
+  @keyframes drift{to{transform:translateX(calc(100vw + 300px));}}
+
+  .screen{position:fixed;inset:0;z-index:1;display:flex;flex-direction:column;}
+  .hidden{display:none!important;}
+
+  /* HUD */
+  .hud{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;gap:8px;flex:0 0 auto;}
+  .icon-btn{
+    width:52px;height:52px;border-radius:50%;border:none;
+    background:#fff;font-size:24px;line-height:1;
+    box-shadow:0 4px 0 rgba(0,0,0,.14),0 6px 14px rgba(0,0,0,.1);
+    cursor:pointer;font-family:inherit;
+    display:flex;align-items:center;justify-content:center;
+    position:relative;flex:0 0 auto;
+  }
+  .icon-btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.14);}
+  .badge{
+    position:absolute;top:-3px;right:-3px;
+    min-width:22px;height:22px;border-radius:11px;
+    background:#ff6b9d;color:#fff;
+    font-size:12px;font-weight:900;
+    display:none;align-items:center;justify-content:center;
+    padding:0 5px;border:2px solid #fff;
+    box-shadow:0 2px 4px rgba(0,0,0,.18);
+  }
+  .badge.show{display:flex;}
+  .hud-center{display:flex;align-items:center;justify-content:center;flex:1;min-width:0;}
+  .stars{
+    display:flex;align-items:center;gap:8px;
+    background:#fff;border-radius:999px;padding:6px 18px 6px 16px;
+    box-shadow:0 4px 0 rgba(0,0,0,.12),0 6px 14px rgba(0,0,0,.1);
+    font-size:clamp(20px,5.5vw,26px);font-weight:900;color:#f5a623;
+  }
+  .star-icon{font-size:clamp(20px,5.5vw,26px);}
+  .stars.bump{animation:bump .45s;}
+  @keyframes bump{0%{transform:scale(1);}40%{transform:scale(1.28);}100%{transform:scale(1);}}
+  .sticker-progress{display:flex;gap:4px;margin-left:6px;}
+  .dot{
+    width:11px;height:11px;border-radius:50%;
+    background:#e8e0d5;
+    transition:background .3s, box-shadow .3s;
+  }
+  .dot.filled{background:#ffb74d;box-shadow:0 0 7px #ffb74d;}
+
+  /* ステージ */
+  .stage{flex:1;display:flex;flex-direction:column;gap:6px;padding:0 14px 18px;min-height:0;}
+  .prompt-row{
+    flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:4px;
+    margin:2px 0 4px;
+  }
+  .prompt{
+    text-align:center;font-size:clamp(17px,5vw,24px);font-weight:900;
+    color:#5b4a38;margin:0;
+    text-shadow:0 2px 0 #fff;
+  }
+  .count-btn{
+    font-family:inherit;
+    font-size:clamp(13px,3.8vw,16px);
+    font-weight:900;color:#fff;letter-spacing:1px;
+    background:linear-gradient(180deg,#b39ddb,#9575cd);
+    border:none;border-radius:999px;
+    padding:8px 22px;
+    box-shadow:0 4px 0 #7e57c2,0 6px 12px rgba(126,87,194,.3);
+    cursor:pointer;
+  }
+  .count-btn:active{transform:translateY(3px);box-shadow:0 1px 0 #7e57c2;}
+  .question-box{
+    flex:1 1 auto;min-height:0;
+    display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
+    gap:6px;padding:10px;
+    background:rgba(255,255,255,.62);
+    border:4px solid rgba(255,255,255,.95);
+    border-radius:32px;
+    box-shadow:inset 0 4px 16px rgba(120,160,200,.16);
+    overflow:hidden;
+  }
+  .q-emoji{
+    font-size:clamp(34px,10vw,66px);line-height:1;
+    filter:drop-shadow(0 3px 2px rgba(0,0,0,.13));
+    animation:pop .4s cubic-bezier(.34,1.56,.64,1) backwards;
+    transition:transform .18s, filter .18s;
+    cursor:pointer;
+  }
+  .question-box.many .q-emoji{font-size:clamp(24px,7vw,44px);}
+  .q-emoji.counting-hit{
+    transform:scale(1.3);
+    filter:drop-shadow(0 0 10px rgba(255,180,60,.95)) drop-shadow(0 3px 2px rgba(0,0,0,.13));
+  }
+  @keyframes pop{from{transform:scale(0);opacity:0;}to{transform:scale(1);opacity:1;}}
+
+  .big-num-card{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:14px 46px 10px;
+    border:6px solid #ffd166;border-radius:34px;
+    background:linear-gradient(180deg,#fff,#fff7e0);
+    box-shadow:0 8px 0 #e8b93c,0 12px 22px rgba(0,0,0,.14);
+    animation:pop .4s cubic-bezier(.34,1.56,.64,1);
+  }
+  .big-num-card .num-digit{font-size:clamp(56px,20vw,110px);font-weight:900;color:#ff7043;line-height:1;}
+  .big-num-card .num-word{font-size:clamp(14px,4vw,20px);color:#a89684;font-weight:700;margin-top:4px;}
+
+  .choices{flex:0 0 auto;display:grid;gap:10px;}
+  .choices-num{grid-template-columns:repeat(3,1fr);}
+  .choices-group{grid-template-columns:1fr;}
+
+  .num-card{
+    font-family:inherit;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:10px 4px 8px;
+    min-height:clamp(84px,17vh,124px);
+    border:5px solid #ffd166;border-radius:26px;
+    background:linear-gradient(180deg,#fff,#fff7e0);
+    box-shadow:0 7px 0 #e8b93c,0 10px 18px rgba(0,0,0,.12);
+    cursor:pointer;transition:transform .1s,box-shadow .1s;
+  }
+  .num-card .num-digit{font-size:clamp(38px,12vw,60px);font-weight:900;color:#ff7043;line-height:1;}
+  .num-card .num-word{font-size:clamp(12px,3.4vw,16px);color:#a89684;font-weight:700;margin-top:3px;}
+
+  .group-card{
+    font-family:inherit;
+    display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
+    gap:5px 7px;padding:7px 12px;
+    min-height:clamp(48px,9vh,80px);
+    border:5px solid #7fd6ff;border-radius:24px;
+    background:linear-gradient(180deg,#fff,#eaf8ff);
+    box-shadow:0 6px 0 #58b8e8,0 9px 16px rgba(0,0,0,.12);
+    cursor:pointer;transition:transform .1s,box-shadow .1s;
+  }
+  .group-card .g-emoji{font-size:clamp(18px,5.5vw,30px);line-height:1;}
+
+  .num-card:active,.group-card:active{transform:translateY(5px);box-shadow:0 2px 0 rgba(0,0,0,.15);}
+
+  .correct{
+    border-color:#7ed957!important;
+    background:linear-gradient(180deg,#eaffe2,#c9f5b8)!important;
+    box-shadow:0 6px 0 #5cb832,0 0 0 8px rgba(126,217,87,.32),0 10px 20px rgba(0,0,0,.15)!important;
+    animation:correctPop .55s ease-out;
+  }
+  @keyframes correctPop{
+    0%{transform:scale(1);}
+    45%{transform:scale(1.12) rotate(-2deg);}
+    72%{transform:scale(.98);}
+    100%{transform:scale(1.04);}
+  }
+  .wrong{
+    border-color:#ffb3b3!important;
+    background:linear-gradient(180deg,#fff,#ffecec)!important;
+    animation:shake .5s;
+  }
+  @keyframes shake{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-9px) rotate(-2deg);}
+    40%{transform:translateX(9px) rotate(2deg);}
+    60%{transform:translateX(-6px);}
+    80%{transform:translateX(6px);}
+  }
+
+  #gameScreen.compact .prompt{font-size:clamp(14px,4vw,18px);}
+  #gameScreen.compact .prompt-row{margin:0 0 2px;gap:2px;}
+  #gameScreen.compact .count-btn{padding:5px 16px;font-size:clamp(11px,3.2vw,13px);}
+  #gameScreen.compact .q-emoji{font-size:clamp(24px,7vw,40px);}
+  #gameScreen.compact .question-box{border-radius:22px;padding:6px;gap:4px;}
+  #gameScreen.compact .big-num-card{padding:8px 30px 6px;border-radius:24px;border-width:4px;box-shadow:0 5px 0 #e8b93c,0 8px 16px rgba(0,0,0,.14);}
+  #gameScreen.compact .big-num-card .num-digit{font-size:clamp(40px,13vw,72px);}
+  #gameScreen.compact .group-card{min-height:40px;padding:4px 10px;gap:3px 5px;border-width:3px;border-radius:16px;box-shadow:0 4px 0 #58b8e8;}
+  #gameScreen.compact .group-card .g-emoji{font-size:clamp(15px,4.2vw,22px);}
+  #gameScreen.compact .num-card{min-height:60px;border-width:3px;border-radius:18px;box-shadow:0 4px 0 #e8b93c;}
+  #gameScreen.compact .num-card .num-digit{font-size:clamp(28px,9vw,44px);}
+  #gameScreen.compact .num-card .num-word{font-size:clamp(10px,3vw,12px);}
+  #gameScreen.compact .choices{gap:6px;}
+  #gameScreen.compact .stage{padding:0 10px 10px;gap:4px;}
+
+  .bubble{
+    position:fixed;left:50%;top:40%;
+    transform:translate(-50%,-50%) scale(.4);
+    background:#fff;color:#ff6b9d;font-weight:900;
+    font-size:clamp(26px,8vw,44px);
+    letter-spacing:2px;
+    padding:16px 36px;border-radius:999px;
+    border:5px solid #ffd9e6;
+    box-shadow:0 8px 0 rgba(255,107,157,.35),0 14px 34px rgba(0,0,0,.2);
+    pointer-events:none;z-index:80;opacity:0;white-space:nowrap;
+  }
+  .bubble.show{animation:bubblePop 1.3s ease-out forwards;}
+  @keyframes bubblePop{
+    0%{opacity:0;transform:translate(-50%,-50%) scale(.4);}
+    18%{opacity:1;transform:translate(-50%,-50%) scale(1.14);}
+    34%{transform:translate(-50%,-50%) scale(1);}
+    78%{opacity:1;transform:translate(-50%,-50%) scale(1);}
+    100%{opacity:0;transform:translate(-50%,-72%) scale(1);}
+  }
+
+  .confetti{
+    position:fixed;top:-50px;z-index:70;pointer-events:none;
+    animation:fall linear forwards;
+    will-change:transform;
+  }
+  @keyframes fall{
+    to{transform:translateY(115vh) rotate(600deg);opacity:.85;}
+  }
+
+  /* シール選択画面 */
+  #stickerSelectScreen{
+    background:linear-gradient(180deg,#ffd6f0 0%,#ffe9b8 45%,#d4f0ff 100%);
+    align-items:center;justify-content:center;
+    padding:24px;gap:18px;text-align:center;
+    overflow:hidden;z-index:50;
+  }
+  #stickerSelectScreen::before{
+    content:"";position:absolute;inset:0;
+    background:
+      radial-gradient(circle at 12% 18%,rgba(255,255,255,.6) 0 8px,transparent 9px),
+      radial-gradient(circle at 88% 24%,rgba(255,255,255,.6) 0 10px,transparent 11px),
+      radial-gradient(circle at 22% 82%,rgba(255,255,255,.6) 0 9px,transparent 10px),
+      radial-gradient(circle at 78% 76%,rgba(255,255,255,.6) 0 7px,transparent 8px);
+    pointer-events:none;
+  }
+  .select-header{
+    font-size:clamp(20px,5.8vw,30px);font-weight:900;
+    color:#ff6b9d;letter-spacing:2px;
+    text-shadow:2px 2px 0 #fff,4px 4px 0 rgba(255,150,190,.3);
+    animation:floaty 2.2s ease-in-out infinite;
+    position:relative;z-index:2;
+  }
+  @keyframes floaty{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+  .select-sub{
+    font-size:clamp(13px,3.8vw,17px);
+    color:#7a6a58;font-weight:700;
+    margin-top:-8px;position:relative;z-index:2;
+  }
+  .sticker-options{
+    display:flex;flex-wrap:wrap;gap:14px;justify-content:center;align-items:center;
+    position:relative;z-index:2;margin-top:6px;
+  }
+  .sticker-option{
+    font-family:inherit;
+    width:clamp(84px,26vw,140px);
+    height:clamp(84px,26vw,140px);
+    border-radius:50%;border:6px solid #fff;
+    background:radial-gradient(circle at 35% 30%,#fff,#ffe8f0);
+    box-shadow:0 8px 0 rgba(255,107,157,.3),0 12px 24px rgba(0,0,0,.15);
+    display:flex;align-items:center;justify-content:center;
+    font-size:clamp(46px,14vw,76px);
+    cursor:pointer;padding:0;
+    transition:transform .15s,box-shadow .15s;
+    animation:stickerEnter .5s cubic-bezier(.34,1.56,.64,1) backwards;
+  }
+  .sticker-option:active{transform:translateY(6px) scale(.95);box-shadow:0 2px 0 rgba(255,107,157,.3);}
+  @keyframes stickerEnter{
+    from{transform:scale(0) rotate(-180deg);opacity:0;}
+    to{transform:scale(1) rotate(0);opacity:1;}
+  }
+  .sticker-option.chosen{
+    animation:chosenPop .7s cubic-bezier(.34,1.56,.64,1);
+    border-color:#ffd166;
+    box-shadow:0 0 0 12px rgba(255,209,102,.5),0 14px 28px rgba(0,0,0,.22);
+    z-index:3;
+  }
+  @keyframes chosenPop{
+    0%{transform:scale(1) rotate(0);}
+    40%{transform:scale(1.3) rotate(10deg);}
+    70%{transform:scale(.95) rotate(-6deg);}
+    100%{transform:scale(1.08) rotate(0);}
+  }
+  .sticker-option.fade-out{animation:fadeOutShrink .6s forwards;}
+  @keyframes fadeOutShrink{to{opacity:.15;transform:scale(.7);}}
+
+  @media (prefers-reduced-motion: reduce){
+    .cloud,.sticker-option,.select-header{animation:none!important;}
+  }
+</style>
+</head>
+<body>
+
+<div class="cloud-layer">
+  <div class="cloud c1"></div>
+  <div class="cloud c2"></div>
+  <div class="cloud c3"></div>
+  <div class="cloud c4"></div>
+</div>
+
+<!-- ゲーム画面 -->
+<div id="gameScreen" class="screen">
+  <header class="hud">
+    <button id="homeBtn" class="icon-btn" aria-label="おうちへ">🏠</button>
+    <div class="hud-center">
+      <div class="stars">
+        <span class="star-icon">⭐</span>
+        <span id="starCount">0</span>
+        <span class="sticker-progress" id="progressDots"></span>
+      </div>
+    </div>
+    <button id="bookBtn" class="icon-btn" aria-label="シール帳">
+      📖<span class="badge" id="bookBadge">0</span>
+    </button>
+  </header>
+
+  <main class="stage">
+    <div class="prompt-row">
+      <p id="prompt" class="prompt">いくつ あるかな？</p>
+      <button id="countBtn" class="count-btn hidden" type="button">👆 いっしょに かぞえよう</button>
+    </div>
+    <div id="questionBox" class="question-box"></div>
+    <div id="choices" class="choices choices-num"></div>
+  </main>
+</div>
+
+<!-- シール選択画面 -->
+<div id="stickerSelectScreen" class="screen hidden">
+  <div class="select-header">シールを えらんでね！</div>
+  <div class="select-sub">すきな シールを 1つ タップしてね</div>
+  <div class="sticker-options" id="stickerOptions"></div>
+</div>
+
+<div id="bubble" class="bubble" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(s){ return document.querySelector(s); };
+
+  /* =========================================================
+     定数
+     ========================================================= */
+  var MAX_N = 10;
+  var MAX_LEVEL = 5;
+  var LEVEL_MAX_N = [0, 3, 4, 5, 7, 10];
+  var STICKERS_PER_UNLOCK = 3;
+
+  var STICKER_KEY = 'momo_stickers_v1';
+  var SETTINGS_KEY = 'momo_settings_v1';
+
+  var NUM_WORDS = ['', 'いち', 'に', 'さん', 'よん', 'ご', 'ろく', 'なな', 'はち', 'きゅう', 'じゅう'];
+  var COUNT_WORDS = ['いち', 'に', 'さん', 'よん', 'ご', 'ろく', 'なな', 'はち', 'きゅう', 'じゅう'];
+
+  var TIMING = {
+    Q_SPEAK: 420,
+    STICKER_BACK: 2400,
+    WRONG_SHAKE: 600,
+    GUIDE_DELAY: 650,
+    BUBBLE: 1400
+  };
+
+  var REDUCED_MOTION = window.matchMedia
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* かずシールプール（ハブ画面と共通） */
+  var KAZU_STICKER_POOL = [
+    '🌈','⭐','🌸','🎈','🍭','🧸','🐰','🐱','🐶','🦋',
+    '🍓','🍎','🌻','🐟','🐸','🦄','🍩','🎀','💖','🌟',
+    '🍦','🐧','🐼','🐨','🍪','🎁','🌙','☀️','🌺','🍒',
+    '🐥','🐯','🦁','🍰','🚀','🎂','🦖','🐙','🍀','🧁'
+  ];
+
+  var EMOJI_SETS = [
+    '🍎','🍓','🐣','⭐','🍩','🐟','🌸','🍪','🎈','🐰',
+    '🍊','🐝','🚗','🦋','🍇','🐼','🌻','🍰','🚂','🐧'
+  ];
+  var PRAISE = ['せいかい！', 'すごい！', 'やったね！', 'じょうず！', 'あたり！'];
+
+  /* =========================================================
+     設定（ハブ画面と共通）
+     ========================================================= */
+  var settings = {
+    bgmMode: 'fun',
+    bgmVol: 50,
+    sfxVol: 70,
+    soundOn: true
+  };
+  function loadSettings(){
+    try {
+      var raw = localStorage.getItem(SETTINGS_KEY);
+      if (raw){
+        var obj = JSON.parse(raw);
+        if (obj && typeof obj === 'object'){
+          if (obj.bgmMode === 'fun' || obj.bgmMode === 'calm' || obj.bgmMode === 'random') settings.bgmMode = obj.bgmMode;
+          if (typeof obj.bgmVol === 'number') settings.bgmVol = Math.max(0, Math.min(100, obj.bgmVol));
+          if (typeof obj.sfxVol === 'number') settings.sfxVol = Math.max(0, Math.min(100, obj.sfxVol));
+          if (typeof obj.soundOn === 'boolean') settings.soundOn = obj.soundOn;
+        }
+      }
+    } catch(e){}
+  }
+  loadSettings();
+
+  /* =========================================================
+     シールの保存（ハブ画面と共有）
+     ========================================================= */
+  var state = {
+    stars: 0,
+    totalCorrect: 0,
+    level: 1,
+    qCount: 0,
+    current: null,
+    locked: false,
+    counting: false,
+    wrongStreak: 0,
+    correctSinceSticker: 0,
+    pendingStickers: null,
+    myStickers: []     // このゲームで獲得したかずシール（重複回避用）
+  };
+
+  function loadMyStickers(){
+    try {
+      var raw = localStorage.getItem(STICKER_KEY);
+      if (raw){
+        var arr = JSON.parse(raw);
+        if (Array.isArray(arr)){
+          state.myStickers = arr
+            .map(function(it){
+              if (typeof it === 'string') return it;
+              if (it && typeof it === 'object' && it.emoji) return it.emoji;
+              return null;
+            })
+            .filter(Boolean);
+        }
+      }
+    } catch(e){}
+  }
+  function saveSticker(emoji){
+    try {
+      var raw = localStorage.getItem(STICKER_KEY);
+      var arr = [];
+      if (raw){
+        var parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)){
+          arr = parsed.map(function(it){
+            if (typeof it === 'string') return { emoji: it, from: 'kazu' };
+            if (it && typeof it === 'object' && it.emoji){
+              return { emoji: it.emoji, from: it.from || 'kazu' };
+            }
+            return null;
+          }).filter(Boolean);
+        }
+      }
+      arr.push({ emoji: emoji, from: 'kazu' });
+      localStorage.setItem(STICKER_KEY, JSON.stringify(arr));
+      state.myStickers.push(emoji);
+    } catch(e){}
+  }
+
+  /* =========================================================
+     親（ハブ）へのメッセージ
+     ========================================================= */
+  function notifyParent(msg){
+    try {
+      if (window.parent && window.parent !== window){
+        window.parent.postMessage(msg, '*');
+      }
+    } catch(e){}
+  }
+
+  /* =========================================================
+     音
+     ========================================================= */
+  var ctx = null;
+  var sfxGain = null;
+  var bgmGain = null;
+  var bgmTimer = null;
+  var bgmLoopTime = 0;
+  var currentTrack = null;
+  var isDucked = false;
+  var audioUnlocked = false;
+
+  function getBgmGainValue(quiet){
+    return (settings.bgmVol / 100) * (quiet ? 0.07 : 0.20);
+  }
+  function getSfxGainValue(){
+    return (settings.sfxVol / 100) * 0.70;
+  }
+
+  var F = {
+    C3:130.81, F3:174.61, G3:196.00, A3:220.00,
+    C4:261.63, D4:293.66, E4:329.63, F4:349.23, G4:392.00, A4:440.00,
+    C5:523.25, D5:587.33, E5:659.25, F5:698.46, G5:783.99, A5:880.00,
+    C6:1046.50, E6:1318.51, DS4:311.13
+  };
+
+  var TRACKS = [
+    { name:'おさんぽマーチ', mood:'fun', bpm:116,
+      melody:[[0,F.E5,1],[1,F.G5,1],[2,F.A5,1],[3,F.G5,1],[4,F.E5,1],[5,F.D5,1],[6,F.C5,2],
+              [8,F.D5,1],[9,F.E5,1],[10,F.G5,1],[11,F.E5,1],[12,F.E5,1],[13,F.D5,1],[14,F.C5,2]],
+      bass:[[0,F.C3,4],[4,F.F3,4],[8,F.G3,4],[12,F.C3,4]] },
+    { name:'わくわくジャンプ', mood:'fun', bpm:132,
+      melody:[[0,F.C5,.5],[.5,F.E5,.5],[1,F.G5,.5],[1.5,F.E5,.5],[2,F.G5,.5],[2.5,F.A5,.5],[3,F.G5,1],
+              [4,F.A5,.5],[4.5,F.G5,.5],[5,F.F5,.5],[5.5,F.E5,.5],[6,F.D5,.5],[6.5,F.E5,.5],[7,F.F5,1],
+              [8,F.E5,.5],[8.5,F.G5,.5],[9,F.C6,1],[10,F.A5,.5],[10.5,F.G5,.5],[11,F.E5,1],
+              [12,F.F5,.5],[12.5,F.E5,.5],[13,F.D5,.5],[13.5,F.C5,.5],[14,F.G4,1],[15,F.C5,1]],
+      bass:[[0,F.C3,2],[2,F.C3,2],[4,F.F3,2],[6,F.G3,2],[8,F.C3,2],[10,F.A3,2],[12,F.F3,2],[14,F.G3,2]] },
+    { name:'おひるね', mood:'calm', bpm:76,
+      melody:[[0,F.E5,1.5],[1.5,F.D5,.5],[2,F.C5,2],[4,F.D5,1.5],[5.5,F.E5,.5],[6,F.G5,2],
+              [8,F.G5,1],[9,F.F5,1],[10,F.E5,1],[11,F.D5,1],[12,F.C5,2],[14,F.E5,1],[15,F.C5,1]],
+      bass:[[0,F.C3,4],[4,F.A3,4],[8,F.F3,4],[12,F.G3,4]] },
+    { name:'ゆらゆら', mood:'calm', bpm:88,
+      melody:[[0,F.C5,1],[1,F.E5,1],[2,F.G5,1.5],[3.5,F.E5,.5],[4,F.F5,1],[5,F.A5,1],[6,F.G5,2],
+              [8,F.E5,1],[9,F.G5,1],[10,F.C6,1.5],[11.5,F.A5,.5],[12,F.G5,1],[13,F.F5,1],[14,F.E5,1],[15,F.C5,1]],
+      bass:[[0,F.C3,4],[4,F.F3,4],[8,F.C3,2],[10,F.A3,2],[12,F.F3,2],[14,F.G3,2]] }
+  ];
+
+  function getTrackPool(){
+    if (settings.bgmMode === 'calm') return TRACKS.filter(function(t){ return t.mood === 'calm'; });
+    if (settings.bgmMode === 'fun')  return TRACKS.filter(function(t){ return t.mood === 'fun'; });
+    return TRACKS.slice();
+  }
+  function pickTrack(){
+    var p = getTrackPool();
+    return p[Math.floor(Math.random() * p.length)] || TRACKS[0];
+  }
+
+  function initAudio(){
+    if (ctx) return;
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    ctx = new AC();
+    sfxGain = ctx.createGain();
+    sfxGain.gain.value = getSfxGainValue();
+    sfxGain.connect(ctx.destination);
+  }
+
+  function playNote(freq, t0, dur, type, dest, vol){
+    if (!ctx || !dest) return;
+    var osc = ctx.createOscillator();
+    var g = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t0);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(Math.max(vol, 0.001), t0 + 0.03);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + Math.max(dur, 0.05));
+    osc.connect(g); g.connect(dest);
+    osc.start(t0); osc.stop(t0 + dur + 0.08);
+  }
+
+  function scheduleTrack(t0, track){
+    var beat = 60 / track.bpm;
+    var loopDur = 16 * beat;
+    track.melody.forEach(function(n){ playNote(n[1], t0 + n[0] * beat, n[2] * beat * 0.9, 'triangle', bgmGain, 0.5); });
+    track.bass.forEach(function(n){ playNote(n[1], t0 + n[0] * beat, n[2] * beat * 0.85, 'sine', bgmGain, 0.42); });
+    if (track.mood === 'fun'){
+      playNote(F.C6, t0 + 6 * beat,  0.5, 'sine', bgmGain, 0.10);
+      playNote(F.E6, t0 + 14 * beat, 0.5, 'sine', bgmGain, 0.10);
+    }
+    return loopDur;
+  }
+
+  function pumpBGM(){
+    if (!ctx || !bgmGain) return;
+    if (!currentTrack) currentTrack = pickTrack();
+    while (bgmLoopTime < ctx.currentTime + 2.5){
+      var dur = scheduleTrack(bgmLoopTime, currentTrack);
+      bgmLoopTime += dur;
+    }
+  }
+
+  function startBGM(){
+    if (!ctx || !settings.soundOn) return;
+    stopBGM();
+    bgmGain = ctx.createGain();
+    bgmGain.gain.value = getBgmGainValue(isDucked);
+    bgmGain.connect(ctx.destination);
+    currentTrack = pickTrack();
+    bgmLoopTime = ctx.currentTime + 0.2;
+    pumpBGM();
+    bgmTimer = setInterval(pumpBGM, 700);
+  }
+  function stopBGM(){
+    if (bgmTimer){ clearInterval(bgmTimer); bgmTimer = null; }
+    if (bgmGain){ try { bgmGain.disconnect(); } catch(e){} bgmGain = null; }
+    currentTrack = null;
+  }
+  function applyBgmGain(){
+    if (!ctx || !bgmGain) return;
+    var target = getBgmGainValue(isDucked);
+    try {
+      bgmGain.gain.cancelScheduledValues(ctx.currentTime);
+      bgmGain.gain.setValueAtTime(bgmGain.gain.value, ctx.currentTime);
+      bgmGain.gain.linearRampToValueAtTime(target, ctx.currentTime + 0.15);
+    } catch(e){ bgmGain.gain.value = target; }
+  }
+  function duckBGM(quiet){ isDucked = quiet; applyBgmGain(); }
+
+  function applySfxGain(){
+    if (!ctx || !sfxGain) return;
+    var target = getSfxGainValue();
+    try {
+      sfxGain.gain.cancelScheduledValues(ctx.currentTime);
+      sfxGain.gain.setValueAtTime(target, ctx.currentTime);
+    } catch(e){ sfxGain.gain.value = target; }
+  }
+
+  /* 効果音 */
+  function sfxTap(){
+    if (!settings.soundOn || !ctx) return;
+    playNote(880, ctx.currentTime, 0.09, 'sine', sfxGain, 0.22);
+  }
+  function sfxPop(){
+    if (!settings.soundOn || !ctx) return;
+    playNote(1250 + Math.random()*250, ctx.currentTime, 0.07, 'sine', sfxGain, 0.10);
+  }
+  function sfxCorrect(){
+    if (!settings.soundOn || !ctx) return;
+    var t = ctx.currentTime;
+    [[F.C5,0],[F.E5,.10],[F.G5,.20],[F.C6,.30]].forEach(function(n){
+      playNote(n[0], t + n[1], 0.42, 'triangle', sfxGain, 0.34);
+    });
+  }
+  function sfxWrong(){
+    if (!settings.soundOn || !ctx) return;
+    var t = ctx.currentTime;
+    playNote(F.G4, t, 0.20, 'sine', sfxGain, 0.20);
+    playNote(F.DS4, t + 0.17, 0.30, 'sine', sfxGain, 0.20);
+  }
+  function sfxLevelUp(){
+    if (!settings.soundOn || !ctx) return;
+    var t = ctx.currentTime;
+    [F.C5, F.E5, F.G5, F.C6, F.E6].forEach(function(f, i){
+      playNote(f, t + i * 0.09, 0.45, 'triangle', sfxGain, 0.30);
+    });
+  }
+
+  /* =========================================================
+     読み上げ
+     ========================================================= */
+  var jaVoice = null;
+  function pickVoice(){
+    if (!('speechSynthesis' in window)) return;
+    var voices = window.speechSynthesis.getVoices();
+    jaVoice = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf('ja') === 0; }) || null;
+  }
+  if ('speechSynthesis' in window){
+    pickVoice();
+    window.speechSynthesis.onvoiceschanged = pickVoice;
+  }
+
+  function buildUtterance(text, rate){
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = 'ja-JP';
+    if (jaVoice) u.voice = jaVoice;
+    u.rate = rate || 0.9;
+    u.pitch = 1.35;
+    u.volume = 1;
+    return u;
+  }
+  function speak(text, rate){
+    if (!settings.soundOn || !('speechSynthesis' in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      setTimeout(function(){
+        try { window.speechSynthesis.speak(buildUtterance(text, rate)); } catch(e){}
+      }, 60);
+    } catch(e){}
+  }
+  function speakWithEnd(text, onend, rate){
+    var safeOnend = onend;
+    if (!settings.soundOn || !('speechSynthesis' in window)){
+      setTimeout(safeOnend, 500); return;
+    }
+    try {
+      window.speechSynthesis.cancel();
+      setTimeout(function(){
+        var u = buildUtterance(text, rate);
+        var done = false;
+        var finish = function(){ if (done) return; done = true; safeOnend(); };
+        u.onend = finish; u.onerror = finish;
+        try { window.speechSynthesis.speak(u); } catch(e){ finish(); return; }
+        setTimeout(finish, Math.max(2500, text.length * 260));
+      }, 60);
+    } catch(e){ setTimeout(safeOnend, 500); }
+  }
+  function speakWord(text, onend){
+    if (!settings.soundOn || !('speechSynthesis' in window)){ setTimeout(onend, 380); return; }
+    try {
+      window.speechSynthesis.cancel();
+      setTimeout(function(){
+        var u = buildUtterance(text, 0.82);
+        var done = false;
+        var finish = function(){ if (done) return; done = true; onend(); };
+        u.onend = finish; u.onerror = finish;
+        try { window.speechSynthesis.speak(u); } catch(e){ finish(); return; }
+        setTimeout(finish, 1400);
+      }, 60);
+    } catch(e){ setTimeout(onend, 300); }
+  }
+  function cancelSpeech(){
+    if ('speechSynthesis' in window){ try { window.speechSynthesis.cancel(); } catch(e){} }
+  }
+
+  /* =========================================================
+     問題生成・描画
+     ========================================================= */
+  function makeNumberChoices(n){
+    var pool = [];
+    for (var i = 1; i <= MAX_N; i++){ if (i !== n) pool.push(i); }
+    var near = pool.slice().sort(function(a, b){ return Math.abs(a - n) - Math.abs(b - n); }).slice(0, 2);
+    var others;
+    if (Math.random() < 0.3){
+      var far = pool.filter(function(x){ return near.indexOf(x) === -1; });
+      others = shuffle([near[0], pick(far)]);
+    } else {
+      others = shuffle(pool.slice().sort(function(a, b){ return Math.abs(a - n) - Math.abs(b - n); }).slice(0, 3)).slice(0, 2);
+    }
+    return shuffle([n, others[0], others[1]]);
+  }
+  function shuffle(a){
+    for (var i = a.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  function rand(n){ return Math.floor(Math.random() * n); }
+  function pick(arr){ return arr[rand(arr.length)]; }
+
+  function newQuestion(){
+    cancelSpeech();
+    state.locked = false;
+    state.counting = false;
+    state.wrongStreak = 0;
+    state.qCount++;
+
+    var maxN = LEVEL_MAX_N[state.level] || MAX_N;
+    var n = 1 + rand(maxN);
+    var emoji = pick(EMOJI_SETS);
+    var mode = (state.qCount <= 2) ? 'count' : (Math.random() < 0.65 ? 'count' : 'find');
+
+    state.current = { n: n, emoji: emoji, mode: mode };
+    renderQuestion();
+
+    setTimeout(function(){
+      var text = mode === 'count' ? 'いくつ あるかな' : 'この かずは どれかな';
+      speak(text);
+    }, TIMING.Q_SPEAK);
+  }
+
+  function renderQuestion(){
+    var n = state.current.n;
+    var emoji = state.current.emoji;
+    var mode = state.current.mode;
+
+    var qBox = $('#questionBox');
+    var chBox = $('#choices');
+    qBox.innerHTML = '';
+    chBox.innerHTML = '';
+    qBox.classList.toggle('many', mode === 'count' && n > 6);
+    chBox.className = 'choices ' + (mode === 'count' ? 'choices-num' : 'choices-group');
+    $('#countBtn').classList.toggle('hidden', mode !== 'count');
+
+    if (mode === 'count'){
+      $('#prompt').textContent = 'いくつ あるかな？';
+      for (var i = 0; i < n; i++){
+        var s = document.createElement('span');
+        s.className = 'q-emoji';
+        s.textContent = emoji;
+        s.style.animationDelay = (i * 0.11) + 's';
+        qBox.appendChild(s);
+        (function(idx){ setTimeout(sfxPop, idx * 110 + 120); })(i);
+      }
+      makeNumberChoices(n).forEach(function(num){
+        var b = document.createElement('button');
+        b.className = 'num-card';
+        b.type = 'button';
+        b.innerHTML = '<span class="num-digit">' + num + '</span>' +
+                      '<span class="num-word">' + NUM_WORDS[num] + '</span>';
+        b.addEventListener('click', function(){
+          if (!state.locked && !state.counting) sfxTap();
+          answer(num === n, b, num);
+        });
+        chBox.appendChild(b);
+      });
+    } else {
+      $('#prompt').textContent = 'この かずは どれかな？';
+      var big = document.createElement('div');
+      big.className = 'big-num-card';
+      big.innerHTML = '<span class="num-digit">' + n + '</span>' +
+                      '<span class="num-word">' + NUM_WORDS[n] + '</span>';
+      qBox.appendChild(big);
+      setTimeout(sfxPop, 150);
+      makeNumberChoices(n).forEach(function(c){
+        var b = document.createElement('button');
+        b.className = 'group-card';
+        b.type = 'button';
+        var html = '';
+        for (var i = 0; i < c; i++){ html += '<span class="g-emoji">' + emoji + '</span>'; }
+        b.innerHTML = html;
+        b.addEventListener('click', function(){
+          if (!state.locked && !state.counting) sfxTap();
+          answer(c === n, b, c);
+        });
+        chBox.appendChild(b);
+      });
+    }
+  }
+
+  function countAlong(){
+    if (state.counting || state.locked) return;
+    if (!state.current || state.current.mode !== 'count') return;
+    state.counting = true;
+
+    var items = Array.prototype.slice.call(document.querySelectorAll('#questionBox .q-emoji'));
+    var i = 0;
+    showBubble('いっしょに かぞえよう！');
+
+    function step(){
+      if (i > 0) items[i - 1].classList.remove('counting-hit');
+      if (i >= items.length){
+        state.counting = false;
+        var text = state.current.n + 'こ！';
+        showBubble(text);
+        setTimeout(function(){ speak(text); }, 150);
+        return;
+      }
+      items[i].classList.add('counting-hit');
+      sfxPop();
+      speakWord(COUNT_WORDS[i], step);
+      i++;
+    }
+    step();
+  }
+
+  function answer(isCorrect, el, val){
+    if (state.locked || state.counting) return;
+    cancelSpeech();
+
+    if (isCorrect){
+      state.locked = true;
+      state.wrongStreak = 0;
+      el.classList.add('correct');
+      sfxCorrect();
+      confetti(20);
+
+      state.stars++;
+      state.totalCorrect++;
+      state.correctSinceSticker++;
+      updateStars();
+      updateProgress();
+
+      showBubble(pick(PRAISE));
+
+      var wasLevelUp = (state.totalCorrect % 4 === 0 && state.level < MAX_LEVEL);
+      if (wasLevelUp) state.level++;
+
+      var earnedSticker = state.correctSinceSticker >= STICKERS_PER_UNLOCK;
+
+      var words = COUNT_WORDS.slice(0, state.current.n).join('、');
+      var countText = words + '。' + state.current.n + 'こ！';
+
+      setTimeout(function(){
+        speakWithEnd(countText, function(){
+          if (wasLevelUp){
+            sfxLevelUp();
+            showBubble('レベルアップ！');
+            confetti(34);
+            setTimeout(function(){
+              speakWithEnd('れべるあっぷ！', function(){
+                finishTurn(earnedSticker);
+              });
+            }, 550);
+          } else {
+            finishTurn(earnedSticker);
+          }
+        });
+      }, TIMING.Q_SPEAK);
+
+    } else {
+      el.classList.add('wrong');
+      sfxWrong();
+      state.wrongStreak++;
+      setTimeout(function(){ el.classList.remove('wrong'); }, TIMING.WRONG_SHAKE);
+      if (state.wrongStreak >= 2 && state.current.mode === 'count'){
+        setTimeout(countAlong, TIMING.GUIDE_DELAY);
+      }
+    }
+  }
+
+  function finishTurn(earned){
+    if (earned) showStickerSelect();
+    else newQuestion();
+  }
+
+  function updateStars(){
+    $('#starCount').textContent = state.stars;
+    var el = document.querySelector('.stars');
+    el.classList.remove('bump');
+    void el.offsetWidth;
+    el.classList.add('bump');
+  }
+  function updateProgress(){
+    var dots = document.querySelectorAll('#progressDots .dot');
+    dots.forEach(function(d, i){
+      d.classList.toggle('filled', i < state.correctSinceSticker);
+    });
+  }
+  function updateBookBadge(){
+    try {
+      var raw = localStorage.getItem(STICKER_KEY);
+      var arr = raw ? JSON.parse(raw) : [];
+      var n = 0;
+      if (Array.isArray(arr)){
+        n = arr.length;
+        // スタンプもカウントに含める（ハブと整合）
+        var raw2 = localStorage.getItem('momo_stamps_v1');
+        if (raw2){
+          var arr2 = JSON.parse(raw2);
+          if (Array.isArray(arr2)) n += arr2.length;
+        }
+      }
+      var badge = $('#bookBadge');
+      badge.textContent = n;
+      badge.classList.toggle('show', n > 0);
+    } catch(e){}
+  }
+
+  /* =========================================================
+     吹き出し・紙吹雪
+     ========================================================= */
+  var bubbleTimer = null;
+  function showBubble(text){
+    var b = $('#bubble');
+    b.textContent = text;
+    b.classList.remove('show');
+    void b.offsetWidth;
+    b.classList.add('show');
+    clearTimeout(bubbleTimer);
+    bubbleTimer = setTimeout(function(){ b.classList.remove('show'); }, TIMING.BUBBLE);
+  }
+  function confetti(count){
+    if (REDUCED_MOTION) count = Math.min(count, 8);
+    var kinds = ['⭐','✨','🌸','🎉','💖','🍬','🌈','🎈'];
+    for (var i = 0; i < count; i++){
+      var el = document.createElement('div');
+      el.className = 'confetti';
+      el.textContent = pick(kinds);
+      el.style.left = (Math.random() * 96) + 'vw';
+      el.style.fontSize = (14 + Math.random() * 22) + 'px';
+      el.style.animationDuration = (1.7 + Math.random() * 1.3) + 's';
+      el.style.animationDelay = (Math.random() * 0.35) + 's';
+      document.body.appendChild(el);
+      (function(node){
+        setTimeout(function(){ node.remove(); }, 3600);
+      })(el);
+    }
+  }
+
+  /* =========================================================
+     シール選択
+     ========================================================= */
+  function showStickerSelect(){
+    state.locked = false;
+    cancelSpeech();
+
+    var unowned = KAZU_STICKER_POOL.filter(function(s){ return state.myStickers.indexOf(s) === -1; });
+    var pool = unowned.length >= STICKERS_PER_UNLOCK ? unowned : KAZU_STICKER_POOL.slice();
+    shuffle(pool);
+    state.pendingStickers = pool.slice(0, STICKERS_PER_UNLOCK);
+
+    var cont = $('#stickerOptions');
+    cont.innerHTML = '';
+
+    state.pendingStickers.forEach(function(st, i){
+      var card = document.createElement('button');
+      card.className = 'sticker-option';
+      card.type = 'button';
+      card.textContent = st;
+      card.style.animationDelay = (i * 0.13) + 's';
+      card.addEventListener('click', function(){ chooseSticker(st, card); });
+      cont.appendChild(card);
+    });
+
+    $('#stickerSelectScreen').classList.remove('hidden');
+    duckBGM(true);
+
+    setTimeout(function(){ speak('シールを えらんでね'); }, 500);
+  }
+
+  function chooseSticker(sticker, card){
+    if (state.locked) return;
+    state.locked = true;
+
+    document.querySelectorAll('.sticker-option').forEach(function(c){
+      c.style.pointerEvents = 'none';
+      if (c !== card) c.classList.add('fade-out');
+    });
+    card.classList.add('chosen');
+
+    sfxLevelUp();
+    confetti(30);
+
+    saveSticker(sticker);
+    state.correctSinceSticker = 0;
+    updateProgress();
+    updateBookBadge();
+
+    notifyParent({ type: 'updateBadge' });
+
+    setTimeout(function(){ showBubble('シール ゲット！'); }, 200);
+    setTimeout(function(){ speak('シール ゲット'); }, 450);
+
+    setTimeout(function(){
+      $('#stickerSelectScreen').classList.add('hidden');
+      duckBGM(false);
+      state.locked = false;
+      newQuestion();
+    }, TIMING.STICKER_BACK);
+  }
+
+  /* =========================================================
+     画面サイズ
+     ========================================================= */
+  function applyCompact(){
+    var compact = window.innerHeight < 560;
+    $('#gameScreen').classList.toggle('compact', compact);
+  }
+
+  /* =========================================================
+     音声アンロック
+     ========================================================= */
+  function unlockAudio(){
+    if (audioUnlocked && bgmTimer) return;
+    audioUnlocked = true;
+    initAudio();
+    if (ctx && ctx.state === 'suspended'){ try { ctx.resume(); } catch(e){} }
+    try {
+      if ('speechSynthesis' in window){
+        var u = new SpeechSynthesisUtterance('');
+        u.volume = 0;
+        window.speechSynthesis.speak(u);
+        window.speechSynthesis.cancel();
+      }
+    } catch(e){}
+    if (settings.soundOn && !bgmTimer) startBGM();
+  }
+  document.addEventListener('pointerdown', unlockAudio, { passive: true });
+  document.addEventListener('touchstart', unlockAudio, { passive: true });
+  document.addEventListener('keydown', unlockAudio);
+  document.addEventListener('click', unlockAudio);
+
+  /* =========================================================
+     イベント
+     ========================================================= */
+  $('#homeBtn').addEventListener('click', function(){
+    sfxTap();
+    cancelSpeech();
+    stopBGM();
+    notifyParent('goHome');
+  });
+
+  $('#bookBtn').addEventListener('click', function(){
+    sfxTap();
+    cancelSpeech();
+    stopBGM();
+    notifyParent({ type: 'openBook', from: 'kazu' });
+  });
+
+  $('#countBtn').addEventListener('click', function(){
+    if (!state.locked && !state.counting){ sfxTap(); countAlong(); }
+  });
+  $('#questionBox').addEventListener('click', function(e){
+    if (e.target.classList.contains('q-emoji')) countAlong();
+  });
+
+  window.addEventListener('resize', applyCompact);
+  window.addEventListener('orientationchange', function(){
+    setTimeout(applyCompact, 250);
+  });
+
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden){
+      stopBGM();
+      cancelSpeech();
+    } else {
+      if (ctx && ctx.state === 'suspended'){ try { ctx.resume(); } catch(e){} }
+      if (settings.soundOn && !bgmTimer && audioUnlocked) startBGM();
+    }
+  });
+
+  document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+  document.addEventListener('gesturestart', function(e){ e.preventDefault(); });
+
+  /* =========================================================
+     起動
+     ========================================================= */
+  (function buildDots(){
+    var box = $('#progressDots');
+    box.innerHTML = '';
+    for (var i = 0; i < STICKERS_PER_UNLOCK; i++){
+      var d = document.createElement('span');
+      d.className = 'dot';
+      box.appendChild(d);
+    }
+  })();
+
+  loadMyStickers();
+  updateStars();
+  updateProgress();
+  updateBookBadge();
+  applyCompact();
+
+  // ゲーム開始
+  setTimeout(newQuestion, 400);
+
+  // 早期に音声アンロックを試みる
+  setTimeout(function(){
+    try {
+      initAudio();
+      if (ctx && ctx.state === 'running'){
+        audioUnlocked = true;
+        if (settings.soundOn && !bgmTimer) startBGM();
+      }
+    } catch(e){}
+  }, 100);
+
+})();
+</script>
+</body>
+</html>

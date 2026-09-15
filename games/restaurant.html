@@ -1,0 +1,1487 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>レストランごっこ</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;overflow:hidden;}
+  body{
+    font-family:"Hiragino Maru Gothic ProN","Yu Gothic UI","Meiryo",system-ui,sans-serif;
+    background:linear-gradient(170deg,#fff8ec 0%,#ffeef5 50%,#eaf6ff 100%);
+    color:#6b5568;display:flex;justify-content:center;
+    user-select:none;-webkit-user-select:none;
+    touch-action:manipulation;
+  }
+  #app{
+    width:min(96vw,480px);
+    height:100vh;height:100dvh;
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+    padding:calc(4px + env(safe-area-inset-top)) 8px calc(6px + env(safe-area-inset-bottom));
+    overflow-y:auto;overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  header{
+    width:100%;display:flex;align-items:center;justify-content:space-between;
+    gap:6px;flex:0 0 auto;
+  }
+  h1{
+    margin:0;font-size:clamp(12px,3.6vw,15px);font-weight:800;
+    color:#ff8fb0;
+    text-shadow:0 1px 0 #fff,0 2px 4px rgba(255,150,190,.35);
+    white-space:nowrap;
+  }
+  .mini{
+    width:44px;height:44px;border-radius:50%;border:0;
+    background:rgba(255,255,255,.92);
+    box-shadow:0 2px 8px rgba(180,140,180,.28);
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    touch-action:manipulation;flex:0 0 auto;
+    transition:transform .1s;position:relative;
+    font-family:inherit;font-size:22px;line-height:1;
+  }
+  .mini:active{transform:scale(.9);}
+  .mini .badge{
+    position:absolute;top:-3px;right:-3px;
+    min-width:20px;height:20px;border-radius:10px;
+    background:#ff6b9d;color:#fff;
+    font-size:11px;font-weight:900;
+    display:none;align-items:center;justify-content:center;
+    padding:0 4px;border:2px solid #fff;
+    box-shadow:0 2px 4px rgba(0,0,0,.18);
+  }
+  .mini .badge.show{display:flex;}
+
+  #topRow{
+    width:100%;display:flex;justify-content:center;align-items:center;
+    gap:6px;flex:0 0 auto;flex-wrap:wrap;
+  }
+  #stars{
+    display:flex;flex-wrap:wrap;justify-content:center;
+    gap:1px;align-items:center;min-height:18px;
+    font-size:clamp(13px,3.8vw,17px);line-height:1;
+  }
+  #stars .st{transition:transform .25s;display:inline-block;}
+  #stars .st.pop{animation:starPop .5s ease;}
+  @keyframes starPop{0%{transform:scale(1);}45%{transform:scale(1.7) rotate(20deg);}100%{transform:scale(1);}}
+  #stars .more{font-size:clamp(10px,3vw,12px);font-weight:800;color:#ff8fb0;margin-left:2px;}
+
+  #sales{
+    display:flex;align-items:center;gap:4px;
+    background:linear-gradient(160deg,#fff8e0,#ffe0a0);
+    border:2px solid #ffc850;border-radius:999px;
+    padding:2px 12px 2px 10px;
+    font-size:clamp(12px,3.6vw,15px);font-weight:800;color:#8a5000;
+    box-shadow:0 2px 0 rgba(220,160,60,.4);
+    flex:0 0 auto;transition:transform .15s;
+  }
+  #sales .coin{font-size:1.15em;line-height:1;}
+  #sales.bump{animation:salesBump .5s ease;}
+  #sales.loss{animation:salesLoss .6s ease;}
+  @keyframes salesBump{0%{transform:scale(1);}40%{transform:scale(1.25);}100%{transform:scale(1);}}
+  @keyframes salesLoss{0%,100%{transform:translateX(0);}20%{transform:translateX(-5px);}40%{transform:translateX(5px);}60%{transform:translateX(-3px);}80%{transform:translateX(3px);}}
+
+  #orderCard{
+    width:100%;background:#fff;border-radius:22px;
+    padding:8px 10px 10px;
+    box-shadow:0 3px 0 rgba(230,200,220,.5),0 6px 14px rgba(200,160,180,.18);
+    flex:0 0 auto;display:flex;flex-direction:column;gap:6px;
+  }
+  .order-row-1{
+    display:flex;align-items:center;gap:8px;min-height:0;
+    cursor:pointer;border-radius:14px;transition:background .2s;
+  }
+  .order-row-1:active{background:#fff8fb;}
+  #custIcon{
+    width:clamp(48px,13vw,62px);height:clamp(48px,13vw,62px);
+    flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center;
+    font-size:clamp(36px,10vw,50px);line-height:1;
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,.12));
+  }
+  #custIcon svg{width:100%;height:100%;display:block;}
+  #custIcon.happy{animation:happyBounce .55s ease infinite;}
+  @keyframes happyBounce{0%,100%{transform:translateY(0) scale(1);}30%{transform:translateY(-7px) scale(1.08);}60%{transform:translateY(0) scale(1);}}
+  #bubble{
+    position:relative;flex:1 1 auto;min-width:0;
+    background:#fff5f8;border-radius:14px;
+    padding:6px 11px;
+    font-size:clamp(12px,3.6vw,15px);font-weight:800;color:#8a6f85;
+    text-align:left;line-height:1.15;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    cursor:pointer;
+  }
+  #bubble::before{
+    content:'';position:absolute;left:-5px;top:50%;
+    transform:translateY(-50%);
+    border:5px solid transparent;border-right-color:#fff5f8;
+  }
+  #bubble.bounce{animation:bubbleBounce .35s ease;}
+  @keyframes bubbleBounce{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
+
+  .order-row-2{
+    display:flex;align-items:center;justify-content:center;
+    gap:clamp(4px,1.6vw,8px);
+    padding-top:8px;border-top:2px dashed #ffd9e5;
+  }
+  #needRow{display:flex;gap:clamp(3px,1.2vw,6px);align-items:center;}
+  #needRow .plus{font-size:clamp(18px,5.4vw,24px);color:#ff9ec0;font-weight:800;line-height:1;text-shadow:0 1px 0 #fff;}
+  .need-chip{
+    width:clamp(44px,12.5vw,56px);height:clamp(44px,12.5vw,56px);
+    border-radius:32%;
+    background:linear-gradient(160deg,#fffaf0,#fff0d8);
+    border:2.5px solid #ffd9a8;
+    display:flex;align-items:center;justify-content:center;
+    flex:0 0 auto;
+    box-shadow:0 2px 0 rgba(230,180,140,.35);
+    font-size:clamp(28px,8vw,38px);line-height:1;
+    padding:6px;
+  }
+  .need-chip svg{width:100%;height:100%;display:block;}
+  .equals{font-size:clamp(24px,7vw,32px);font-weight:800;color:#ff9ec0;line-height:1;margin:0 2px;text-shadow:0 1px 0 #fff;}
+  #dishWrap{position:relative;flex:0 0 auto;}
+  #dishIcon{
+    width:clamp(56px,15.5vw,70px);height:clamp(56px,15.5vw,70px);
+    display:flex;align-items:center;justify-content:center;
+    font-size:clamp(40px,11vw,54px);line-height:1;
+    filter:drop-shadow(0 3px 4px rgba(220,160,190,.3));
+    padding:4px;
+  }
+  #dishIcon svg{width:100%;height:100%;display:block;}
+  #priceTag{
+    position:absolute;bottom:-4px;right:-8px;
+    background:#ffd93d;color:#7a4a00;
+    font-size:clamp(10px,2.9vw,12px);font-weight:800;
+    padding:2px 7px;border-radius:999px;
+    border:1.5px solid #fff;
+    box-shadow:0 1px 3px rgba(180,140,60,.4);
+    white-space:nowrap;pointer-events:none;line-height:1.2;
+  }
+
+  #cookArea{display:flex;flex-direction:column;align-items:center;gap:2px;flex:0 0 auto;}
+  #slots{display:flex;gap:8px;}
+  .slot{
+    width:clamp(34px,10vw,44px);height:clamp(34px,10vw,44px);
+    border-radius:50%;border:2px dashed rgba(200,170,200,.55);
+    background:rgba(255,255,255,.6);
+    display:flex;align-items:center;justify-content:center;
+    font-size:clamp(20px,6vw,28px);line-height:1;
+    transition:border-color .25s,background .25s,box-shadow .25s;
+    padding:5px;
+  }
+  .slot svg{width:100%;height:100%;display:block;}
+  .slot.filled{border:2px solid #fff;background:#fff;box-shadow:0 2px 0 rgba(220,180,200,.4),0 0 12px rgba(255,200,220,.6);}
+  .slot.pop{animation:slotPop .4s ease;}
+  @keyframes slotPop{0%{transform:scale(.4);}60%{transform:scale(1.2);}100%{transform:scale(1);}}
+  .slot.wrong{
+    border-color:#ff5252 !important;
+    background:#fff0f0 !important;
+    box-shadow:0 0 0 3px #ff5252,0 0 14px rgba(255,82,82,.7) !important;
+    animation:wrongShake .4s ease;
+  }
+  @keyframes wrongShake{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+
+  #potWrap{position:relative;width:clamp(92px,26vw,118px);height:clamp(72px,20vw,94px);}
+  #potWrap.shake{animation:potShake .35s ease-in-out 4;}
+  @keyframes potShake{0%,100%{transform:translateX(0) rotate(0);}25%{transform:translateX(-4px) rotate(-3deg);}75%{transform:translateX(4px) rotate(3deg);}}
+  #pot{
+    width:100%;height:100%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:clamp(64px,19vw,88px);line-height:1;
+    filter:drop-shadow(0 4px 6px rgba(0,0,0,.15));
+  }
+  #pot svg{width:100%;height:100%;display:block;}
+  #pot.cooking{animation:cookBob .4s ease-in-out infinite;}
+  @keyframes cookBob{0%,100%{transform:translateY(0) scale(1);}50%{transform:translateY(-4px) scale(1.03);}}
+  #dish{
+    position:absolute;left:50%;top:46%;
+    width:74%;height:74%;
+    transform:translate(-50%,-50%) scale(0);opacity:0;
+    pointer-events:none;
+    display:flex;align-items:center;justify-content:center;
+    font-size:clamp(56px,17vw,78px);line-height:1;
+    transition:opacity .35s,transform .45s cubic-bezier(.34,1.56,.64,1);
+    filter:drop-shadow(0 5px 8px rgba(200,160,180,.45));
+  }
+  #dish svg{width:100%;height:100%;display:block;}
+  #dish.show{opacity:1;transform:translate(-50%,-50%) scale(1);animation:dishPulse 1.1s ease-in-out infinite;pointer-events:auto;cursor:pointer;}
+  @keyframes dishPulse{0%,100%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-50%,-50%) scale(1.1);}}
+
+  #ingredients{
+    width:100%;display:grid;grid-template-columns:repeat(3,1fr);
+    gap:clamp(6px,2vw,10px);
+    flex:0 0 auto;padding:2px 0 4px;
+  }
+  .ing-btn{
+    width:100%;aspect-ratio:1/1.18;
+    border-radius:22%;border:3px solid #fff;
+    background:linear-gradient(160deg,#fffdf5,#fff0e0);
+    box-shadow:0 4px 0 rgba(220,190,180,.45),0 6px 12px rgba(200,160,180,.18);
+    cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:6% 4% 4%;gap:2px;
+    transition:transform .12s,box-shadow .12s,opacity .3s;
+    touch-action:manipulation;font-family:inherit;
+    min-height:0;
+  }
+  .ing-img{
+    flex:1 1 auto;width:100%;min-height:0;
+    display:flex;align-items:center;justify-content:center;
+    font-size:clamp(36px,11vw,50px);line-height:1;
+    padding:2%;
+  }
+  .ing-img svg{width:100%;height:100%;display:block;}
+  .ing-name{
+    flex:0 0 auto;
+    font-size:clamp(11px,3.4vw,15px);font-weight:800;
+    color:#8a6f85;line-height:1.05;letter-spacing:.02em;
+    white-space:nowrap;
+  }
+  .ing-btn:active{transform:translateY(4px) scale(.96);box-shadow:0 1px 0 rgba(220,190,180,.45);}
+  .ing-btn.used{opacity:.15;transform:scale(.85);pointer-events:none;box-shadow:none;}
+
+  .flyer{
+    position:fixed;z-index:200;pointer-events:none;
+    will-change:left,top,transform;
+    display:flex;align-items:center;justify-content:center;
+    line-height:1;
+  }
+  .flyer svg{width:100%;height:100%;display:block;}
+
+  .bubble-fx{
+    position:fixed;width:11px;height:11px;border-radius:50%;
+    background:rgba(255,255,255,.95);
+    border:2px solid rgba(255,205,225,.85);
+    pointer-events:none;z-index:60;
+    animation:bubbleUp 1.1s ease-out forwards;
+    margin-left:-5.5px;
+  }
+  @keyframes bubbleUp{
+    0%{transform:translateY(0) scale(.3);opacity:0;}
+    25%{opacity:1;}
+    100%{transform:translateY(-80px) scale(1.3);opacity:0;}
+  }
+  .heart-fx{
+    position:fixed;pointer-events:none;z-index:80;
+    animation:heartUp 1.3s ease-out forwards;
+    font-size:22px;line-height:1;margin-left:-11px;
+  }
+  @keyframes heartUp{
+    0%{transform:translateY(0) scale(.4);opacity:0;}
+    20%{opacity:1;}
+    100%{transform:translateY(-100px) scale(1.2) rotate(15deg);opacity:0;}
+  }
+  .money-fx{
+    position:fixed;transform:translate(-50%,0);
+    font-weight:800;font-size:clamp(14px,4.2vw,19px);
+    pointer-events:none;z-index:90;
+    animation:moneyUp 1.4s ease-out forwards;
+    text-shadow:0 1px 0 #fff,0 2px 4px rgba(0,0,0,.1);
+  }
+  .money-fx.plus{color:#e8a000;}
+  .money-fx.minus{color:#e84a4a;}
+  @keyframes moneyUp{
+    0%{transform:translate(-50%,0) scale(.5);opacity:0;}
+    25%{opacity:1;transform:translate(-50%,-8px) scale(1.2);}
+    100%{transform:translate(-50%,-70px) scale(1);opacity:0;}
+  }
+
+  .overlay{
+    position:fixed;inset:0;z-index:500;
+    display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(170deg,rgba(255,248,236,.96),rgba(255,238,245,.96),rgba(234,246,255,.96));
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+    animation:fadeIn .3s ease;padding:16px;
+  }
+  .overlay[hidden]{display:none;}
+  @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+  .win-card{
+    background:#fff;border-radius:32px;
+    padding:24px 30px;text-align:center;
+    box-shadow:0 14px 44px rgba(180,140,190,.4);
+    animation:popIn .45s cubic-bezier(.4,1.6,.5,1);
+    max-width:90vw;
+  }
+  @keyframes popIn{
+    0%{transform:scale(.7);opacity:0;}
+    100%{transform:scale(1);opacity:1;}
+  }
+  .win-emoji{
+    font-size:clamp(46px,15vw,70px);line-height:1;
+    animation:winBounce .9s ease infinite;
+  }
+  @keyframes winBounce{
+    0%,100%{transform:translateY(0) scale(1);}
+    50%{transform:translateY(-8px) scale(1.12);}
+  }
+  .win-text{
+    margin:12px 0 4px;
+    font-size:clamp(18px,5vw,23px);font-weight:900;
+    color:#ff8fb0;letter-spacing:1px;
+  }
+  .win-sub{
+    margin:0;font-size:clamp(12px,3.4vw,14px);
+    font-weight:800;color:#a890a8;
+  }
+
+  #stampBoxScreen{
+    position:fixed;inset:0;z-index:520;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:linear-gradient(180deg,#fff0d8 0%,#ffe8d0 45%,#ffeedd 100%);
+    padding:24px;gap:14px;text-align:center;overflow:hidden;
+  }
+  #stampBoxScreen[hidden]{display:none;}
+  #stampBoxScreen::before{
+    content:"";position:absolute;inset:0;
+    background:
+      radial-gradient(circle at 12% 18%,rgba(255,255,255,.5) 0 6px,transparent 7px),
+      radial-gradient(circle at 88% 24%,rgba(255,255,255,.5) 0 8px,transparent 9px),
+      radial-gradient(circle at 22% 82%,rgba(255,255,255,.5) 0 7px,transparent 8px),
+      radial-gradient(circle at 78% 76%,rgba(255,255,255,.5) 0 6px,transparent 7px);
+    pointer-events:none;
+  }
+  .select-header{
+    font-size:clamp(20px,5.8vw,30px);font-weight:900;
+    color:#c8855a;letter-spacing:2px;
+    text-shadow:2px 2px 0 #fff,4px 4px 0 rgba(220,160,120,.3);
+    animation:floatyH 2.2s ease-in-out infinite;
+    position:relative;z-index:2;
+  }
+  @keyframes floatyH{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+  .select-sub{
+    font-size:clamp(12px,3.5vw,15px);
+    color:#8a7058;font-weight:800;
+    margin-top:-6px;position:relative;z-index:2;
+  }
+  .stamp-box{
+    width:clamp(140px, 42vw, 200px);
+    height:clamp(140px, 42vw, 200px);
+    border-radius:28px;
+    background:linear-gradient(180deg,#fff5e0,#ffdca8);
+    border:6px solid #fff;
+    box-shadow:0 10px 0 #d4a060, 0 16px 30px rgba(0,0,0,.2);
+    display:flex;align-items:center;justify-content:center;
+    position:relative;cursor:pointer;padding:0;
+    font-family:inherit;margin-top:10px;
+    transition:transform .1s, box-shadow .1s;
+    overflow:hidden;z-index:2;
+  }
+  .stamp-box:not(.opened):active{
+    transform:translateY(6px);
+    box-shadow:0 4px 0 #d4a060, 0 8px 18px rgba(0,0,0,.2);
+  }
+  .stamp-box .box-emoji{
+    font-size:clamp(78px, 24vw, 118px);line-height:1;
+    transition:transform .3s, opacity .3s;display:block;
+  }
+  .stamp-box .box-stamp{
+    position:absolute;inset:0;
+    display:flex;align-items:center;justify-content:center;
+    font-size:clamp(78px, 24vw, 118px);line-height:1;
+    opacity:0;transform:scale(0.3) rotate(-20deg);
+    transition:opacity .3s, transform .5s cubic-bezier(.34,1.56,.64,1);
+  }
+  .stamp-box.opened .box-emoji{transform:scale(0);opacity:0;}
+  .stamp-box.opened .box-stamp{opacity:1;transform:scale(1) rotate(-6deg);}
+  .stamp-box.shaking{animation:boxShake .5s ease;}
+  @keyframes boxShake{
+    0%,100%{transform:translateY(0) translateX(0) rotate(0);}
+    20%{transform:translateY(0) translateX(-8px) rotate(-5deg);}
+    40%{transform:translateY(0) translateX(8px) rotate(5deg);}
+    60%{transform:translateY(0) translateX(-5px) rotate(-3deg);}
+    80%{transform:translateY(0) translateX(5px) rotate(3deg);}
+  }
+  .box-stamp.hanko-red{ filter:url(#hanko-red); }
+  .box-stamp.hanko-blue{ filter:url(#hanko-blue); }
+  .box-stamp.hanko-green{ filter:url(#hanko-green); }
+
+  .bubble-pop{
+    position:fixed;left:50%;top:38%;
+    transform:translate(-50%,-50%) scale(.4);
+    background:#fff;color:#ff8fb0;font-weight:900;
+    font-size:clamp(22px,6.5vw,38px);
+    letter-spacing:2px;
+    padding:14px 32px;border-radius:999px;
+    border:5px solid #ffd9e6;
+    box-shadow:0 8px 0 rgba(255,107,157,.35),0 14px 34px rgba(0,0,0,.2);
+    pointer-events:none;z-index:600;opacity:0;white-space:nowrap;
+  }
+  .bubble-pop.show{animation:bubblePop 1.3s ease-out forwards;}
+  @keyframes bubblePop{
+    0%{opacity:0;transform:translate(-50%,-50%) scale(.4);}
+    18%{opacity:1;transform:translate(-50%,-50%) scale(1.14);}
+    34%{transform:translate(-50%,-50%) scale(1);}
+    78%{opacity:1;transform:translate(-50%,-50%) scale(1);}
+    100%{opacity:0;transform:translate(-50%,-72%) scale(1);}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .win-emoji,.select-header,.stamp-box.shaking{animation:none!important;}
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="hanko-red" color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="
+        0 0 0 0 0.82
+        0 0 0 0 0.16
+        0 0 0 0 0.16
+        0 0 0 0.72 0
+      "/>
+    </filter>
+    <filter id="hanko-blue" color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="
+        0 0 0 0 0.16
+        0 0 0 0 0.42
+        0 0 0 0 0.78
+        0 0 0 0.72 0
+      "/>
+    </filter>
+    <filter id="hanko-green" color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="
+        0 0 0 0 0.20
+        0 0 0 0 0.62
+        0 0 0 0 0.35
+        0 0 0 0.72 0
+      "/>
+    </filter>
+  </defs>
+</svg>
+
+<div id="clearOverlay" class="overlay" hidden>
+  <div class="win-card">
+    <div class="win-emoji">🎉</div>
+    <p class="win-text" id="clearText">5品 つくったよ！</p>
+    <p class="win-sub">スタンプを もらおう！</p>
+  </div>
+</div>
+
+<div id="stampBoxScreen" hidden>
+  <div class="select-header">スタンプ どうぞ！</div>
+  <div class="select-sub">はこを タップして あけてね</div>
+  <button class="stamp-box" id="stampBoxBtn" type="button" aria-label="スタンプのはこ">
+    <span class="box-emoji">🎁</span>
+    <span class="box-stamp" id="boxStamp"></span>
+  </button>
+</div>
+
+<div id="bubblePop" class="bubble-pop" role="status" aria-live="polite"></div>
+
+<div id="app">
+  <header>
+    <button id="homeBtn" class="mini" aria-label="おうちへ">🏠</button>
+    <h1>🍳 レストランごっこ</h1>
+    <button id="bookBtn" class="mini" aria-label="シール帳">
+      📖<span class="badge" id="bookBadge">0</span>
+    </button>
+  </header>
+
+  <div id="topRow">
+    <div id="stars"></div>
+    <div id="sales"><span class="coin">🪙</span><span id="salesValue">0円</span></div>
+  </div>
+
+  <div id="orderCard">
+    <div class="order-row-1" id="orderTap">
+      <div id="custIcon"></div>
+      <div id="bubble"></div>
+    </div>
+    <div class="order-row-2">
+      <div id="needRow"></div>
+      <div class="equals">＝</div>
+      <div id="dishWrap">
+        <div id="dishIcon"></div>
+        <div id="priceTag"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="cookArea">
+    <div id="slots">
+      <div class="slot"></div>
+      <div class="slot"></div>
+      <div class="slot"></div>
+    </div>
+    <div id="potWrap">
+      <div id="pot"></div>
+      <div id="dish"></div>
+    </div>
+  </div>
+
+  <div id="ingredients"></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+var $ = function(s){ return document.querySelector(s); };
+
+/* =========================================================
+   SVG ヘルパー
+   ========================================================= */
+function svg(inner){ return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' + inner + '</svg>'; }
+function face(cx, cy, opt){
+  opt = opt || {};
+  var eyeR=opt.eyeR||3.5, eyeDist=opt.eyeDist||9, eyeY=opt.eyeY||0,
+      mouthY=opt.mouthY||7, mouthW=opt.mouthW||5,
+      c=opt.color||'#3a2630', hl=eyeR*0.38;
+  return '<circle cx="'+(cx-eyeDist)+'" cy="'+(cy+eyeY)+'" r="'+eyeR+'" fill="'+c+'"/>'+
+    '<circle cx="'+(cx+eyeDist)+'" cy="'+(cy+eyeY)+'" r="'+eyeR+'" fill="'+c+'"/>'+
+    '<circle cx="'+(cx-eyeDist-eyeR*0.3)+'" cy="'+(cy+eyeY-eyeR*0.4)+'" r="'+hl+'" fill="#fff"/>'+
+    '<circle cx="'+(cx+eyeDist-eyeR*0.3)+'" cy="'+(cy+eyeY-eyeR*0.4)+'" r="'+hl+'" fill="#fff"/>'+
+    '<path d="M'+(cx-mouthW)+' '+(cy+mouthY)+' Q'+cx+' '+(cy+mouthY+4)+' '+(cx+mouthW)+' '+(cy+mouthY)+'" stroke="'+c+'" stroke-width="1.8" fill="none" stroke-linecap="round"/>'+
+    '<circle cx="'+(cx-eyeDist-4)+'" cy="'+(cy+mouthY-2)+'" r="3.6" fill="#ffa0b8" opacity=".55"/>'+
+    '<circle cx="'+(cx+eyeDist+4)+'" cy="'+(cy+mouthY-2)+'" r="3.6" fill="#ffa0b8" opacity=".55"/>';
+}
+
+/* =========================================================
+   アイコン定義
+   ========================================================= */
+var ICONS = {
+  /* 食材 */
+  tomato:     '🍅',
+  lettuce:    '🥬',
+  cucumber:   '🥒',
+  potato:     '🥔',
+  carrot:     '🥕',
+  onion:      '🧅',
+  strawberry: '🍓',
+  banana:     '🍌',
+  milk:       '🥛',
+  flour:      svg('<path d="M31 40 L31 86 Q31 90 35 90 L65 90 Q69 90 69 86 L69 40 L60 29 L40 29 Z" fill="#fffaf0" stroke="#ded1b5" stroke-width="2"/><path d="M40 29 Q40 20 50 20 Q60 20 60 29" fill="#e8dcc0"/><circle cx="50" cy="64" r="16" fill="#fff3d6"/>'+face(50,64,{eyeDist:6,eyeR:2.6,mouthY:5})),
+  egg:        '🥚',
+  butter:     '🧈',
+  rice:       '🍚',
+  ketchup:    svg('<path d="M40 26 L40 90 Q40 94 44 94 L56 94 Q60 94 60 90 L60 26 Z" fill="#e53935"/><path d="M44 26 Q44 16 50 16 Q56 16 56 26 Z" fill="#c62828"/><rect x="38" y="14" width="24" height="14" rx="4" fill="#c62828"/><rect x="41" y="46" width="18" height="22" rx="3" fill="#fff" opacity=".9"/><ellipse cx="50" cy="57" rx="5" ry="3.5" fill="#e53935"/>'+face(50,64,{eyeDist:5,eyeR:2.2,mouthY:4})),
+  bread:      '🍞',
+  meat:       '🥩',
+  cheese:     '🧀',
+  icecream:   '🍦',
+
+  /* 料理 */
+  salad:     '🥗',
+  curry:     '🍛',
+  smoothie:  '🥤',
+  cake:      '🍰',
+  omurice:   svg('<ellipse cx="50" cy="70" rx="44" ry="22" fill="#f8f8f8" stroke="#c8c8c8" stroke-width="2"/><ellipse cx="50" cy="68" rx="38" ry="17" fill="#e4e4e4"/><ellipse cx="50" cy="60" rx="34" ry="22" fill="#ffd95e"/><ellipse cx="50" cy="58" rx="30" ry="18" fill="#ffe680"/><ellipse cx="40" cy="52" rx="8" ry="5" fill="#fff0a0" opacity=".7"/><path d="M30 50 Q40 58 50 50 Q60 42 70 50" stroke="#e53935" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M32 62 Q42 68 50 62 Q58 56 68 62" stroke="#e53935" stroke-width="3.5" fill="none" stroke-linecap="round"/>'+face(50,68,{eyeDist:8,eyeR:2.8,mouthY:5,color:'#8a6818'})),
+  hamburger: '🍔',
+  pizza:     '🍕',
+  parfait:   '🍨',
+
+  /* お客さん */
+  bear:     '🐻',
+  rabbit:   '🐰',
+  cat:      '🐱',
+  panda:    '🐼',
+  fox:      '🦊',
+  frog:     '🐸',
+  pig:      '🐷',
+  elephant: '🐘',
+  lion:     '🦁',
+  mouse:    '🐭',
+  koala:    '🐨',
+  chick:    '🐤',
+
+  /* ===== 調理器具 ===== */
+  /* 鍋 */
+  pot: svg(
+    '<rect x="1" y="42" width="14" height="9" rx="4" fill="#5a5a5a"/>'+
+    '<rect x="85" y="42" width="14" height="9" rx="4" fill="#5a5a5a"/>'+
+    '<path d="M14 42 Q14 84 50 84 Q86 84 86 42 Z" fill="#a4a4a4"/>'+
+    '<path d="M14 42 Q14 84 50 84 Q86 84 86 42" fill="none" stroke="#707070" stroke-width="2"/>'+
+    '<ellipse cx="50" cy="42" rx="38" ry="8" fill="#b4b4b4"/>'+
+    '<ellipse cx="50" cy="41" rx="34" ry="6" fill="#727272"/>'+
+    '<ellipse cx="34" cy="62" rx="6" ry="12" fill="#c8c8c8" opacity=".45"/>'
+  ),
+  /* ボウル */
+  bowl: svg(
+    '<path d="M14 42 Q14 90 50 90 Q86 90 86 42 Z" fill="#f8f8f8" stroke="#c8c8c8" stroke-width="2"/>'+
+    '<ellipse cx="50" cy="42" rx="36" ry="8" fill="#e8e8e8"/>'+
+    '<ellipse cx="50" cy="42" rx="32" ry="6" fill="#ffffff"/>'+
+    '<circle cx="42" cy="42" r="4.5" fill="#8bc34a"/>'+
+    '<circle cx="56" cy="41" r="4" fill="#7cb342"/>'+
+    '<circle cx="48" cy="44" r="3.5" fill="#aed581"/>'+
+    '<circle cx="62" cy="44" r="3" fill="#e8524e"/>'+
+    '<ellipse cx="34" cy="62" rx="5" ry="10" fill="#f0f0f0" opacity=".8"/>'
+  ),
+  /* ミキサー */
+  blender: svg(
+    /* 台座 */
+    '<rect x="28" y="72" width="44" height="20" rx="5" fill="#c8c8c8" stroke="#a0a0a0" stroke-width="1.5"/>'+
+    '<rect x="34" y="76" width="32" height="8" rx="2" fill="#a0a0a0"/>'+
+    '<circle cx="38" cy="88" r="2.2" fill="#ff8a80"/>'+
+    '<circle cx="50" cy="88" r="2.2" fill="#7ec8a0"/>'+
+    '<circle cx="62" cy="88" r="2.2" fill="#7fa8e0"/>'+
+    /* 容器 */
+    '<path d="M32 18 L26 72 L74 72 L68 18 Z" fill="#e0eef5" stroke="#a8c8d8" stroke-width="2"/>'+
+    /* 中身 */
+    '<path d="M34 40 L30 68 L70 68 L66 40 Z" fill="#ffb0c8" opacity=".75"/>'+
+    /* ふた */
+    '<rect x="29" y="12" width="42" height="8" rx="3" fill="#b0b0b0"/>'
+  ),
+  /* オーブン */
+  oven: svg(
+    '<rect x="14" y="22" width="72" height="68" rx="6" fill="#c8c8c8"/>'+
+    '<rect x="14" y="22" width="72" height="68" rx="6" fill="none" stroke="#909090" stroke-width="2"/>'+
+    '<rect x="18" y="26" width="64" height="8" rx="3" fill="#909090"/>'+
+    '<rect x="20" y="40" width="60" height="42" rx="4" fill="#3a2a20"/>'+
+    '<rect x="23" y="43" width="54" height="36" rx="3" fill="#ff8030" opacity=".75"/>'+
+    '<ellipse cx="50" cy="72" rx="22" ry="7" fill="#ffd060" opacity=".85"/>'+
+    '<circle cx="24" cy="84" r="3" fill="#707070"/>'+
+    '<circle cx="76" cy="84" r="3" fill="#707070"/>'
+  ),
+  /* フライパン */
+  frying_pan: svg(
+    '<rect x="76" y="48" width="24" height="9" rx="4" fill="#4a3a2a"/>'+
+    '<rect x="78" y="50" width="20" height="5" rx="2" fill="#6a5a4a"/>'+
+    '<ellipse cx="44" cy="56" rx="38" ry="20" fill="#3a3a3a"/>'+
+    '<ellipse cx="44" cy="54" rx="35" ry="17" fill="#5a5a5a"/>'+
+    '<ellipse cx="44" cy="53" rx="32" ry="14" fill="#2a2a2a"/>'+
+    '<ellipse cx="34" cy="48" rx="8" ry="3" fill="#7a7a7a" opacity=".5"/>'
+  ),
+  /* パフェグラス */
+  glass: svg(
+    '<rect x="48.5" y="72" width="3" height="14" fill="#e8f0f5" stroke="#b8d0e0" stroke-width="1"/>'+
+    '<ellipse cx="50" cy="88" rx="14" ry="3" fill="#e8f0f5" stroke="#b8d0e0" stroke-width="1"/>'+
+    '<path d="M32 18 L42 72 L58 72 L68 18 Z" fill="#f0f8ff" stroke="#b8d0e0" stroke-width="2" opacity=".9"/>'+
+    '<path d="M35 32 L43 68 L57 68 L65 32 Z" fill="#ffb0c8" opacity=".7"/>'+
+    '<path d="M37 48 L44 68 L56 68 L63 48 Z" fill="#a8e0d0" opacity=".65"/>'+
+    '<path d="M40 60 L45 68 L55 68 L60 60 Z" fill="#ffe680" opacity=".75"/>'+
+    '<circle cx="46" cy="24" r="3" fill="#e53935"/>'
+  ),
+
+  /* その他 */
+  star:  '⭐',
+  heart: '💖'
+};
+
+/* アイコンが SVG か絵文字かを判定 */
+function isSvg(val){
+  return typeof val === 'string' && val.indexOf('<svg') === 0;
+}
+function setIcon(el, key){
+  var val = ICONS[key];
+  if (val == null) val = key;
+  if (isSvg(val)){
+    el.innerHTML = val;
+  } else {
+    el.textContent = val;
+  }
+}
+
+/* =========================================================
+   レシピ・データ
+   ========================================================= */
+/* tool: 調理器具のキー / saying: 調理中のセリフ */
+var RECIPES = [
+  { dish:'salad',     need:['tomato','lettuce','cucumber'],    label:'サラダ',        price:300, tool:'bowl',       saying:'まぜまぜ…' },
+  { dish:'curry',     need:['potato','carrot','onion'],        label:'カレー',        price:500, tool:'pot',        saying:'ぐつぐつ…' },
+  { dish:'smoothie',  need:['strawberry','banana','milk'],     label:'スムージー',    price:400, tool:'blender',    saying:'ガーッ！' },
+  { dish:'cake',      need:['flour','egg','butter'],           label:'ケーキ',        price:450, tool:'oven',       saying:'あつあつ…' },
+  { dish:'omurice',   need:['rice','egg','ketchup'],           label:'オムライス',    price:550, tool:'frying_pan', saying:'ジュージュー' },
+  { dish:'hamburger', need:['bread','meat','lettuce'],         label:'ハンバーガー',  price:600, tool:'frying_pan', saying:'ジュージュー' },
+  { dish:'pizza',     need:['flour','cheese','tomato'],        label:'ピザ',          price:700, tool:'oven',       saying:'あつあつ…' },
+  { dish:'parfait',   need:['icecream','strawberry','banana'], label:'パフェ',        price:500, tool:'glass',      saying:'のせのせ…' }
+];
+var ALL_ING = ['tomato','lettuce','cucumber','potato','carrot','onion','strawberry','banana','milk','flour','egg','butter','rice','ketchup','bread','meat','cheese','icecream'];
+var CUST_KEYS = ['bear','rabbit','cat','panda','fox','frog','pig','elephant','lion','mouse','koala','chick'];
+var PENALTY = 100;
+var DISTRACTORS = 3;
+
+var ING_NAME = {
+  tomato:'とまと', lettuce:'れたす', cucumber:'きゅうり', potato:'じゃがいも',
+  carrot:'にんじん', onion:'たまねぎ', strawberry:'いちご', banana:'ばなな',
+  milk:'ぎゅうにゅう', flour:'こむぎこ', egg:'たまご', butter:'ばたー',
+  rice:'ごはん', ketchup:'けちゃっぷ', bread:'ぱん', meat:'おにく',
+  cheese:'ちーず', icecream:'あいす'
+};
+
+var VOICE = {
+  bear:{pitch:1.05,rate:0.92}, rabbit:{pitch:1.65,rate:1.02},
+  cat:{pitch:1.50,rate:1.00}, panda:{pitch:1.15,rate:0.92},
+  fox:{pitch:1.35,rate:1.05}, frog:{pitch:1.30,rate:0.88},
+  pig:{pitch:1.55,rate:0.92}, elephant:{pitch:0.80,rate:0.85},
+  lion:{pitch:0.95,rate:0.90}, mouse:{pitch:1.80,rate:1.05},
+  koala:{pitch:1.20,rate:0.95}, chick:{pitch:1.75,rate:1.05}
+};
+var ING_VOICE = { pitch:1.20, rate:0.95 };
+
+var REST_STAMP_POOL = [
+  '🍔','🍕','🍝','🍛','🥗','🍜','🍣','🍱','🍙','🥐','🥞','🍮'
+];
+var HANKO_COLORS = ['red','blue','green'];
+
+var CLEAR_TARGET = 5;
+
+var STICKER_KEY = 'momo_stickers_v1';
+var STAMP_KEY   = 'momo_stamps_v1';
+var SETTINGS_KEY= 'momo_settings_v1';
+
+/* =========================================================
+   設定
+   ========================================================= */
+var settings = { bgmMode:'fun', bgmVol:50, sfxVol:70, soundOn:true };
+function loadSettings(){
+  try {
+    var raw = localStorage.getItem(SETTINGS_KEY);
+    if (raw){
+      var obj = JSON.parse(raw);
+      if (obj && typeof obj === 'object'){
+        if (obj.bgmMode === 'fun' || obj.bgmMode === 'calm' || obj.bgmMode === 'random') settings.bgmMode = obj.bgmMode;
+        if (typeof obj.bgmVol === 'number') settings.bgmVol = Math.max(0, Math.min(100, obj.bgmVol));
+        if (typeof obj.sfxVol === 'number') settings.sfxVol = Math.max(0, Math.min(100, obj.sfxVol));
+        if (typeof obj.soundOn === 'boolean') settings.soundOn = obj.soundOn;
+      }
+    }
+  } catch(e){}
+}
+loadSettings();
+
+/* =========================================================
+   状態
+   ========================================================= */
+var state = {
+  recipe:null, customer:'bear',
+  slotIngs:[null,null,null], used:{},
+  stars:0, sales:0,
+  phase:'idle',
+  myStamps:[],
+  pendingStamp:null,
+  boxOpened:false
+};
+
+function loadMyStamps(){
+  try {
+    var raw = localStorage.getItem(STAMP_KEY);
+    if (raw){
+      var arr = JSON.parse(raw);
+      if (Array.isArray(arr)){
+        state.myStamps = arr.filter(function(it){
+          return it && typeof it === 'object' && it.from === 'restaurant';
+        }).map(function(it){ return it.emoji; }).filter(Boolean);
+      }
+    }
+  } catch(e){}
+}
+function saveStamp(emoji, color){
+  try {
+    var raw = localStorage.getItem(STAMP_KEY);
+    var arr = [];
+    if (raw){
+      var parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)){
+        arr = parsed.map(function(it){
+          if (typeof it === 'string') return { emoji: it, from: 'animals' };
+          if (it && typeof it === 'object' && it.emoji){
+            return { emoji: it.emoji, from: it.from || 'animals', color: it.color };
+          }
+          return null;
+        }).filter(Boolean);
+      }
+    }
+    arr.push({ emoji: emoji, from: 'restaurant', color: color });
+    localStorage.setItem(STAMP_KEY, JSON.stringify(arr));
+    state.myStamps.push(emoji);
+  } catch(e){}
+}
+
+function notifyParent(msg){
+  try {
+    if (window.parent && window.parent !== window){
+      window.parent.postMessage(msg, '*');
+    }
+  } catch(e){}
+}
+
+function updateBookBadge(){
+  try {
+    var n = 0;
+    var raw1 = localStorage.getItem(STICKER_KEY);
+    if (raw1){ var a1 = JSON.parse(raw1); if (Array.isArray(a1)) n += a1.length; }
+    var raw2 = localStorage.getItem(STAMP_KEY);
+    if (raw2){ var a2 = JSON.parse(raw2); if (Array.isArray(a2)) n += a2.length; }
+    var badge = $('#bookBadge');
+    if (badge){ badge.textContent = n; badge.classList.toggle('show', n > 0); }
+  } catch(e){}
+}
+
+/* =========================================================
+   音
+   ========================================================= */
+var ctx = null, sfxGain = null, bgmGain = null, bgmTimer = null, bgmLoopTime = 0;
+var currentTrack = null, isDucked = false, audioUnlocked = false;
+
+function getBgmGainValue(quiet){ return (settings.bgmVol / 100) * (quiet ? 0.07 : 0.20); }
+function getSfxGainValue(){ return (settings.sfxVol / 100) * 0.70; }
+
+var F = {
+  C3:130.81, F3:174.61, G3:196.00, A3:220.00,
+  C4:261.63, D4:293.66, E4:329.63, F4:349.23, G4:392.00, A4:440.00,
+  C5:523.25, D5:587.33, E5:659.25, F5:698.46, G5:783.99, A5:880.00,
+  C6:1046.50, E6:1318.51, DS4:311.13
+};
+
+var TRACKS = [
+  { mood:'fun', bpm:116,
+    melody:[[0,F.E5,1],[1,F.G5,1],[2,F.A5,1],[3,F.G5,1],[4,F.E5,1],[5,F.D5,1],[6,F.C5,2],
+            [8,F.D5,1],[9,F.E5,1],[10,F.G5,1],[11,F.E5,1],[12,F.E5,1],[13,F.D5,1],[14,F.C5,2]],
+    bass:[[0,F.C3,4],[4,F.F3,4],[8,F.G3,4],[12,F.C3,4]] },
+  { mood:'fun', bpm:132,
+    melody:[[0,F.C5,.5],[.5,F.E5,.5],[1,F.G5,.5],[1.5,F.E5,.5],[2,F.G5,.5],[2.5,F.A5,.5],[3,F.G5,1],
+            [4,F.A5,.5],[4.5,F.G5,.5],[5,F.F5,.5],[5.5,F.E5,.5],[6,F.D5,.5],[6.5,F.E5,.5],[7,F.F5,1],
+            [8,F.E5,.5],[8.5,F.G5,.5],[9,F.C6,1],[10,F.A5,.5],[10.5,F.G5,.5],[11,F.E5,1],
+            [12,F.F5,.5],[12.5,F.E5,.5],[13,F.D5,.5],[13.5,F.C5,.5],[14,F.G4,1],[15,F.C5,1]],
+    bass:[[0,F.C3,2],[2,F.C3,2],[4,F.F3,2],[6,F.G3,2],[8,F.C3,2],[10,F.A3,2],[12,F.F3,2],[14,F.G3,2]] },
+  { mood:'calm', bpm:76,
+    melody:[[0,F.E5,1.5],[1.5,F.D5,.5],[2,F.C5,2],[4,F.D5,1.5],[5.5,F.E5,.5],[6,F.G5,2],
+            [8,F.G5,1],[9,F.F5,1],[10,F.E5,1],[11,F.D5,1],[12,F.C5,2],[14,F.E5,1],[15,F.C5,1]],
+    bass:[[0,F.C3,4],[4,F.A3,4],[8,F.F3,4],[12,F.G3,4]] },
+  { mood:'calm', bpm:88,
+    melody:[[0,F.C5,1],[1,F.E5,1],[2,F.G5,1.5],[3.5,F.E5,.5],[4,F.F5,1],[5,F.A5,1],[6,F.G5,2],
+            [8,F.E5,1],[9,F.G5,1],[10,F.C6,1.5],[11.5,F.A5,.5],[12,F.G5,1],[13,F.F5,1],[14,F.E5,1],[15,F.C5,1]],
+    bass:[[0,F.C3,4],[4,F.F3,4],[8,F.C3,2],[10,F.A3,2],[12,F.F3,2],[14,F.G3,2]] }
+];
+
+function getTrackPool(){
+  if (settings.bgmMode === 'calm') return TRACKS.filter(function(t){ return t.mood === 'calm'; });
+  if (settings.bgmMode === 'fun')  return TRACKS.filter(function(t){ return t.mood === 'fun'; });
+  return TRACKS.slice();
+}
+function pickTrack(){
+  var p = getTrackPool();
+  return p[Math.floor(Math.random() * p.length)] || TRACKS[0];
+}
+
+function initAudio(){
+  if (ctx) return;
+  var AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return;
+  ctx = new AC();
+  sfxGain = ctx.createGain();
+  sfxGain.gain.value = getSfxGainValue();
+  sfxGain.connect(ctx.destination);
+}
+
+function playNote(freq, t0, dur, type, dest, vol){
+  if (!ctx || !dest) return;
+  var osc = ctx.createOscillator();
+  var g = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, t0);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(Math.max(vol, 0.001), t0 + 0.03);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + Math.max(dur, 0.05));
+  osc.connect(g); g.connect(dest);
+  osc.start(t0); osc.stop(t0 + dur + 0.08);
+}
+
+function scheduleTrack(t0, track){
+  var beat = 60 / track.bpm;
+  var loopDur = 16 * beat;
+  track.melody.forEach(function(n){ playNote(n[1], t0 + n[0] * beat, n[2] * beat * 0.9, 'triangle', bgmGain, 0.5); });
+  track.bass.forEach(function(n){ playNote(n[1], t0 + n[0] * beat, n[2] * beat * 0.85, 'sine', bgmGain, 0.42); });
+  if (track.mood === 'fun'){
+    playNote(F.C6, t0 + 6 * beat,  0.5, 'sine', bgmGain, 0.10);
+    playNote(F.E6, t0 + 14 * beat, 0.5, 'sine', bgmGain, 0.10);
+  }
+  return loopDur;
+}
+function pumpBGM(){
+  if (!ctx || !bgmGain) return;
+  if (!currentTrack) currentTrack = pickTrack();
+  while (bgmLoopTime < ctx.currentTime + 2.5){
+    var dur = scheduleTrack(bgmLoopTime, currentTrack);
+    bgmLoopTime += dur;
+  }
+}
+function startBGM(){
+  if (!ctx || !settings.soundOn) return;
+  stopBGM();
+  bgmGain = ctx.createGain();
+  bgmGain.gain.value = getBgmGainValue(isDucked);
+  bgmGain.connect(ctx.destination);
+  currentTrack = pickTrack();
+  bgmLoopTime = ctx.currentTime + 0.2;
+  pumpBGM();
+  bgmTimer = setInterval(pumpBGM, 700);
+}
+function stopBGM(){
+  if (bgmTimer){ clearInterval(bgmTimer); bgmTimer = null; }
+  if (bgmGain){ try { bgmGain.disconnect(); } catch(e){} bgmGain = null; }
+  currentTrack = null;
+}
+function applyBgmGain(){
+  if (!ctx || !bgmGain) return;
+  var target = getBgmGainValue(isDucked);
+  try {
+    bgmGain.gain.cancelScheduledValues(ctx.currentTime);
+    bgmGain.gain.setValueAtTime(bgmGain.gain.value, ctx.currentTime);
+    bgmGain.gain.linearRampToValueAtTime(target, ctx.currentTime + 0.15);
+  } catch(e){ bgmGain.gain.value = target; }
+}
+function duckBGM(quiet){ isDucked = quiet; applyBgmGain(); }
+
+function sfxTap(){ if (!settings.soundOn || !ctx) return; playNote(880, ctx.currentTime, 0.09, 'sine', sfxGain, 0.22); }
+function sfxDrop(){ if (!settings.soundOn || !ctx) return; playNote(1200, ctx.currentTime, 0.10, 'triangle', sfxGain, 0.18); playNote(1600, ctx.currentTime + 0.06, 0.12, 'triangle', sfxGain, 0.14); }
+function sfxWrong(){ if (!settings.soundOn || !ctx) return; playNote(240, ctx.currentTime, 0.18, 'sawtooth', sfxGain, 0.12); playNote(180, ctx.currentTime + 0.14, 0.24, 'sawtooth', sfxGain, 0.11); }
+function sfxCook(){ if (!settings.soundOn || !ctx) return; for (var i = 0; i < 7; i++) playNote(380 + Math.random()*320, ctx.currentTime + i*0.16, 0.10, 'sine', sfxGain, 0.06); }
+function sfxDing(){ if (!settings.soundOn || !ctx) return; playNote(1047, ctx.currentTime, 0.16, 'triangle', sfxGain, 0.14); playNote(1568, ctx.currentTime + 0.10, 0.26, 'triangle', sfxGain, 0.12); }
+function sfxEat(){ if (!settings.soundOn || !ctx) return; [523,659,784,1047].forEach(function(f, i){ playNote(f, ctx.currentTime + i*0.10, 0.26, 'triangle', sfxGain, 0.12); }); }
+function sfxStar(){ if (!settings.soundOn || !ctx) return; playNote(1319, ctx.currentTime, 0.12, 'sine', sfxGain, 0.14); playNote(1760, ctx.currentTime + 0.08, 0.22, 'sine', sfxGain, 0.12); }
+function sfxCoin(){ if (!settings.soundOn || !ctx) return; playNote(1568, ctx.currentTime, 0.10, 'triangle', sfxGain, 0.13); playNote(2093, ctx.currentTime + 0.08, 0.18, 'triangle', sfxGain, 0.11); }
+function sfxLoss(){ if (!settings.soundOn || !ctx) return; playNote(392, ctx.currentTime, 0.16, 'sawtooth', sfxGain, 0.09); playNote(311, ctx.currentTime + 0.14, 0.22, 'sawtooth', sfxGain, 0.09); }
+function sfxShake(){ if (!settings.soundOn || !ctx) return; playNote(140, ctx.currentTime, 0.35, 'sawtooth', sfxGain, 0.10); playNote(170, ctx.currentTime + 0.12, 0.28, 'sawtooth', sfxGain, 0.09); playNote(200, ctx.currentTime + 0.24, 0.22, 'sawtooth', sfxGain, 0.08); }
+function sfxReveal(){ if (!settings.soundOn || !ctx) return; playNote(523, ctx.currentTime, 0.20, 'sine', sfxGain, 0.18); playNote(784, ctx.currentTime + 0.10, 0.25, 'sine', sfxGain, 0.16); playNote(1047, ctx.currentTime + 0.22, 0.28, 'sine', sfxGain, 0.14); }
+function sfxClear(){ if (!settings.soundOn || !ctx) return; [523,659,784,1047,1319].forEach(function(f, i){ playNote(f, ctx.currentTime + i*0.12, 0.32, 'triangle', sfxGain, 0.13); }); }
+
+/* =========================================================
+   音声合成
+   ========================================================= */
+var speechSupported = ('speechSynthesis' in window) && ('SpeechSynthesisUtterance' in window);
+var jaVoice = null;
+function pickVoice(){
+  if (!speechSupported) return;
+  var voices = window.speechSynthesis.getVoices();
+  jaVoice = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf('ja') === 0; }) || null;
+}
+if (speechSupported){
+  pickVoice();
+  window.speechSynthesis.onvoiceschanged = pickVoice;
+}
+function warmupSpeech(){
+  if (!speechSupported) return;
+  try {
+    var u = new SpeechSynthesisUtterance(' ');
+    u.volume = 0; u.lang = 'ja-JP';
+    window.speechSynthesis.speak(u);
+  } catch(e){}
+}
+function speak(text, opts){
+  opts = opts || {};
+  if (!settings.soundOn || !speechSupported) return;
+  var clean = String(text).replace(/\s+/g,'');
+  if (!clean) return;
+  var v = opts.voice || VOICE[state.customer] || {pitch:1.3, rate:1.0};
+  try {
+    if (opts.queue !== true) window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(clean);
+    u.lang = 'ja-JP';
+    if (jaVoice) u.voice = jaVoice;
+    u.pitch = v.pitch; u.rate = v.rate; u.volume = 1;
+    window.speechSynthesis.speak(u);
+  } catch(e){}
+}
+function stopSpeech(){ if (!speechSupported) return; try { window.speechSynthesis.cancel(); } catch(e){} }
+
+/* =========================================================
+   要素
+   ========================================================= */
+var clearOverlay = document.getElementById('clearOverlay');
+var clearText    = document.getElementById('clearText');
+var stampBoxScreen = document.getElementById('stampBoxScreen');
+var stampBoxBtn  = document.getElementById('stampBoxBtn');
+var boxStamp     = document.getElementById('boxStamp');
+var bubblePop    = document.getElementById('bubblePop');
+var starsEl      = document.getElementById('stars');
+var salesEl      = document.getElementById('sales');
+var salesValueEl = document.getElementById('salesValue');
+var custIcon     = document.getElementById('custIcon');
+var bubbleEl     = document.getElementById('bubble');
+var orderTap     = document.getElementById('orderTap');
+var needRow      = document.getElementById('needRow');
+var dishIcon     = document.getElementById('dishIcon');
+var priceTag     = document.getElementById('priceTag');
+var potEl        = document.getElementById('pot');
+var potWrap      = document.getElementById('potWrap');
+var dishEl       = document.getElementById('dish');
+var ingEl        = document.getElementById('ingredients');
+var slotEls      = document.querySelectorAll('.slot');
+
+/* 初期化 */
+setIcon(potEl, 'pot');
+
+/* =========================================================
+   ユーティリティ
+   ========================================================= */
+function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+function shuffle(a){
+  for (var i = a.length - 1; i > 0; i--){
+    var j = Math.floor(Math.random()*(i+1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+function flyIcon(fromRect, toRect, key, dur, onDone){
+  var el = document.createElement('div');
+  el.className = 'flyer';
+  var val = ICONS[key] || key;
+  var isS = isSvg(val);
+
+  var ss = Math.max(fromRect.width, fromRect.height) * 0.9;
+  var es = Math.max(toRect.width, toRect.height) * 1.05;
+
+  el.style.left = (fromRect.left + fromRect.width/2 - ss/2) + 'px';
+  el.style.top  = (fromRect.top  + fromRect.height/2 - ss/2) + 'px';
+  el.style.width = ss + 'px';
+  el.style.height = ss + 'px';
+
+  if (isS){
+    el.innerHTML = val;
+  } else {
+    el.textContent = val;
+    el.style.fontSize = (ss * 0.9) + 'px';
+  }
+
+  document.body.appendChild(el);
+  void el.offsetWidth;
+
+  el.style.transition = 'all ' + dur + 'ms cubic-bezier(.35,1.35,.55,1)';
+
+  el.style.left = (toRect.left + toRect.width/2 - es/2) + 'px';
+  el.style.top  = (toRect.top  + toRect.height/2 - es/2) + 'px';
+  el.style.width = es + 'px';
+  el.style.height = es + 'px';
+
+  if (!isS){
+    el.style.fontSize = (es * 0.9) + 'px';
+  }
+
+  setTimeout(function(){ el.remove(); if (onDone) onDone(); }, dur + 20);
+}
+function say(text, opt){
+  opt = opt || {};
+  bubbleEl.textContent = text;
+  bubbleEl.classList.remove('bounce');
+  void bubbleEl.offsetWidth;
+  bubbleEl.classList.add('bounce');
+  if (opt.speak === false) return;
+  if (opt.delay) setTimeout(function(){ speak(text); }, opt.delay);
+  else speak(text);
+}
+function showPop(text){
+  bubblePop.textContent = text;
+  bubblePop.classList.remove('show');
+  void bubblePop.offsetWidth;
+  bubblePop.classList.add('show');
+}
+function spawnBubbleFX(){
+  var r = potEl.getBoundingClientRect();
+  var b = document.createElement('div');
+  b.className = 'bubble-fx';
+  b.style.left = (r.left + r.width*(0.3+Math.random()*0.4)) + 'px';
+  b.style.top  = (r.top + r.height*0.35) + 'px';
+  document.body.appendChild(b);
+  setTimeout(function(){ b.remove(); }, 1200);
+}
+function spawnHeartFX(){
+  var r = custIcon.getBoundingClientRect();
+  var h = document.createElement('div');
+  h.className = 'heart-fx';
+  h.textContent = ICONS.heart;
+  h.style.left = (r.left + r.width*(0.15+Math.random()*0.7)) + 'px';
+  h.style.top  = (r.top + r.height*0.35) + 'px';
+  document.body.appendChild(h);
+  setTimeout(function(){ h.remove(); }, 1400);
+}
+function spawnMoneyFX(amount){
+  var r = salesEl.getBoundingClientRect();
+  var el = document.createElement('div');
+  el.className = 'money-fx ' + (amount >= 0 ? 'plus' : 'minus');
+  el.textContent = (amount >= 0 ? '+' : '') + amount + '円';
+  el.style.left = (r.left + r.width/2) + 'px';
+  el.style.top  = (r.top) + 'px';
+  document.body.appendChild(el);
+  setTimeout(function(){ el.remove(); }, 1450);
+}
+function renderStars(){
+  starsEl.innerHTML = '';
+  var n = Math.min(state.stars, 10);
+  for (var i = 0; i < n; i++){
+    var s = document.createElement('span');
+    s.className = 'st' + (i === n-1 ? ' pop' : '');
+    s.textContent = ICONS.star;
+    starsEl.appendChild(s);
+  }
+  if (state.stars > 10){
+    var m = document.createElement('span');
+    m.className = 'more';
+    m.textContent = '+' + (state.stars - 10);
+    starsEl.appendChild(m);
+  }
+}
+function renderSales(){ salesValueEl.textContent = state.sales.toLocaleString() + '円'; }
+function changeSales(amount){
+  state.sales = Math.max(0, state.sales + amount);
+  renderSales();
+  salesEl.classList.remove('bump','loss');
+  void salesEl.offsetWidth;
+  salesEl.classList.add(amount >= 0 ? 'bump' : 'loss');
+  spawnMoneyFX(amount);
+  if (amount >= 0) sfxCoin(); else sfxLoss();
+}
+
+/* =========================================================
+   ゲーム進行
+   ========================================================= */
+function newRound(){
+  state.phase = 'idle';
+  state.recipe = pick(RECIPES);
+  state.customer = pick(CUST_KEYS);
+  state.slotIngs = [null,null,null];
+  state.used = {};
+
+  setIcon(custIcon, state.customer);
+  custIcon.classList.remove('happy');
+  setIcon(dishIcon, state.recipe.dish);
+  priceTag.textContent = state.recipe.price + '円';
+
+  /* ★ レシピに応じた調理器具をセット */
+  setIcon(potEl, state.recipe.tool || 'pot');
+
+  needRow.innerHTML = '';
+  state.recipe.need.forEach(function(key, i){
+    if (i > 0){
+      var p = document.createElement('span');
+      p.className = 'plus'; p.textContent = '＋';
+      needRow.appendChild(p);
+    }
+    var chip = document.createElement('div');
+    chip.className = 'need-chip';
+    setIcon(chip, key);
+    needRow.appendChild(chip);
+  });
+
+  for (var i = 0; i < slotEls.length; i++){
+    slotEls[i].textContent = '';
+    slotEls[i].innerHTML = '';
+    slotEls[i].classList.remove('filled','pop','wrong');
+  }
+  dishEl.classList.remove('show');
+  dishEl.innerHTML = '';
+  dishEl.textContent = '';
+  potEl.classList.remove('cooking');
+  potWrap.classList.remove('shake');
+
+  var distractors = ALL_ING.filter(function(k){ return state.recipe.need.indexOf(k) === -1; });
+  shuffle(distractors);
+  var options = state.recipe.need.concat(distractors.slice(0, DISTRACTORS));
+  shuffle(options);
+
+  ingEl.innerHTML = '';
+  options.forEach(function(key){
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'ing-btn';
+    btn.dataset.key = key;
+    var img = document.createElement('div');
+    img.className = 'ing-img';
+    setIcon(img, key);
+    var nm = document.createElement('div');
+    nm.className = 'ing-name';
+    nm.textContent = ING_NAME[key] || key;
+    btn.appendChild(img);
+    btn.appendChild(nm);
+    btn.addEventListener('click', function(){ onTapIngredient(key, btn); });
+    ingEl.appendChild(btn);
+  });
+
+  say(state.recipe.label + ' ちょうだい！');
+}
+
+function onTapIngredient(key, btn){
+  if (state.phase !== 'idle') return;
+  if (state.used[key]) return;
+  ensureAudio();
+  sfxTap();
+  speak(ING_NAME[key] || key, { voice: ING_VOICE, queue: true });
+
+  var slotIdx = -1;
+  for (var i = 0; i < state.slotIngs.length; i++){
+    if (state.slotIngs[i] === null){ slotIdx = i; break; }
+  }
+  if (slotIdx === -1) return;
+
+  state.used[key] = true;
+  state.slotIngs[slotIdx] = key;
+  btn.classList.add('used');
+  btn.disabled = true;
+
+  var slot = slotEls[slotIdx];
+  var fromRect = btn.getBoundingClientRect();
+  var toRect = slot.getBoundingClientRect();
+  var dur = 450;
+
+  flyIcon(fromRect, toRect, key, dur, function(){
+    setIcon(slot, key);
+    slot.classList.add('filled');
+    slot.classList.remove('pop');
+    void slot.offsetWidth;
+    slot.classList.add('pop');
+    sfxDrop();
+    if (state.slotIngs.indexOf(null) === -1){
+      state.phase = 'checking';
+      setTimeout(judge, 250);
+    }
+  });
+}
+
+function judge(){
+  var need = state.recipe.need;
+  var ok = state.slotIngs.length === need.length &&
+           state.slotIngs.every(function(k){ return need.indexOf(k) !== -1; });
+  if (ok) startCooking();
+  else showFail();
+}
+
+function showFail(){
+  sfxWrong();
+  potWrap.classList.add('shake');
+  say('えーん、ちがうの ほしいな');
+
+  for (var i = 0; i < slotEls.length; i++){
+    var key = state.slotIngs[i];
+    if (key === null || state.recipe.need.indexOf(key) === -1){
+      slotEls[i].classList.add('wrong');
+    }
+  }
+  setTimeout(function(){ changeSales(-PENALTY); }, 400);
+
+  setTimeout(function(){
+    for (var j = 0; j < slotEls.length; j++){
+      slotEls[j].textContent = '';
+      slotEls[j].innerHTML = '';
+      slotEls[j].classList.remove('filled','pop','wrong');
+    }
+    state.slotIngs = [null,null,null];
+    state.used = {};
+    var btns = ingEl.querySelectorAll('.ing-btn');
+    for (var k = 0; k < btns.length; k++){
+      btns[k].classList.remove('used');
+      btns[k].disabled = false;
+    }
+    potWrap.classList.remove('shake');
+    state.phase = 'idle';
+    say(state.recipe.label + ' ちょうだい！');
+  }, 1500);
+}
+
+function startCooking(){
+  state.phase = 'cooking';
+
+  /* ★ 調理器具に応じたセリフ */
+  var saying = state.recipe.saying || 'ぐつぐつ…';
+  say(saying, { speak:false });
+
+  potEl.classList.add('cooking');
+  sfxCook();
+
+  var timer = setInterval(function(){ spawnBubbleFX(); }, 170);
+
+  setTimeout(function(){
+    clearInterval(timer);
+    potEl.classList.remove('cooking');
+    setIcon(dishEl, state.recipe.dish);
+    dishEl.classList.add('show');
+    say('わあ、おいしそう！ ちょうだい！');
+    sfxDing();
+    state.phase = 'ready';
+  }, 1700);
+}
+
+dishEl.addEventListener('click', function(){
+  if (state.phase !== 'ready') return;
+  state.phase = 'eating';
+  ensureAudio();
+
+  var fromRect = dishEl.getBoundingClientRect();
+  var toRect = custIcon.getBoundingClientRect();
+  var dur = 600;
+
+  dishEl.classList.remove('show');
+  dishEl.innerHTML = '';
+  dishEl.textContent = '';
+  flyIcon(fromRect, toRect, state.recipe.dish, dur, eatAnimation);
+});
+
+function eatAnimation(){
+  sfxEat();
+  custIcon.classList.add('happy');
+  setTimeout(function(){ say('おいしい！ ' + state.recipe.price + 'えん どうぞ！'); }, 100);
+
+  for (var i = 0; i < 6; i++){
+    (function(k){ setTimeout(function(){ spawnHeartFX(); }, k*100); })(i);
+  }
+
+  setTimeout(function(){
+    state.stars++;
+    renderStars();
+    sfxStar();
+    changeSales(state.recipe.price);
+  }, 500);
+
+  setTimeout(function(){
+    if (state.stars >= CLEAR_TARGET && state.stars % CLEAR_TARGET === 0){
+      showClear();
+    } else {
+      newRound();
+    }
+  }, 2400);
+}
+
+/* =========================================================
+   クリア → スタンプ
+   ========================================================= */
+function showClear(){
+  state.phase = 'clearing';
+  sfxClear();
+  clearText.textContent = CLEAR_TARGET + '品 つくったよ！';
+  clearOverlay.hidden = false;
+
+  setTimeout(function(){
+    clearOverlay.hidden = true;
+    showStampBox();
+  }, 1500);
+}
+
+function showStampBox(){
+  state.boxOpened = false;
+
+  var unowned = REST_STAMP_POOL.filter(function(s){ return state.myStamps.indexOf(s) === -1; });
+  var pool = unowned.length > 0 ? unowned : REST_STAMP_POOL.slice();
+  var chosen = pool[Math.floor(Math.random() * pool.length)];
+  var color = HANKO_COLORS[Math.floor(Math.random() * HANKO_COLORS.length)];
+  state.pendingStamp = { emoji: chosen, color: color };
+
+  stampBoxBtn.classList.remove('opened', 'shaking');
+  boxStamp.textContent = '';
+  boxStamp.className = 'box-stamp';
+
+  stampBoxScreen.hidden = false;
+  duckBGM(true);
+  setTimeout(function(){ speak('はこを タップして あけてね', 0.95); }, 500);
+}
+
+function openStampBox(){
+  if (!state.pendingStamp || state.boxOpened) return;
+  state.boxOpened = true;
+
+  stampBoxBtn.classList.add('shaking');
+  sfxShake();
+
+  setTimeout(function(){
+    stampBoxBtn.classList.remove('shaking');
+    boxStamp.textContent = state.pendingStamp.emoji;
+    boxStamp.className = 'box-stamp hanko-' + state.pendingStamp.color;
+
+    stampBoxBtn.classList.add('opened');
+    sfxReveal();
+
+    saveStamp(state.pendingStamp.emoji, state.pendingStamp.color);
+    updateBookBadge();
+    notifyParent({ type: 'updateBadge' });
+
+    setTimeout(function(){
+      showPop('スタンプ ゲット！');
+      speak('スタンプ ゲット', 0.95);
+    }, 500);
+
+    setTimeout(function(){
+      stampBoxScreen.hidden = true;
+      duckBGM(false);
+      state.boxOpened = false;
+      state.pendingStamp = null;
+      state.stars = 0;
+      renderStars();
+      newRound();
+    }, 2800);
+  }, 600);
+}
+
+/* =========================================================
+   音声アンロック
+   ========================================================= */
+function ensureAudio(){
+  if (audioUnlocked && bgmTimer) return;
+  audioUnlocked = true;
+  initAudio();
+  if (ctx && ctx.state === 'suspended'){ try { ctx.resume(); } catch(e){} }
+  warmupSpeech();
+  if (settings.soundOn && !bgmTimer) startBGM();
+}
+document.addEventListener('pointerdown', ensureAudio, { passive: true });
+document.addEventListener('touchstart', ensureAudio, { passive: true });
+document.addEventListener('keydown', ensureAudio);
+document.addEventListener('click', ensureAudio);
+
+/* =========================================================
+   イベント
+   ========================================================= */
+document.getElementById('homeBtn').addEventListener('click', function(){
+  sfxTap();
+  stopSpeech();
+  stopBGM();
+  notifyParent('goHome');
+});
+
+document.getElementById('bookBtn').addEventListener('click', function(){
+  sfxTap();
+  stopSpeech();
+  stopBGM();
+  notifyParent({ type: 'openBook', from: 'restaurant' });
+});
+
+orderTap.addEventListener('click', function(){
+  ensureAudio();
+  if (state.recipe) speak(state.recipe.label + ' ちょうだい！');
+});
+bubbleEl.addEventListener('click', function(e){
+  e.stopPropagation();
+  ensureAudio();
+  if (state.recipe) speak(state.recipe.label + ' ちょうだい！');
+});
+
+stampBoxBtn.addEventListener('click', openStampBox);
+
+document.addEventListener('visibilitychange', function(){
+  if (document.hidden){
+    stopBGM();
+    stopSpeech();
+  } else {
+    if (ctx && ctx.state === 'suspended'){ try { ctx.resume(); } catch(e){} }
+    if (settings.soundOn && !bgmTimer && audioUnlocked) startBGM();
+  }
+});
+document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+document.addEventListener('gesturestart', function(e){ e.preventDefault(); });
+
+/* =========================================================
+   起動
+   ========================================================= */
+loadMyStamps();
+updateBookBadge();
+renderStars();
+renderSales();
+newRound();
+
+setTimeout(function(){
+  try {
+    initAudio();
+    if (ctx && ctx.state === 'running'){
+      audioUnlocked = true;
+      if (settings.soundOn && !bgmTimer) startBGM();
+    }
+  } catch(e){}
+}, 100);
+
+})();
+</script>
+</body>
+</html>

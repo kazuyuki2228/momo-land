@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>ももちゃんの おえかき</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;overflow:hidden;}
+  body{
+    font-family:"Hiragino Maru Gothic ProN","Yu Gothic UI","Meiryo",system-ui,sans-serif;
+    background:linear-gradient(170deg,#fff8ec 0%,#ffeef5 50%,#eaf6ff 100%);
+    color:#6b5568;
+    display:flex;justify-content:center;
+    user-select:none;-webkit-user-select:none;
+    touch-action:manipulation;
+    overscroll-behavior:none;
+  }
+
+  #app{
+    width:min(96vw,480px);
+    height:100vh;height:100dvh;
+    display:flex;flex-direction:column;
+    padding:calc(4px + env(safe-area-inset-top)) 8px calc(6px + env(safe-area-inset-bottom));
+    gap:6px;
+    overflow:hidden;
+  }
+
+  header{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:6px;flex:0 0 auto;
+  }
+  .mini{
+    width:44px;height:44px;border-radius:50%;border:0;
+    background:rgba(255,255,255,.92);
+    box-shadow:0 2px 8px rgba(180,140,180,.28);
+    cursor:pointer;font-family:inherit;font-size:22px;line-height:1;
+    display:flex;align-items:center;justify-content:center;
+    touch-action:manipulation;flex:0 0 auto;
+    transition:transform .1s;position:relative;
+  }
+  .mini:active{transform:scale(.9);}
+  h1{
+    margin:0;font-size:clamp(13px,3.8vw,16px);font-weight:800;
+    color:#ff8fb0;text-shadow:0 1px 0 #fff,0 2px 4px rgba(255,150,190,.35);
+    white-space:nowrap;
+  }
+
+  #canvasWrap{
+    position:relative;
+    flex:1 1 auto;min-height:0;
+    background:#fff;
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:
+      inset 0 0 24px rgba(200,150,180,.15),
+      0 4px 0 rgba(230,200,220,.5),
+      0 8px 18px rgba(200,160,180,.2);
+    border:3px solid #fff;
+    touch-action:none;
+  }
+  #canvas{
+    display:block;
+    width:100%;height:100%;
+    cursor:crosshair;
+    touch-action:none;
+  }
+
+  /* ===== 道具エリア ===== */
+  #toolArea{
+    flex:0 0 auto;
+    display:flex;flex-direction:column;
+    gap:4px;
+    padding:4px 2px;
+    background:rgba(255,255,255,.5);
+    border-radius:16px;
+  }
+
+  .main-tools{
+    display:flex;gap:8px;
+    padding:0 4px;
+  }
+  .main-tool{
+    flex:1;
+    height:56px;
+    border-radius:14px;
+    border:3px solid #fff;
+    background:linear-gradient(180deg,#fff,#fff5f8);
+    box-shadow:0 3px 0 rgba(230,200,220,.55),0 4px 10px rgba(200,160,180,.18);
+    cursor:pointer;font-family:inherit;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    transition:transform .1s,box-shadow .1s;
+    padding:0 8px;
+    touch-action:manipulation;
+    color:#6b5568;
+  }
+  .main-tool:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(230,200,220,.55);}
+  .main-tool .mt-icon{font-size:24px;line-height:1;}
+  .main-tool .mt-label{
+    font-size:clamp(13px,3.6vw,15px);font-weight:900;
+    letter-spacing:1px;
+  }
+  .main-tool.active{
+    background:linear-gradient(180deg,#ffe0ec,#ffc0d8);
+    border-color:#ff8fb0;
+    color:#8a3055;
+    box-shadow:0 0 0 3px rgba(255,143,176,.4),0 3px 0 rgba(230,140,170,.6),0 0 16px rgba(255,143,176,.5);
+    transform:translateY(-1px);
+  }
+
+  .stamps{
+    display:flex;gap:6px;
+    justify-content:center;
+    padding:2px 4px;
+  }
+  .stamp-btn{
+    flex:1 1 0;
+    min-width:0;
+    max-width:60px;
+    aspect-ratio:1;
+    border-radius:12px;
+    border:3px solid #fff;
+    background:linear-gradient(180deg,#fff,#f8f0f8);
+    box-shadow:0 3px 0 rgba(230,200,220,.55),0 4px 10px rgba(200,160,180,.15);
+    cursor:pointer;font-family:inherit;
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .1s,box-shadow .1s;
+    padding:0;
+    touch-action:manipulation;
+  }
+  .stamp-btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(230,200,220,.55);}
+  .stamp-btn svg{width:70%;height:70%;display:block;}
+  .stamp-btn.active{
+    background:linear-gradient(180deg,#ffe0ec,#ffc0d8);
+    border-color:#ff8fb0;
+    box-shadow:0 0 0 3px rgba(255,143,176,.4),0 3px 0 rgba(230,140,170,.6),0 0 14px rgba(255,143,176,.5);
+    transform:translateY(-1px);
+  }
+
+  /* ===== 色パレット：2行 × 8列 全幅 ===== */
+  #palette{
+    flex:0 0 auto;
+    display:grid;
+    grid-template-columns:repeat(8, 1fr);
+    grid-template-rows:repeat(2, 1fr);
+    gap:4px;
+    width:100%;
+    padding:6px 6px;
+    background:rgba(255,255,255,.5);
+    border-radius:16px;
+  }
+  .color-btn{
+    width:100%;
+    aspect-ratio:1;
+    border-radius:50%;
+    border:2px solid #fff;
+    cursor:pointer;
+    transition:transform .1s, box-shadow .1s;
+    padding:0;
+    touch-action:manipulation;
+    box-shadow:0 2px 0 rgba(0,0,0,.12), 0 3px 5px rgba(0,0,0,.1);
+    position:relative;
+  }
+  .color-btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.12);}
+  .color-btn.active{
+    transform:translateY(-1px) scale(1.06);
+    box-shadow:0 0 0 2px #fff, 0 0 0 4px #ff8fb0, 0 2px 6px rgba(255,143,176,.4);
+    z-index:2;
+  }
+
+  /* ===== 操作バー ===== */
+  .action-bar{
+    display:flex;gap:6px;
+    flex:0 0 auto;
+    justify-content:center;
+    align-items:stretch;
+    padding:2px 2px 0;
+  }
+  .action-btn{
+    flex:1 1 0;
+    min-width:0;
+    height:52px;
+    border-radius:14px;
+    border:none;
+    cursor:pointer;
+    font-family:inherit;
+    font-weight:900;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+    transition:transform .1s,box-shadow .1s;
+    touch-action:manipulation;
+    padding:0 4px;
+    color:#fff;
+  }
+  .action-btn:active{transform:translateY(3px);}
+  .action-btn .ab-icon{font-size:18px;line-height:1;}
+  .action-btn .ab-label{
+    font-size:clamp(10px,2.9vw,11px);
+    line-height:1;letter-spacing:.5px;
+    font-weight:900;
+    white-space:nowrap;
+  }
+  .action-btn.undo{
+    background:linear-gradient(180deg,#c8e0ff,#a0c8ff);
+    box-shadow:0 4px 0 #6f9ed8;
+    color:#4a5a78;
+  }
+  .action-btn.undo:active{box-shadow:0 1px 0 #6f9ed8;}
+  .action-btn.clear{
+    background:linear-gradient(180deg,#ffc8c8,#ffa0a0);
+    box-shadow:0 4px 0 #d86f6f;
+    color:#6a3030;
+  }
+  .action-btn.clear:active{box-shadow:0 1px 0 #d86f6f;}
+  .action-btn.done{
+    flex:1.3 1 0;
+    background:linear-gradient(180deg,#ffb74d,#ff8a3d);
+    box-shadow:0 4px 0 #d96a1f;
+    color:#fff;
+  }
+  .action-btn.done:active{box-shadow:0 1px 0 #d96a1f;}
+  .action-btn.gallery{
+    background:linear-gradient(180deg,#c48cff,#9b6bef);
+    box-shadow:0 4px 0 #6f45c4;
+    color:#fff;
+  }
+  .action-btn.gallery:active{box-shadow:0 1px 0 #6f45c4;}
+
+  /* ===== ギャラリー ===== */
+  .screen-overlay{
+    position:fixed;inset:0;z-index:50;
+    display:flex;flex-direction:column;
+    background:linear-gradient(170deg,#fff8ec 0%,#ffeef5 50%,#eaf6ff 100%);
+    padding:calc(4px + env(safe-area-inset-top)) 8px calc(6px + env(safe-area-inset-bottom));
+    animation:fadeIn .25s ease;
+  }
+  .screen-overlay[hidden]{display:none;}
+  @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
+  .gallery-header{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:6px;flex:0 0 auto;padding-bottom:8px;
+  }
+  .gallery-title{
+    margin:0;font-size:clamp(15px,4.4vw,19px);font-weight:900;
+    color:#9b6bef;text-shadow:0 1px 0 #fff;
+    letter-spacing:2px;
+  }
+  .gallery-grid{
+    flex:1;min-height:0;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:8px;
+    padding:4px 2px 12px;
+    align-content:start;
+  }
+  .gallery-grid[hidden]{display:none;}
+  .gallery-cell{
+    aspect-ratio:1;
+    border-radius:14px;
+    border:3px solid #fff;
+    background:#fff;
+    box-shadow:0 3px 0 rgba(230,200,220,.5), 0 4px 10px rgba(200,160,180,.18);
+    cursor:pointer;
+    overflow:hidden;
+    padding:0;
+    transition:transform .1s, box-shadow .1s;
+    touch-action:manipulation;
+  }
+  .gallery-cell:active{transform:translateY(3px) scale(.97);box-shadow:0 1px 0 rgba(230,200,220,.5);}
+  .gallery-cell img{
+    width:100%;height:100%;object-fit:cover;display:block;
+    background:#fff;
+  }
+  .gallery-empty{
+    flex:1;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    gap:12px;padding:20px;text-align:center;
+    color:#a890a8;
+  }
+  .gallery-empty[hidden]{display:none;}
+  .gallery-empty .ge-emoji{
+    font-size:clamp(64px,20vw,90px);line-height:1;
+    animation:floaty 2.4s ease-in-out infinite;
+  }
+  @keyframes floaty{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+  .gallery-empty .ge-text{
+    font-size:clamp(14px,4vw,17px);font-weight:800;
+    color:#8a7088;line-height:1.5;
+  }
+  .gallery-count{
+    font-size:clamp(11px,3.2vw,13px);font-weight:800;color:#a890a8;
+    text-align:center;padding:4px 0 0;flex:0 0 auto;
+  }
+
+  #viewModal{
+    position:fixed;inset:0;z-index:220;
+    background:rgba(60,40,20,.75);
+    display:flex;align-items:center;justify-content:center;
+    padding:20px;
+    animation:fadeIn .25s ease;
+    -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
+  }
+  #viewModal[hidden]{display:none;}
+  .view-inner{
+    width:100%;max-width:440px;
+    background:#fff;border-radius:24px;
+    padding:14px;
+    box-shadow:0 24px 60px rgba(0,0,0,.5);
+    animation:popIn .35s cubic-bezier(.34,1.56,.64,1);
+    display:flex;flex-direction:column;
+    gap:10px;
+    max-height:90vh;
+  }
+  @keyframes popIn{
+    from{transform:scale(.6) rotate(-4deg);opacity:0;}
+    to{transform:scale(1) rotate(0);opacity:1;}
+  }
+  .view-inner img{
+    width:100%;height:auto;max-height:70vh;object-fit:contain;
+    display:block;border-radius:14px;background:#fff;
+  }
+  .view-buttons{
+    display:flex;gap:10px;justify-content:center;
+    padding-top:4px;
+  }
+  .view-btn{
+    flex:1;
+    font-family:inherit;
+    font-size:clamp(13px,3.9vw,15px);font-weight:900;
+    color:#fff;border:none;border-radius:999px;
+    padding:12px 18px;cursor:pointer;
+    letter-spacing:1px;
+    transition:transform .1s,box-shadow .1s;
+    touch-action:manipulation;
+  }
+  .view-btn:active{transform:translateY(3px);}
+  .view-btn.back{background:linear-gradient(180deg,#7fd6ff,#4ab3e8);box-shadow:0 4px 0 #2a8ec4;}
+  .view-btn.back:active{box-shadow:0 1px 0 #2a8ec4;}
+  .view-btn.del{background:linear-gradient(180deg,#ff8a8a,#e74c3c);box-shadow:0 4px 0 #b03a2e;}
+  .view-btn.del:active{box-shadow:0 1px 0 #b03a2e;}
+
+  #confirmModal{
+    position:fixed;inset:0;z-index:240;
+    background:rgba(60,40,20,.55);
+    display:flex;align-items:center;justify-content:center;
+    padding:24px;
+    animation:fadeIn .25s ease;
+    -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
+  }
+  #confirmModal[hidden]{display:none;}
+  .confirm-card{
+    background:linear-gradient(180deg,#fffbf0 0%,#ffe8f5 100%);
+    border-radius:30px;border:6px solid #fff;
+    padding:32px 24px 26px;text-align:center;
+    max-width:360px;width:100%;
+    box-shadow:0 24px 60px rgba(0,0,0,.45),0 0 0 8px rgba(255,255,255,.25);
+    animation:popIn .4s cubic-bezier(.34,1.56,.64,1);
+  }
+  .confirm-emoji{font-size:clamp(60px,18vw,80px);margin-bottom:6px;line-height:1;}
+  .confirm-text{
+    font-size:clamp(15px,4.4vw,18px);font-weight:900;
+    color:#5b4a38;margin-bottom:20px;line-height:1.5;
+  }
+  .confirm-buttons{display:flex;gap:10px;justify-content:center;}
+  .confirm-btn{
+    flex:1;
+    font-family:inherit;
+    font-size:clamp(14px,3.9vw,16px);font-weight:900;
+    color:#fff;border:none;border-radius:999px;
+    padding:12px 16px;cursor:pointer;
+    letter-spacing:1px;
+    transition:transform .1s,box-shadow .1s;
+    touch-action:manipulation;
+  }
+  .confirm-btn:active{transform:translateY(3px);}
+  .confirm-btn.cancel{background:linear-gradient(180deg,#7fd6ff,#4ab3e8);box-shadow:0 4px 0 #2a8ec4;}
+  .confirm-btn.cancel:active{box-shadow:0 1px 0 #2a8ec4;}
+  .confirm-btn.ok{background:linear-gradient(180deg,#ff8a8a,#e74c3c);box-shadow:0 4px 0 #b03a2e;}
+  .confirm-btn.ok:active{box-shadow:0 1px 0 #b03a2e;}
+
+  #doneOverlay{
+    position:fixed;inset:0;z-index:180;
+    display:flex;align-items:center;justify-content:center;
+    pointer-events:none;
+    opacity:0;
+  }
+  #doneOverlay.show{animation:doneFade 2s ease-out forwards;}
+  @keyframes doneFade{
+    0%{opacity:0;}
+    15%{opacity:1;}
+    80%{opacity:1;}
+    100%{opacity:0;}
+  }
+  .done-card{
+    background:#fff;
+    border-radius:28px;
+    padding:22px 34px;
+    text-align:center;
+    box-shadow:0 14px 44px rgba(180,140,190,.4);
+    animation:popIn .45s cubic-bezier(.4,1.6,.5,1);
+  }
+  .done-emoji{
+    font-size:clamp(48px,14vw,68px);line-height:1;
+    animation:doneBounce .9s ease infinite;
+  }
+  @keyframes doneBounce{
+    0%,100%{transform:translateY(0) scale(1);}
+    50%{transform:translateY(-8px) scale(1.12);}
+  }
+  .done-text{
+    margin:10px 0 0;
+    font-size:clamp(17px,4.8vw,22px);font-weight:900;
+    color:#ff8fb0;letter-spacing:1px;
+  }
+
+  .confetti{
+    position:fixed;top:-40px;z-index:170;pointer-events:none;
+    animation-name:fall;
+    animation-timing-function:linear;
+    animation-fill-mode:forwards;
+  }
+  @keyframes fall{
+    0%{transform:translateY(0) rotate(0);opacity:1;}
+    100%{transform:translateY(110vh) rotate(360deg);opacity:.9;}
+  }
+
+  @media (max-width:360px){
+    .mini{width:40px;height:40px;font-size:20px;}
+    .action-btn{height:46px;}
+    .main-tool{height:50px;}
+    .main-tool .mt-icon{font-size:22px;}
+    #palette{gap:3px;padding:5px 5px;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .gallery-empty .ge-emoji,.done-emoji{animation:none!important;}
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <button id="homeBtn" class="mini" aria-label="おうちへ">🏠</button>
+    <h1>🎨 ももちゃんの おえかき</h1>
+    <button id="bookBtn" class="mini" aria-label="シール帳">📖</button>
+  </header>
+
+  <div id="canvasWrap">
+    <canvas id="canvas"></canvas>
+  </div>
+
+  <div id="toolArea">
+    <div class="main-tools">
+      <button id="penBtn" class="main-tool active" type="button">
+        <span class="mt-icon">🖌️</span>
+        <span class="mt-label">ペン</span>
+      </button>
+      <button id="eraserBtn" class="main-tool" type="button">
+        <span class="mt-icon">🧽</span>
+        <span class="mt-label">けす</span>
+      </button>
+    </div>
+    <div class="stamps" id="stamps"></div>
+  </div>
+
+  <div id="palette"></div>
+
+  <div class="action-bar">
+    <button id="undoBtn" class="action-btn undo" type="button">
+      <span class="ab-icon">↶</span>
+      <span class="ab-label">もどす</span>
+    </button>
+    <button id="clearBtn" class="action-btn clear" type="button">
+      <span class="ab-icon">🗑️</span>
+      <span class="ab-label">ぜんぶ</span>
+    </button>
+    <button id="doneBtn" class="action-btn done" type="button">
+      <span class="ab-icon">✨</span>
+      <span class="ab-label">できた！</span>
+    </button>
+    <button id="galleryBtn" class="action-btn gallery" type="button">
+      <span class="ab-icon">🖼️</span>
+      <span class="ab-label">ぎゃらりー</span>
+    </button>
+  </div>
+</div>
+
+<div id="galleryScreen" class="screen-overlay" hidden>
+  <div class="gallery-header">
+    <button id="closeGalleryBtn" class="mini" aria-label="とじる">✖</button>
+    <h2 class="gallery-title">🖼️ おえかきちょう</h2>
+    <div style="width:44px;flex:0 0 auto;"></div>
+  </div>
+  <div id="galleryGrid" class="gallery-grid" hidden></div>
+  <div id="galleryEmpty" class="gallery-empty" hidden>
+    <div class="ge-emoji">🎨</div>
+    <div class="ge-text">まだ おえかきが<br>ないよ</div>
+  </div>
+  <div id="galleryCount" class="gallery-count"></div>
+</div>
+
+<div id="viewModal" hidden>
+  <div class="view-inner">
+    <img id="viewImage" alt="おえかき">
+    <div class="view-buttons">
+      <button id="viewBackBtn" class="view-btn back" type="button">とじる</button>
+      <button id="viewDelBtn" class="view-btn del" type="button">けす</button>
+    </div>
+  </div>
+</div>
+
+<div id="confirmModal" hidden>
+  <div class="confirm-card">
+    <div class="confirm-emoji" id="confirmEmoji">🗑️</div>
+    <div class="confirm-text" id="confirmText">ぜんぶ けしても いい？</div>
+    <div class="confirm-buttons">
+      <button id="confirmNoBtn" class="confirm-btn cancel" type="button">やめる</button>
+      <button id="confirmYesBtn" class="confirm-btn ok" type="button">けす</button>
+    </div>
+  </div>
+</div>
+
+<div id="doneOverlay">
+  <div class="done-card">
+    <div class="done-emoji">🎉</div>
+    <p class="done-text">すてきに かけたね！</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var $ = function(s){ return document.querySelector(s); };
+
+  var STORAGE_KEY = 'momo_drawings_v1';
+  var SETTINGS_KEY = 'momo_settings_v1';
+  var MAX_SAVED = 30;
+  var MAX_HISTORY = 10;
+
+  /* ★ 16色（2行×8列） */
+  var COLORS = [
+    /* 1段目 */
+    { name: 'くろ',         color: '#222222' },
+    { name: 'あか',         color: '#e53935' },
+    { name: 'あお',         color: '#2196f3' },
+    { name: 'きいろ',       color: '#ffd93d' },
+    { name: 'みどり',       color: '#4caf50' },
+    { name: 'きみどり',     color: '#a8e05f' },
+    { name: 'みずいろ',     color: '#7ec8e3' },
+    { name: 'ももいろ',     color: '#ff5a9e' },
+    /* 2段目 */
+    { name: 'むらさき',     color: '#9c27b0' },
+    { name: 'だいだいいろ', color: '#ff9800' },
+    { name: 'ペールオレンジ', color: '#ffcc99' },
+    { name: 'おうどいろ',   color: '#c8a44a' },
+    { name: 'ちゃいろ',     color: '#8d6e63' },
+    { name: 'こげちゃいろ', color: '#4e342e' },
+    { name: 'はいいろ',     color: '#9e9e9e' },
+    { name: 'しろ',         color: '#ffffff', border: '#ddd' }
+  ];
+
+  var STAMP_SHAPES = [
+    { id: 'star',    name: 'ほし' },
+    { id: 'circle',  name: 'まる' },
+    { id: 'triangle',name: 'さんかく' },
+    { id: 'square',  name: 'しかく' },
+    { id: 'heart',   name: 'ハート' },
+    { id: 'diamond', name: 'ひしがた' }
+  ];
+
+  var settings = { bgmMode:'fun', bgmVol:50, sfxVol:70, soundOn:true };
+  function loadSettings(){
+    try {
+      var raw = localStorage.getItem(SETTINGS_KEY);
+      if (raw){
+        var obj = JSON.parse(raw);
+        if (obj && typeof obj === 'object'){
+          if (obj.bgmMode === 'fun' || obj.bgmMode === 'calm' || obj.bgmMode === 'random') settings.bgmMode = obj.bgmMode;
+          if (typeof obj.bgmVol === 'number') settings.bgmVol = Math.max(0, Math.min(100, obj.bgmVol));
+          if (typeof obj.sfxVol === 'number') settings.sfxVol = Math.max(0, Math.min(100, obj.sfxVol));
+          if (typeof obj.soundOn === 'boolean') settings.soundOn = obj.soundOn;
+        }
+      }
+    } catch(e){}
+  }
+  loadSettings();
+
+  var state = {
+    tool: 'pen',
+    stampShape: 'star',
+    color: '#222222',
+    isDrawing: false,
+    lastX: 0, lastY: 0,
+    history: [],
+    viewingIndex: -1,
+    pendingConfirm: null,
+    hasDrawn: false
+  };
+
+  /* ===== 音 ===== */
+  var ctx = null, sfxGain = null, bgmGain = null, bgmTimer = null, bgmLoopTime = 0;
+  var currentTrack = null, isDucked = false, audioUnlocked = false;
+
+  function getBgmGainValue(quiet){ return (settings.bgmVol / 100) * (quiet ? 0.07 : 0.20); }
+  function getSfxGainValue(){ return (settings.sfxVol / 100) * 0.70; }
+
+  var F = {
+    C3:130.81, F3:174.61, G3:196.00, A3:220.00,
+    C4:261.63, D4:293.66, E4:329.63, F4:349.23, G4:392.00, A4:440.00,
+    C5:523.25, D5:587.33, E5:659.25, F5:698.46, G5:783.99, A5:880.00,
+    C6:1046.50, E6:1318.51, DS4:311.13
+  };
+
+  var TRACKS = [
+    { mood:'fun', bpm:116,
+      melody:[[0,F.E5,1],[1,F.G5,1],[2,F.A5,1],[3,F.G5,1],[4,F.E5,1],[5,F.D5,1],[6,F.C5,2],
+              [8,F.D5,1],[9,F.E5,1],[10,F.G5,1],[11,F.E5,1],[12,F.E5,1],[13,F.D5,1],[14,F.C5,2]],
+      bass:[[0,F.C3,4],[4,F.F3,4],[8,F.G3,4],[12,F.C3,4]] },
+    { mood:'fun', bpm:132,
+      melody:[[0,F.C5,.5],[.5,F.E5,.5],[1,F.G5,.5],[1.5,F.E5,.5],[2,F.G5,.5],[2.5,F.A5,.5],[3,F.G5,1],
+              [4,F.A5,.5],[4.5,F.G5,.5],[5,F.F5,.5],[5.5,F.E5,.5],[6,F.D5,.5],[6.5,F.E5,.5],[7,F.F5,1],
+              [8,F.E5,.5],[8.5,F.G5,.5],[9,F.C6,1],[10,F.A5,.5],[10.5,F.G5,.5],[11,F.E5,1],
+              [12,F.F5,.5],[12.5,F.E5,.5],[13,F.D5,.5],[13.5,F.C5,.5],[14,F.G4,1],[15,F.C5,1]],
+      bass:[[0,F.C3,2],[2,F.C3,2],[4,F.F3,2],[6,F.G3,2],[8,F.C3,2],[10,F.A3,2],[12,F.F3,2],[14,F.G3,2]] },
+    { mood:'calm', bpm:76,
+      melody:[[0,F.E5,1.5],[1.5,F.D5,.5],[2,F.C5,2],[4,F.D5,1.5],[5.5,F.E5,.5],[6,F.G5,2],
+              [8,F.G5,1],[9,F.F5,1],[10,F.E5,1],[11,F.D5,1],[12,F.C5,2],[14,F.E5,1],[15,F.C5,1]],
+      bass:[[0,F.C3,4],[4,F.A3,4],[8,F.F3,4],[12,F.G3,4]] },
+    { mood:'calm', bpm:88,
+      melody:[[0,F.C5,1],[1,F.E5,1],[2,F.G5,1.5],[3.5,F.E5,.5],[4,F.F5,1],[5,F.A5,1],[6,F.G5,2],
+              [8,F.E5,1],[9,F.G5,1],[10,F.C6,1.5],[11.5,F.A5,.5],[12,F.G5,1],[13,F.F5,1],[14,F.E5,1],[15,F.C5,1]],
+      bass:[[0,F.C3,4],[4,F.F3,4],[8,F.C3,2],[10,F.A3,2],[12,F.F3,2],[14,F.G3,2]] }
+  ];
+
+  function getTrackPool(){
+    if (settings.bgmMode === 'calm') return TRACKS.filter(function(t){ return t.mood === 'calm'; });
+    if (settings.bgmMode === 'fun')  return TRACKS.filter(function(t){ return t.mood === 'fun'; });
+    return TRACKS.slice();
+  }
+  function pickTrack(){
+    var p = getTrackPool();
+    return p[Math.floor(Math.random() * p.length)] || TRACKS[0];
+  }
+
+  function initAudio(){
+    if (ctx) return;
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    ctx = new AC();
+    sfxGain = ctx.createGain();
+    sfxGain.gain.value = getSfxGainValue();
+    sfxGain.connect(ctx.destination);
+  }
+  function playNote(freq, t0, dur, type, dest, vol){
+    if (!ctx || !dest) return;
+    var osc = ctx.createOscillator();
+    var g = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t0);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(Math.max(vol, 0.001), t0 + 0.03);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + Math.max(dur, 0.05));
+    osc.connect(g); g.connect(dest);
+    osc.start(t0); osc.stop(t0 + dur + 0.08);
+  }
+  function scheduleTrack(t0, track){
+    var beat = 60 / track.bpm;
+    var loopDur = 16 * beat;
+    track.melody.forEach(function(n){ playNote(n[1], t0 + n[0] * beat, n[2] * beat * 0.9, 'triangle', bgmGain, 0.5); });
+    track.bass.forEach(function(n){ playNote(n[1], t0 + n[0] * beat, n[2] * beat * 0.85, 'sine', bgmGain, 0.42); });
+    if (track.mood === 'fun'){
+      playNote(F.C6, t0 + 6 * beat,  0.5, 'sine', bgmGain, 0.10);
+      playNote(F.E6, t0 + 14 * beat, 0.5, 'sine', bgmGain, 0.10);
+    }
+    return loopDur;
+  }
+  function pumpBGM(){
+    if (!ctx || !bgmGain) return;
+    if (!currentTrack) currentTrack = pickTrack();
+    while (bgmLoopTime < ctx.currentTime + 2.5){
+      var dur = scheduleTrack(bgmLoopTime, currentTrack);
+      bgmLoopTime += dur;
+    }
+  }
+  function startBGM(){
+    if (!ctx || !settings.soundOn) return;
+    stopBGM();
+    bgmGain = ctx.createGain();
+    bgmGain.gain.value = getBgmGainValue(isDucked);
+    bgmGain.connect(ctx.destination);
+    currentTrack = pickTrack();
+    bgmLoopTime = ctx.currentTime + 0.2;
+    pumpBGM();
+    bgmTimer = setInterval(pumpBGM, 700);
+  }
+  function stopBGM(){
+    if (bgmTimer){ clearInterval(bgmTimer); bgmTimer = null; }
+    if (bgmGain){ try { bgmGain.disconnect(); } catch(e){} bgmGain = null; }
+    currentTrack = null;
+  }
+  function applyBgmGain(){
+    if (!ctx || !bgmGain) return;
+    var target = getBgmGainValue(isDucked);
+    try {
+      bgmGain.gain.cancelScheduledValues(ctx.currentTime);
+      bgmGain.gain.setValueAtTime(bgmGain.gain.value, ctx.currentTime);
+      bgmGain.gain.linearRampToValueAtTime(target, ctx.currentTime + 0.15);
+    } catch(e){ bgmGain.gain.value = target; }
+  }
+  function duckBGM(quiet){ isDucked = quiet; applyBgmGain(); }
+
+  function sfxTap(){ if (!settings.soundOn || !ctx) return; playNote(880, ctx.currentTime, 0.09, 'sine', sfxGain, 0.22); }
+  function sfxDrawStart(){ if (!settings.soundOn || !ctx) return; playNote(660, ctx.currentTime, 0.06, 'sine', sfxGain, 0.10); }
+  function sfxStamp(){ if (!settings.soundOn || !ctx) return; playNote(1047, ctx.currentTime, 0.10, 'sine', sfxGain, 0.18); playNote(1568, ctx.currentTime + 0.06, 0.14, 'sine', sfxGain, 0.14); }
+  function sfxClear(){ if (!settings.soundOn || !ctx) return; playNote(1200, ctx.currentTime, 0.18, 'sawtooth', sfxGain, 0.10); playNote(400, ctx.currentTime + 0.12, 0.22, 'sawtooth', sfxGain, 0.09); }
+  function sfxUndo(){ if (!settings.soundOn || !ctx) return; playNote(700, ctx.currentTime, 0.10, 'sine', sfxGain, 0.14); playNote(520, ctx.currentTime + 0.08, 0.12, 'sine', sfxGain, 0.12); }
+  function sfxDone(){
+    if (!settings.soundOn || !ctx) return;
+    var t = ctx.currentTime;
+    [523,659,784,1047,1319].forEach(function(f, i){ playNote(f, t + i*0.11, 0.32, 'triangle', sfxGain, 0.20); });
+  }
+
+  /* ===== 音声合成 ===== */
+  var speechSupported = ('speechSynthesis' in window) && ('SpeechSynthesisUtterance' in window);
+  var jaVoice = null;
+  function pickVoice(){
+    if (!speechSupported) return;
+    var voices = window.speechSynthesis.getVoices();
+    jaVoice = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf('ja') === 0; }) || null;
+  }
+  if (speechSupported){
+    pickVoice();
+    window.speechSynthesis.onvoiceschanged = pickVoice;
+  }
+  function speak(text, rate){
+    if (!settings.soundOn || !speechSupported) return;
+    try {
+      window.speechSynthesis.cancel();
+      setTimeout(function(){
+        var u = new SpeechSynthesisUtterance(text);
+        u.lang = 'ja-JP';
+        if (jaVoice) u.voice = jaVoice;
+        u.rate = rate || 1.0;
+        u.pitch = 1.35;
+        u.volume = 1;
+        window.speechSynthesis.speak(u);
+      }, 60);
+    } catch(e){}
+  }
+  function cancelSpeech(){
+    if (!speechSupported) return;
+    try { window.speechSynthesis.cancel(); } catch(e){}
+  }
+  function notifyParent(msg){
+    try {
+      if (window.parent && window.parent !== window){
+        window.parent.postMessage(msg, '*');
+      }
+    } catch(e){}
+  }
+
+  /* ===== キャンバス ===== */
+  var canvas = $('#canvas');
+  var canvasWrap = $('#canvasWrap');
+  var ctx2d = canvas.getContext('2d');
+  var canvasW = 0, canvasH = 0;
+
+  function setupCanvas(){
+    var rect = canvasWrap.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    canvasW = rect.width;
+    canvasH = rect.height;
+    canvas.width = Math.floor(rect.width * dpr);
+    canvas.height = Math.floor(rect.height * dpr);
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+    ctx2d.setTransform(1, 0, 0, 1, 0, 0);
+    ctx2d.scale(dpr, dpr);
+    ctx2d.lineCap = 'round';
+    ctx2d.lineJoin = 'round';
+    ctx2d.fillStyle = '#ffffff';
+    ctx2d.fillRect(0, 0, canvasW, canvasH);
+    state.history = [];
+    pushHistory();
+  }
+
+  function getLineWidth(){ return Math.max(6, Math.min(14, canvasW / 40)); }
+  function getStampSize(){ return Math.max(50, Math.min(100, canvasW / 5)); }
+
+  function pushHistory(){
+    try {
+      var data = canvas.toDataURL('image/png');
+      state.history.push(data);
+      if (state.history.length > MAX_HISTORY){ state.history.shift(); }
+    } catch(e){}
+  }
+  function undo(){
+    if (state.history.length <= 1) return;
+    state.history.pop();
+    var prev = state.history[state.history.length - 1];
+    restoreFromData(prev);
+    sfxUndo();
+  }
+  function restoreFromData(dataUrl){
+    var img = new Image();
+    img.onload = function(){
+      ctx2d.clearRect(0, 0, canvasW, canvasH);
+      ctx2d.fillStyle = '#ffffff';
+      ctx2d.fillRect(0, 0, canvasW, canvasH);
+      ctx2d.drawImage(img, 0, 0, canvasW, canvasH);
+    };
+    img.src = dataUrl;
+  }
+
+  function getPos(e){
+    var rect = canvas.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+
+  function startDraw(e){
+    e.preventDefault();
+    ensureAudio();
+    var p = getPos(e);
+    state.isDrawing = true;
+    state.lastX = p.x;
+    state.lastY = p.y;
+
+    if (state.tool === 'stamp'){
+      drawStamp(p.x, p.y);
+      state.isDrawing = false;
+      state.hasDrawn = true;
+      pushHistory();
+      sfxStamp();
+      return;
+    }
+
+    ctx2d.beginPath();
+    ctx2d.arc(p.x, p.y, getLineWidth() / 2, 0, Math.PI * 2);
+    if (state.tool === 'eraser'){
+      ctx2d.fillStyle = '#ffffff';
+    } else {
+      ctx2d.fillStyle = state.color;
+    }
+    ctx2d.fill();
+    state.hasDrawn = true;
+    sfxDrawStart();
+  }
+
+  function moveDraw(e){
+    if (!state.isDrawing) return;
+    e.preventDefault();
+    var p = getPos(e);
+
+    ctx2d.beginPath();
+    ctx2d.moveTo(state.lastX, state.lastY);
+    ctx2d.lineTo(p.x, p.y);
+    ctx2d.lineWidth = getLineWidth();
+    ctx2d.lineCap = 'round';
+    ctx2d.lineJoin = 'round';
+
+    if (state.tool === 'eraser'){
+      ctx2d.strokeStyle = '#ffffff';
+    } else {
+      ctx2d.strokeStyle = state.color;
+    }
+    ctx2d.stroke();
+
+    state.lastX = p.x;
+    state.lastY = p.y;
+  }
+
+  function endDraw(e){
+    if (!state.isDrawing) return;
+    e.preventDefault();
+    state.isDrawing = false;
+    pushHistory();
+  }
+
+  /* ===== 図形スタンプ ===== */
+  function drawStamp(cx, cy){
+    var size = getStampSize();
+    var half = size / 2;
+    var color = state.color;
+    var shape = state.stampShape;
+
+    ctx2d.save();
+    ctx2d.fillStyle = color;
+    ctx2d.strokeStyle = color;
+    ctx2d.lineWidth = Math.max(2, size * 0.05);
+    ctx2d.lineJoin = 'round';
+    ctx2d.lineCap = 'round';
+
+    if (shape === 'star'){
+      drawStar(cx, cy, 5, half, half * 0.45);
+    } else if (shape === 'circle'){
+      ctx2d.beginPath();
+      ctx2d.arc(cx, cy, half, 0, Math.PI * 2);
+      ctx2d.fill();
+    } else if (shape === 'triangle'){
+      ctx2d.beginPath();
+      ctx2d.moveTo(cx, cy - half);
+      ctx2d.lineTo(cx + half * 0.866, cy + half * 0.6);
+      ctx2d.lineTo(cx - half * 0.866, cy + half * 0.6);
+      ctx2d.closePath();
+      ctx2d.fill();
+    } else if (shape === 'square'){
+      ctx2d.fillRect(cx - half * 0.85, cy - half * 0.85, half * 1.7, half * 1.7);
+    } else if (shape === 'heart'){
+      drawHeart(cx, cy, half);
+    } else if (shape === 'diamond'){
+      ctx2d.beginPath();
+      ctx2d.moveTo(cx, cy - half);
+      ctx2d.lineTo(cx + half * 0.75, cy);
+      ctx2d.lineTo(cx, cy + half);
+      ctx2d.lineTo(cx - half * 0.75, cy);
+      ctx2d.closePath();
+      ctx2d.fill();
+    }
+    ctx2d.restore();
+  }
+
+  function drawStar(cx, cy, spikes, outerR, innerR){
+    var rot = -Math.PI / 2;
+    var step = Math.PI / spikes;
+    ctx2d.beginPath();
+    ctx2d.moveTo(cx + Math.cos(rot) * outerR, cy + Math.sin(rot) * outerR);
+    for (var i = 0; i < spikes; i++){
+      rot += step;
+      ctx2d.lineTo(cx + Math.cos(rot) * innerR, cy + Math.sin(rot) * innerR);
+      rot += step;
+      ctx2d.lineTo(cx + Math.cos(rot) * outerR, cy + Math.sin(rot) * outerR);
+    }
+    ctx2d.closePath();
+    ctx2d.fill();
+  }
+  function drawHeart(cx, cy, r){
+    var top = cy - r * 0.6;
+    ctx2d.beginPath();
+    ctx2d.moveTo(cx, cy + r * 0.9);
+    ctx2d.bezierCurveTo(cx - r * 1.2, cy - r * 0.1, cx - r * 0.6, top - r * 0.4, cx, top + r * 0.1);
+    ctx2d.bezierCurveTo(cx + r * 0.6, top - r * 0.4, cx + r * 1.2, cy - r * 0.1, cx, cy + r * 0.9);
+    ctx2d.closePath();
+    ctx2d.fill();
+  }
+
+  canvas.addEventListener('pointerdown', startDraw);
+  canvas.addEventListener('pointermove', moveDraw);
+  canvas.addEventListener('pointerup', endDraw);
+  canvas.addEventListener('pointercancel', endDraw);
+  canvas.addEventListener('pointerleave', endDraw);
+  canvas.addEventListener('touchstart', function(e){ e.preventDefault(); }, { passive: false });
+  canvas.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+
+  /* ===== リサイズ ===== */
+  var resizeTimer = null;
+  function onResize(){
+    if (resizeTimer) clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function(){
+      var prev = canvas.toDataURL('image/png');
+      var img = new Image();
+      img.onload = function(){
+        setupCanvas();
+        ctx2d.clearRect(0, 0, canvasW, canvasH);
+        ctx2d.fillStyle = '#ffffff';
+        ctx2d.fillRect(0, 0, canvasW, canvasH);
+        ctx2d.drawImage(img, 0, 0, canvasW, canvasH);
+        pushHistory();
+      };
+      img.src = prev;
+    }, 250);
+  }
+  window.addEventListener('resize', onResize);
+  window.addEventListener('orientationchange', function(){ setTimeout(onResize, 300); });
+
+  /* ===== スタンプボタンSVG ===== */
+  function shapeSvg(shape, color){
+    var c = color || '#666';
+    if (shape === 'star')     return '<svg viewBox="0 0 100 100"><path d="M50 8 L61 38 L94 40 L68 60 L78 92 L50 74 L22 92 L32 60 L6 40 L39 38 Z" fill="'+c+'"/></svg>';
+    if (shape === 'circle')   return '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="'+c+'"/></svg>';
+    if (shape === 'triangle') return '<svg viewBox="0 0 100 100"><polygon points="50,8 92,88 8,88" fill="'+c+'"/></svg>';
+    if (shape === 'square')   return '<svg viewBox="0 0 100 100"><rect x="10" y="10" width="80" height="80" rx="8" fill="'+c+'"/></svg>';
+    if (shape === 'heart')    return '<svg viewBox="0 0 100 100"><path d="M50 88 C18 62 18 40 34 32 C44 28 50 38 50 42 C50 38 56 28 66 32 C82 40 82 62 50 88 Z" fill="'+c+'"/></svg>';
+    if (shape === 'diamond')  return '<svg viewBox="0 0 100 100"><polygon points="50,8 88,50 50,92 12,50" fill="'+c+'"/></svg>';
+    return '';
+  }
+
+  /* ===== UI構築 ===== */
+  function buildStamps(){
+    var el = $('#stamps');
+    el.innerHTML = '';
+    STAMP_SHAPES.forEach(function(s){
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'stamp-btn' + (state.tool === 'stamp' && state.stampShape === s.id ? ' active' : '');
+      btn.dataset.shape = s.id;
+      btn.setAttribute('aria-label', s.name);
+      btn.innerHTML = shapeSvg(s.id, '#666');
+      btn.addEventListener('click', function(){
+        sfxTap();
+        selectStamp(s.id);
+        speak(s.name, 1.1);
+      });
+      el.appendChild(btn);
+    });
+    updateStampColors();
+  }
+  function updateStampColors(){
+    document.querySelectorAll('.stamp-btn').forEach(function(btn){
+      var shape = btn.dataset.shape;
+      btn.innerHTML = shapeSvg(shape, state.color);
+    });
+  }
+  function selectStamp(shapeId){
+    state.tool = 'stamp';
+    state.stampShape = shapeId;
+    updateMainTools();
+    document.querySelectorAll('.stamp-btn').forEach(function(b){
+      b.classList.toggle('active', b.dataset.shape === shapeId);
+    });
+  }
+  function selectPen(){
+    state.tool = 'pen';
+    updateMainTools();
+    document.querySelectorAll('.stamp-btn').forEach(function(b){ b.classList.remove('active'); });
+  }
+  function selectEraser(){
+    state.tool = 'eraser';
+    updateMainTools();
+    document.querySelectorAll('.stamp-btn').forEach(function(b){ b.classList.remove('active'); });
+  }
+  function updateMainTools(){
+    $('#penBtn').classList.toggle('active', state.tool === 'pen');
+    $('#eraserBtn').classList.toggle('active', state.tool === 'eraser');
+  }
+
+  function buildPalette(){
+    var el = $('#palette');
+    el.innerHTML = '';
+    COLORS.forEach(function(c){
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'color-btn' + (state.color === c.color ? ' active' : '');
+      btn.dataset.color = c.color;
+      btn.style.background = c.color;
+      if (c.border) btn.style.borderColor = c.border;
+      btn.setAttribute('aria-label', c.name);
+      btn.addEventListener('click', function(){
+        sfxTap();
+        selectColor(c.color);
+        speak(c.name, 1.1);
+      });
+      el.appendChild(btn);
+    });
+  }
+
+  function selectColor(color){
+    state.color = color;
+    if (state.tool === 'eraser'){ selectPen(); }
+    document.querySelectorAll('.color-btn').forEach(function(b){
+      b.classList.toggle('active', b.dataset.color === color);
+    });
+    updateStampColors();
+  }
+
+  $('#penBtn').addEventListener('click', function(){ sfxTap(); selectPen(); speak('ペン', 1.1); });
+  $('#eraserBtn').addEventListener('click', function(){ sfxTap(); selectEraser(); speak('けす', 1.1); });
+
+  $('#undoBtn').addEventListener('click', function(){ sfxTap(); undo(); });
+  $('#clearBtn').addEventListener('click', function(){
+    sfxTap();
+    showConfirm('ぜんぶ けしても いい？', '🗑️', function(){ clearCanvas(); sfxClear(); });
+  });
+  function clearCanvas(){
+    ctx2d.fillStyle = '#ffffff';
+    ctx2d.fillRect(0, 0, canvasW, canvasH);
+    state.history = [];
+    state.hasDrawn = false;
+    pushHistory();
+  }
+  $('#doneBtn').addEventListener('click', function(){ sfxTap(); saveDrawing(); });
+  $('#galleryBtn').addEventListener('click', function(){ sfxTap(); openGallery(); });
+
+  function showConfirm(text, emoji, onYes){
+    $('#confirmText').textContent = text;
+    $('#confirmEmoji').textContent = emoji;
+    state.pendingConfirm = onYes;
+    $('#confirmModal').hidden = false;
+    cancelSpeech();
+    speak(text, 1.0);
+  }
+  function hideConfirm(){
+    $('#confirmModal').hidden = true;
+    state.pendingConfirm = null;
+  }
+  $('#confirmNoBtn').addEventListener('click', function(){ sfxTap(); hideConfirm(); });
+  $('#confirmYesBtn').addEventListener('click', function(){
+    sfxTap();
+    var fn = state.pendingConfirm;
+    hideConfirm();
+    if (fn) fn();
+  });
+
+  function saveDrawing(){
+    if (!state.hasDrawn){
+      speak('まだ なにも かいてないよ', 1.0);
+      return;
+    }
+    var dataUrl;
+    try { dataUrl = canvas.toDataURL('image/jpeg', 0.72); }
+    catch(e){ speak('ほぞん できなかったよ', 1.0); return; }
+
+    var list = loadDrawings();
+    list.unshift({ id: Date.now(), data: dataUrl });
+    if (list.length > MAX_SAVED) list = list.slice(0, MAX_SAVED);
+
+    var success = false;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+      success = true;
+    } catch(e){
+      while (list.length > 1){
+        list.pop();
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); success = true; break; } catch(err){}
+      }
+    }
+    if (!success){ speak('ほぞん できなかったよ', 1.0); return; }
+
+    showDoneCelebration();
+    sfxDone();
+    speak('すてきに かけたね', 1.0);
+    setTimeout(function(){ clearCanvas(); }, 1200);
+  }
+
+  function showDoneCelebration(){
+    var overlay = $('#doneOverlay');
+    overlay.classList.remove('show');
+    void overlay.offsetWidth;
+    overlay.classList.add('show');
+    var marks = ['⭐','✨','🎉','💖','🌸','🎈'];
+    for (var i = 0; i < 24; i++){
+      var el = document.createElement('div');
+      el.className = 'confetti';
+      el.textContent = marks[Math.floor(Math.random() * marks.length)];
+      el.style.left = (Math.random() * 100) + 'vw';
+      el.style.fontSize = (16 + Math.random() * 20) + 'px';
+      el.style.animationDelay = (Math.random() * 0.6) + 's';
+      el.style.animationDuration = (1.6 + Math.random() * 1.3) + 's';
+      document.body.appendChild(el);
+      (function(node){ setTimeout(function(){ node.remove(); }, 3200); })(el);
+    }
+    setTimeout(function(){ overlay.classList.remove('show'); }, 2200);
+  }
+
+  function loadDrawings(){
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      var arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    } catch(e){ return []; }
+  }
+  function saveDrawings(list){
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); } catch(e){}
+  }
+
+  function openGallery(){
+    renderGallery();
+    $('#galleryScreen').hidden = false;
+    duckBGM(true);
+    cancelSpeech();
+    var list = loadDrawings();
+    if (list.length > 0){ setTimeout(function(){ speak('おえかきちょう だよ', 1.0); }, 300); }
+  }
+  function closeGallery(){
+    $('#galleryScreen').hidden = true;
+    duckBGM(false);
+    cancelSpeech();
+  }
+
+  function renderGallery(){
+    var list = loadDrawings();
+    var grid = $('#galleryGrid');
+    var emptyEl = $('#galleryEmpty');
+    var countEl = $('#galleryCount');
+    grid.innerHTML = '';
+
+    if (list.length === 0){
+      grid.hidden = true;
+      emptyEl.hidden = false;
+      countEl.textContent = '';
+      return;
+    }
+    grid.hidden = false;
+    emptyEl.hidden = true;
+    countEl.textContent = list.length + 'まい あるよ';
+
+    list.forEach(function(item, idx){
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'gallery-cell';
+      btn.dataset.idx = idx;
+      var img = document.createElement('img');
+      img.src = item.data;
+      img.alt = 'おえかき ' + (idx + 1);
+      btn.appendChild(img);
+      btn.addEventListener('click', function(){ sfxTap(); openView(idx); });
+      grid.appendChild(btn);
+    });
+  }
+
+  $('#closeGalleryBtn').addEventListener('click', function(){ sfxTap(); closeGallery(); });
+
+  function openView(idx){
+    var list = loadDrawings();
+    if (idx < 0 || idx >= list.length) return;
+    state.viewingIndex = idx;
+    $('#viewImage').src = list[idx].data;
+    $('#viewModal').hidden = false;
+    duckBGM(true);
+  }
+  function closeView(){
+    $('#viewModal').hidden = true;
+    state.viewingIndex = -1;
+    if ($('#galleryScreen').hidden){ duckBGM(false); }
+  }
+  $('#viewBackBtn').addEventListener('click', function(){ sfxTap(); closeView(); });
+  $('#viewDelBtn').addEventListener('click', function(){
+    sfxTap();
+    showConfirm('この えを けしても いい？', '🗑️', function(){ deleteView(); });
+  });
+  function deleteView(){
+    var idx = state.viewingIndex;
+    if (idx < 0) return;
+    var list = loadDrawings();
+    list.splice(idx, 1);
+    saveDrawings(list);
+    closeView();
+    renderGallery();
+    sfxClear();
+  }
+
+  function ensureAudio(){
+    if (audioUnlocked && bgmTimer) return;
+    audioUnlocked = true;
+    initAudio();
+    if (ctx && ctx.state === 'suspended'){ try { ctx.resume(); } catch(e){} }
+    if (speechSupported){
+      try {
+        var u = new SpeechSynthesisUtterance(' ');
+        u.volume = 0;
+        window.speechSynthesis.speak(u);
+        window.speechSynthesis.cancel();
+      } catch(e){}
+    }
+    if (settings.soundOn && !bgmTimer) startBGM();
+  }
+  document.addEventListener('pointerdown', ensureAudio, { passive: true });
+  document.addEventListener('touchstart', ensureAudio, { passive: true });
+
+  $('#homeBtn').addEventListener('click', function(){
+    sfxTap(); cancelSpeech(); stopBGM();
+    notifyParent('goHome');
+  });
+  $('#bookBtn').addEventListener('click', function(){
+    sfxTap(); cancelSpeech(); stopBGM();
+    notifyParent({ type: 'openBook', from: 'drawing' });
+  });
+
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden){
+      stopBGM();
+      cancelSpeech();
+    } else {
+      if (ctx && ctx.state === 'suspended'){ try { ctx.resume(); } catch(e){} }
+      if (settings.soundOn && !bgmTimer && audioUnlocked) startBGM();
+    }
+  });
+  document.addEventListener('gesturestart', function(e){ e.preventDefault(); });
+  document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+
+  buildStamps();
+  buildPalette();
+
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){ setupCanvas(); });
+  });
+
+  setTimeout(function(){ speak('すきな いろで かいてね', 1.0); }, 800);
+
+  setTimeout(function(){
+    try {
+      initAudio();
+      if (ctx && ctx.state === 'running'){
+        audioUnlocked = true;
+        if (settings.soundOn && !bgmTimer) startBGM();
+      }
+    } catch(e){}
+  }, 100);
+
+})();
+</script>
+</body>
+</html>

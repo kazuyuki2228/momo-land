@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>ランドルトれんしゅう</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;overflow:hidden;}
+  body{
+    font-family:"Hiragino Maru Gothic ProN","Yu Gothic UI","Meiryo",system-ui,sans-serif;
+    background:linear-gradient(170deg,#e8f4ff 0%,#f0f8ff 50%,#e0f0ff 100%);
+    color:#4a5568;
+    display:flex;justify-content:center;
+    user-select:none;-webkit-user-select:none;
+    touch-action:manipulation;
+    overscroll-behavior:none;
+  }
+
+  #app{
+    width:min(96vw,480px);
+    height:100vh;height:100dvh;
+    display:flex;flex-direction:column;
+    padding:calc(4px + env(safe-area-inset-top)) 8px calc(6px + env(safe-area-inset-bottom));
+    gap:4px;
+    overflow:hidden;
+  }
+
+  header{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:6px;flex:0 0 auto;
+  }
+  .mini{
+    width:44px;height:44px;border-radius:50%;border:0;
+    background:rgba(255,255,255,.92);
+    box-shadow:0 2px 8px rgba(120,160,200,.28);
+    cursor:pointer;font-family:inherit;font-size:22px;line-height:1;
+    display:flex;align-items:center;justify-content:center;
+    touch-action:manipulation;flex:0 0 auto;
+    transition:transform .1s;position:relative;
+  }
+  .mini:active{transform:scale(.9);}
+  #starRow{
+    flex:1;
+    display:flex;align-items:center;justify-content:center;
+    gap:4px;
+    background:rgba(255,255,255,.85);
+    border-radius:999px;
+    padding:6px 16px;
+    box-shadow:0 2px 8px rgba(120,160,200,.2);
+    font-size:16px;
+    min-width:0;
+  }
+  #starRow .star-icon{font-size:18px;line-height:1;}
+  #starCount{
+    font-weight:900;color:#f5a623;
+    font-size:clamp(15px,4.4vw,18px);
+    min-width:22px;text-align:center;
+  }
+  #starRow.bump{animation:rowBump .4s ease;}
+  @keyframes rowBump{0%{transform:scale(1);}40%{transform:scale(1.15);}100%{transform:scale(1);}}
+
+  #progressDots{
+    display:flex;gap:6px;justify-content:center;align-items:center;
+    flex:0 0 auto;padding:2px 0;
+  }
+  .pdot{
+    width:12px;height:12px;border-radius:50%;
+    background:#d8e4f0;
+    transition:all .3s;
+  }
+  .pdot.current{
+    width:16px;height:16px;
+    background:#7ec8e3;
+    box-shadow:0 0 8px rgba(126,200,227,.7);
+    animation:pdotPulse 1.2s ease-in-out infinite;
+  }
+  @keyframes pdotPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.15);}}
+  .pdot.correct{background:#5cc87a;}
+  .pdot.wrong{background:#ffc850;}
+  .pdot.unknown{background:#c8b8e0;}
+
+  #stage{
+    flex:1 1 auto;min-height:0;
+    position:relative;
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+  }
+  #ringCanvas{
+    display:block;
+    width:100%;height:100%;
+  }
+  #questionText{
+    position:absolute;
+    bottom:4px;left:50%;transform:translateX(-50%);
+    font-size:clamp(13px,3.8vw,16px);
+    font-weight:900;color:#5a7a95;
+    letter-spacing:1px;
+    white-space:nowrap;
+    padding:6px 18px;
+    background:rgba(255,255,255,.85);
+    border-radius:999px;
+    box-shadow:0 2px 8px rgba(120,160,200,.2);
+    transition:opacity .3s;
+  }
+
+  #answerArea{
+    flex:0 0 auto;
+    display:grid;
+    grid-template-areas:
+      ". up ."
+      "left unknown right"
+      ". down .";
+    grid-template-columns:1fr 1fr 1fr;
+    grid-template-rows:auto auto auto;
+    gap:8px;
+    padding:6px 12px 4px;
+    justify-content:center;
+    align-content:center;
+  }
+  .finger-btn{
+    font-family:inherit;
+    border:none;
+    border-radius:20px;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .1s,box-shadow .1s,background .15s;
+    touch-action:manipulation;
+    padding:0;
+    background:linear-gradient(180deg,#ffffff,#e8f4ff);
+    box-shadow:0 5px 0 #b8d4e8, 0 6px 14px rgba(120,160,200,.28);
+    font-size:clamp(48px,14vw,64px);
+    line-height:1;
+    color:#2a4a68;
+    aspect-ratio:1;
+    max-width:96px;
+    width:100%;
+    margin:0 auto;
+  }
+  .finger-btn:active,
+  .finger-btn.pressed{
+    transform:translateY(5px);
+    box-shadow:0 1px 0 #b8d4e8, 0 2px 6px rgba(120,160,200,.3);
+  }
+  .finger-btn.up{grid-area:up;}
+  .finger-btn.left{grid-area:left;}
+  .finger-btn.unknown{grid-area:unknown;}
+  .finger-btn.right{grid-area:right;}
+  .finger-btn.down{grid-area:down;}
+  .finger-btn.unknown{
+    font-size:clamp(28px,8.5vw,38px);
+    background:linear-gradient(180deg,#fff5e0,#ffe0a8);
+    box-shadow:0 5px 0 #d8b060, 0 6px 14px rgba(200,150,60,.25);
+    color:#8a5a10;
+  }
+  .finger-btn.unknown:active{
+    box-shadow:0 1px 0 #d8b060, 0 2px 6px rgba(200,150,60,.3);
+  }
+  .finger-btn:disabled{
+    opacity:.4;
+    pointer-events:none;
+  }
+  .finger-btn.correct-flash{
+    animation:btnCorrect .55s ease;
+  }
+  @keyframes btnCorrect{
+    0%{transform:scale(1);}
+    40%{transform:scale(1.18);background:linear-gradient(180deg,#d4ffd4,#a0e8a8);}
+    100%{transform:scale(1);}
+  }
+
+  .arrow-hint{
+    position:fixed;left:50%;top:50%;
+    transform:translate(-50%,-50%) scale(.3);
+    font-size:clamp(120px,36vw,180px);
+    line-height:1;
+    z-index:300;
+    pointer-events:none;
+    opacity:0;
+    filter:drop-shadow(0 8px 16px rgba(0,0,0,.25));
+    transition:opacity .3s ease, transform .4s cubic-bezier(.34,1.56,.64,1);
+  }
+  .arrow-hint.show{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1);
+  }
+
+  .praise-pop{
+    position:fixed;left:50%;top:32%;
+    transform:translate(-50%,-50%) scale(.4);
+    background:#fff;
+    color:#5cc87a;font-weight:900;
+    font-size:clamp(24px,7.5vw,40px);
+    letter-spacing:2px;
+    padding:14px 34px;border-radius:999px;
+    border:5px solid #d4ffd4;
+    box-shadow:0 8px 0 rgba(92,200,122,.35),0 14px 30px rgba(0,0,0,.18);
+    pointer-events:none;z-index:400;
+    opacity:0;white-space:nowrap;
+  }
+  .praise-pop.show{
+    animation:praisePop 1.3s ease-out forwards;
+  }
+  @keyframes praisePop{
+    0%{opacity:0;transform:translate(-50%,-50%) scale(.4);}
+    18%{opacity:1;transform:translate(-50%,-50%) scale(1.14);}
+    34%{transform:translate(-50%,-50%) scale(1);}
+    78%{opacity:1;transform:translate(-50%,-50%) scale(1);}
+    100%{opacity:0;transform:translate(-50%,-72%) scale(1);}
+  }
+
+  .overlay{
+    position:fixed;inset:0;z-index:500;
+    display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(170deg,rgba(232,244,255,.97),rgba(240,248,255,.97));
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+    padding:20px;
+    animation:fadeIn .3s ease;
+  }
+  .overlay[hidden]{display:none;}
+  @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
+  .intro-card,.result-card{
+    width:min(92vw,400px);
+    background:#fff;
+    border-radius:30px;
+    padding:24px 24px 20px;
+    text-align:center;
+    box-shadow:0 14px 44px rgba(120,160,200,.35);
+    animation:popIn .45s cubic-bezier(.4,1.6,.5,1);
+  }
+  @keyframes popIn{
+    0%{transform:scale(.7);opacity:0;}
+    100%{transform:scale(1);opacity:1;}
+  }
+
+  .intro-mascot{
+    font-size:clamp(64px,20vw,88px);
+    line-height:1;margin-bottom:6px;
+    animation:mascotBob 2.2s ease-in-out infinite;
+    filter:drop-shadow(0 6px 10px rgba(255,150,190,.3));
+  }
+  @keyframes mascotBob{0%,100%{transform:translateY(0) rotate(-3deg);}50%{transform:translateY(-8px) rotate(3deg);}}
+
+  .intro-title{
+    margin:4px 0 8px;
+    font-size:clamp(18px,5.2vw,23px);
+    font-weight:900;color:#5a7a95;
+    letter-spacing:1px;
+    line-height:1.3;
+  }
+  .intro-text{
+    margin:0 0 18px;
+    font-size:clamp(13px,3.7vw,15px);
+    font-weight:800;color:#8aa0b8;
+    line-height:1.6;
+  }
+  .big-btn{
+    font-family:inherit;
+    width:100%;
+    font-size:clamp(17px,4.8vw,21px);
+    font-weight:900;color:#fff;
+    background:linear-gradient(180deg,#7ec8e3,#4a9dd4);
+    border:none;border-radius:999px;
+    padding:16px 24px;
+    box-shadow:0 6px 0 #2a7aa8, 0 10px 20px rgba(42,122,168,.3);
+    cursor:pointer;
+    letter-spacing:2px;
+    transition:transform .1s,box-shadow .1s;
+    touch-action:manipulation;
+  }
+  .big-btn:active{transform:translateY(5px);box-shadow:0 1px 0 #2a7aa8;}
+
+  .result-emoji{
+    font-size:clamp(52px,16vw,72px);
+    line-height:1;margin-bottom:4px;
+    animation:resultBounce 1s ease infinite;
+  }
+  @keyframes resultBounce{0%,100%{transform:translateY(0) scale(1);}50%{transform:translateY(-8px) scale(1.1);}}
+  .result-title{
+    margin:6px 0 10px;
+    font-size:clamp(18px,5.2vw,23px);
+    font-weight:900;color:#5a7a95;
+    letter-spacing:1px;
+  }
+  .result-stars{
+    display:flex;flex-wrap:wrap;gap:3px;justify-content:center;
+    margin:8px 0 14px;
+    font-size:clamp(22px,7vw,30px);
+    line-height:1;
+  }
+  .result-stars .rs{opacity:.28;transition:opacity .3s, transform .3s;}
+  .result-stars .rs.on{
+    opacity:1;
+    animation:rsPop .5s ease backwards;
+  }
+  @keyframes rsPop{0%{transform:scale(0) rotate(-180deg);}100%{transform:scale(1) rotate(0);}}
+
+  .result-actions{
+    display:flex;flex-direction:column;gap:10px;
+    margin-top:8px;
+  }
+  .result-actions .big-btn.retry{
+    background:linear-gradient(180deg,#ffb74d,#ff8a3d);
+    box-shadow:0 6px 0 #d96a1f, 0 10px 20px rgba(217,106,31,.3);
+  }
+  .result-actions .big-btn.retry:active{box-shadow:0 1px 0 #d96a1f;}
+  .result-actions .big-btn.home{
+    background:linear-gradient(180deg,#c8d8e8,#8aa8c8);
+    box-shadow:0 6px 0 #5a7a9a, 0 10px 20px rgba(90,122,154,.25);
+    font-size:clamp(14px,4vw,17px);
+    padding:13px 20px;
+  }
+  .result-actions .big-btn.home:active{box-shadow:0 1px 0 #5a7a9a;}
+
+  .parent-note{
+    margin:14px 0 0;
+    font-size:clamp(10px,2.9vw,11px);
+    color:#b0bcc8;
+    line-height:1.6;
+    font-weight:700;
+    border-top:1px solid #e8eef4;
+    padding-top:10px;
+  }
+
+  #stampBoxScreen{
+    position:fixed;inset:0;z-index:520;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:linear-gradient(180deg,#e0f0ff 0%,#e8f0ff 45%,#f0f8ff 100%);
+    padding:24px;gap:14px;text-align:center;overflow:hidden;
+  }
+  #stampBoxScreen[hidden]{display:none;}
+  #stampBoxScreen::before{
+    content:"";position:absolute;inset:0;
+    background:
+      radial-gradient(circle at 12% 18%,rgba(255,255,255,.7) 0 6px,transparent 7px),
+      radial-gradient(circle at 88% 24%,rgba(255,255,255,.7) 0 8px,transparent 9px),
+      radial-gradient(circle at 22% 82%,rgba(255,255,255,.7) 0 7px,transparent 8px),
+      radial-gradient(circle at 78% 76%,rgba(255,255,255,.7) 0 6px,transparent 7px);
+    pointer-events:none;
+  }
+  .stamp-header{
+    font-size:clamp(20px,5.8vw,30px);font-weight:900;
+    color:#4a9dd4;letter-spacing:2px;
+    text-shadow:2px 2px 0 #fff,4px 4px 0 rgba(126,200,227,.3);
+    animation:headerFloat 2.2s ease-in-out infinite;
+    position:relative;z-index:2;
+  }
+  @keyframes headerFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+  .stamp-sub{
+    font-size:clamp(12px,3.5vw,15px);
+    color:#6a8aa5;font-weight:800;
+    margin-top:-6px;position:relative;z-index:2;
+  }
+  .stamp-box{
+    width:clamp(140px, 42vw, 200px);
+    height:clamp(140px, 42vw, 200px);
+    border-radius:28px;
+    background:linear-gradient(180deg,#fff5e0,#ffdca8);
+    border:6px solid #fff;
+    box-shadow:0 10px 0 #d4a060, 0 16px 30px rgba(0,0,0,.2);
+    display:flex;align-items:center;justify-content:center;
+    position:relative;cursor:pointer;padding:0;
+    font-family:inherit;margin-top:10px;
+    transition:transform .1s, box-shadow .1s;
+    overflow:hidden;z-index:2;
+  }
+  .stamp-box:not(.opened):active{
+    transform:translateY(6px);
+    box-shadow:0 4px 0 #d4a060, 0 8px 18px rgba(0,0,0,.2);
+  }
+  .stamp-box .box-emoji{
+    font-size:clamp(78px, 24vw, 118px);line-height:1;
+    transition:transform .3s, opacity .3s;display:block;
+  }
+  .stamp-box .box-stamp{
+    position:absolute;inset:0;
+    display:flex;align-items:center;justify-content:center;
+    font-size:clamp(78px, 24vw, 118px);line-height:1;
+    opacity:0;transform:scale(0.3) rotate(-20deg);
+    transition:opacity .3s, transform .5s cubic-bezier(.34,1.56,.64,1);
+  }
+  .stamp-box.opened .box-emoji{transform:scale(0);opacity:0;}
+  .stamp-box.opened .box-stamp{opacity:1;transform:scale(1) rotate(-6deg);}
+  .stamp-box.shaking{animation:boxShake .5s ease;}
+  @keyframes boxShake{
+    0%,100%{transform:translateY(0) translateX(0) rotate(0);}
+    20%{transform:translateY(0) translateX(-8px) rotate(-5deg);}
+    40%{transform:translateY(0) translateX(8px) rotate(5deg);}
+    60%{transform:translateY(0) translateX(-5px) rotate(-3deg);}
+    80%{transform:translateY(0) translateX(5px) rotate(3deg);}
+  }
+  .box-stamp.hanko-red{ filter:url(#hanko-red); }
+  .box-stamp.hanko-blue{ filter:url(#hanko-blue); }
+  .box-stamp.hanko-green{ filter:url(#hanko-green); }
+
+  .confetti{
+    position:fixed;top:-40px;z-index:170;pointer-events:none;
+    animation-name:fall;
+    animation-timing-function:linear;
+    animation-fill-mode:forwards;
+  }
+  @keyframes fall{
+    0%{transform:translateY(0) rotate(0);opacity:1;}
+    100%{transform:translateY(110vh) rotate(360deg);opacity:.9;}
+  }
+
+  @media (max-width:360px){
+    .mini{width:40px;height:40px;font-size:20px;}
+    .finger-btn{font-size:clamp(42px,12vw,52px);max-width:80px;}
+    .finger-btn.unknown{font-size:clamp(24px,7.5vw,32px);}
+    #answerArea{gap:6px;padding:4px 8px;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .intro-mascot,.result-emoji,.stamp-header,.pdot.current,
+    .arrow-hint,.praise-pop,.confetti{animation:none!important;}
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="hanko-red" color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="
+        0 0 0 0 0.82
+        0 0 0 0 0.16
+        0 0 0 0 0.16
+        0 0 0 0.72 0
+      "/>
+    </filter>
+    <filter id="hanko-blue" color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="
+        0 0 0 0 0.16
+        0 0 0 0 0.42
+        0 0 0 0 0.78
+        0 0 0 0.72 0
+      "/>
+    </filter>
+    <filter id="hanko-green" color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="
+        0 0 0 0 0.20
+        0 0 0 0 0.62
+        0 0 0 0 0.35
+        0 0 0 0.72 0
+      "/>
+    </filter>
+  </defs>
+</svg>
+
+<div id="introScreen" class="overlay" hidden>
+  <div class="intro-card">
+    <div class="intro-mascot">🍑</div>
+    <h2 class="intro-title">ランドルト<br>れんしゅう</h2>
+    <p class="intro-text">
+      あいてる むきを<br>
+      ゆびで おしえてね
+    </p>
+    <button id="startBtn" class="big-btn" type="button">はじめる</button>
+  </div>
+</div>
+
+<div id="resultScreen" class="overlay" hidden>
+  <div class="result-card">
+    <div class="result-emoji" id="resultEmoji">🎉</div>
+    <h2 class="result-title" id="resultTitle">ぜんぶ できたね！</h2>
+    <div class="result-stars" id="resultStars"></div>
+    <div class="result-actions">
+      <button id="stampGetBtn" class="big-btn" type="button">スタンプを もらう</button>
+      <button id="retryBtn" class="big-btn retry" type="button" hidden>もういちど</button>
+      <button id="resultHomeBtn" class="big-btn home" type="button" hidden>おうちに かえる</button>
+    </div>
+    <p class="parent-note">
+      ※ このゲームは れんしゅう用です。<br>
+      視力の 測定は できません。気になる ことが あれば 眼科で ご相談ください。
+    </p>
+  </div>
+</div>
+
+<div id="stampBoxScreen" hidden>
+  <div class="stamp-header">スタンプ どうぞ！</div>
+  <div class="stamp-sub">はこを タップして あけてね</div>
+  <button class="stamp-box" id="stampBoxBtn" type="button" aria-label="スタンプのはこ">
+    <span class="box-emoji">🎁</span>
+    <span class="box-stamp" id="boxStamp"></span>
+  </button>
+</div>
+
+<div id="app">
+  <header>
+    <button id="homeBtn" class="mini" aria-label="おうちへ">🏠</button>
+    <div id="starRow">
+      <span class="star-icon">⭐</span>
+      <span id="starCount">0</span>
+    </div>
+    <button id="bookBtn" class="mini" aria-label="シール帳">📖</button>
+  </header>
+
+  <div id="progressDots"></div>
+
+  <div id="stage">
+    <canvas id="ringCanvas"></canvas>
+    <div id="questionText">あいてる むきは？</div>
+  </div>
+
+  <div id="answerArea">
+    <button class="finger-btn up" data-dir="up" type="button" aria-label="うえ">👆</button>
+    <button class="finger-btn left" data-dir="left" type="button" aria-label="ひだり">👈</button>
+    <button class="finger-btn unknown" data-dir="unknown" type="button" aria-label="わからない">🤔</button>
+    <button class="finger-btn right" data-dir="right" type="button" aria-label="みぎ">👉</button>
+    <button class="finger-btn down" data-dir="down" type="button" aria-label="した">👇</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var $ = function(s){ return document.querySelector(s); };
+
+  /* =========================================================
+     定数
+     ========================================================= */
+  var STICKER_KEY = 'momo_stickers_v1';
+  var STAMP_KEY   = 'momo_stamps_v1';
+  var SETTINGS_KEY= 'momo_settings_v1';
+  var SEEN_KEY    = 'momo_eye_seen_v1';
+
+  var EYE_STAMP_POOL = [
+    '👁️','👓','🔍','🕶️','🔭','🌙','☀️','💡','🔦','🧿','🎯','🪞'
+  ];
+  var HANKO_COLORS = ['red', 'blue', 'green'];
+
+  var QUESTION_PLAN = [
+    { sizeRatio: 0.32, dirs: ['up','down'] },
+    { sizeRatio: 0.32, dirs: ['up','down'] },
+    { sizeRatio: 0.24, dirs: ['up','down','left','right'] },
+    { sizeRatio: 0.24, dirs: ['up','down','left','right'] },
+    { sizeRatio: 0.17, dirs: ['up','down','left','right'] },
+    { sizeRatio: 0.17, dirs: ['up','down','left','right'] },
+    { sizeRatio: 0.12, dirs: ['up','down','left','right'] },
+    { sizeRatio: 0.12, dirs: ['up','down','left','right'] }
+  ];
+  var TOTAL_Q = QUESTION_PLAN.length;
+
+  var PRAISE = ['せいかい！', 'すごい！', 'やったね！', 'じょうず！', 'あたり！'];
+
+  /* =========================================================
+     設定
+     ========================================================= */
+  var settings = { bgmMode:'fun', bgmVol:50, sfxVol:70, soundOn:true };
+  function loadSettings(){
+    try {
+      var raw = localStorage.getItem(SETTINGS_KEY);
+      if (raw){
+        var obj = JSON.parse(raw);
+        if (obj && typeof obj === 'object'){
+          if (obj.bgmMode === 'fun' || obj.bgmMode === 'calm' || obj.bgmMode === 'random') settings.bgmMode = obj.bgmMode;
+          if (typeof obj.bgmVol === 'number') settings.bgmVol = Math.max(0, Math.min(100, obj.bgmVol));
+          if (typeof obj.sfxVol === 'number') settings.sfxVol = Math.max(0, Math.min(100, obj.sfxVol));
+          if (typeof obj.soundOn === 'boolean') settings.soundOn = obj.soundOn;
+        }
+      }
+    } catch(e){}
+  }
+  loadSettings();
+
+  /* =========================================================
+     状態
+     ========================================================= */
+  var state = {
+    questionIndex: 0,
+    correctCount: 0,
+    currentDir: 'up',
+    currentSize: 0.32,
+    locked: true,
+    unknownUsed: false,
+    results: [],
+    myStamps: [],
+    pendingStamp: null,
+    boxOpened: false,
+    started: false
+  };
+
+  var animState = {
+    animType: 'idle',
+    animStart: 0,
+    animDuration: 700,
+    rotate: 0,
+    scale: 1,
+    offsetX: 0,
+    alpha: 1,
+    flashing: false,
+    flashColor: '#222222'
+  };
+
+  /* =========================================================
+     音
+     ========================================================= */
+  var ctx = null, sfxGain = null, bgmGain = null, bgmTimer = null, bgmLoopTime = 0;
+  var currentTrack = null, isDucked = false, audioUnlocked = false;
+
+  function getBgmGainValue(quiet){ return (settings.bgmVol / 100) * (quiet ? 0.07 : 0.20); }
+  function getSfxGainValue(){ return (settings.sfxVol / 100) * 0.70; }
+
+  var F = {
+    C3:130.81, F3:174.61, G3:196.00, A3:220.00,
+    C4:261.63, D4:293.66, E4:329.63, F4:349.23, G4:392.00, A4:440.00,
+    C5:523.25, D5:587.33, E5:659.25, F5:698.46, G5:783.99, A5:880.00,
+    C6:1046.50, E6:1318.51, DS4:311.13
+  };
+
+  var TRACKS = [
+    { mood:'fun', bpm:116,
+      melody:[[0,F.E5,1],[1,F.G5,1],[2,F.A5,1],[3,F.G5,1],[4,F.E5,1],[5,F.D5,1],[6,F.C5,2],
+              [8,F.D5,1],[9,F.E5,1],[10,F.G5,1],[11,F.E5,1],[12,F.E5,1],[13,F.D5,1],[14,F.C5,2]],
+      bass:[[0,F.C3,4],[4,F.F3,4],[8,F.G3,4],[12,F.C3,4]] },
+    { mood:'fun', bpm:132,
+      melody:[[0,F.C5,.5],[.5,F.E5,.5],[1,F.G5,.5],[1.5,F.E5,.5],[2,F.G5,.5],[2.5,F.A5,.5],[3,F.G5,1],
+              [4,F.A5,.5],[4.5,F.G5,.5],[5,F.F5,.5],[5.5,F.E5,.5],[6,F.D5,.5],[6.5,F.E5,.5],[7,F.F5,1],
+              [8,F.E5,.5],[8.5,F.G5,.5],[9,F.C6,1],[10,F.A5,.5],[10.5,F.G5,.5],[11,F.E5,1],
+              [12,F.F5,.5],[12.5,F.E5,.5],[13,F.D5,.5],[13.5,F.C5,.5],[14,F.G4,1],[15,F.C5,1]],
+      bass:[[0,F.C3,2],[2,F.C3,2],[4,F.F3,2],[6,F.G3,2],[8,F.C3,2],[10,F.A3,2],[12,F.F3,2],[14,F.G3,2]] },
+    { mood:'calm', bpm:76,
+      melody:[[0,F.E5,1.5],[1.5,F.D5,.5],[2,F.C5,2],[4,F.D5,1.5],[5.5,F.E5,.5],[6,F.G5,2],
+              [8,F.G5,1],[9,F.F5,1],[10,F.E5,1],[11,F.D5,1],[12,F.C5,2],[14,F.E5,1],[15,F.C5,1]],
+      bass:[[0,F.C3,4],[4,F.A3,4],[8,F.F3,4],[12,F.G3,4]] },
+    { mood:'calm', bpm:88,
+      melody:[[0,F.C5,1],[1,F.E5,1],[2,F.G5,1.5],[3.5,F.E5,.5],[4,F.F5,1],[5,F.A5,1],[6,F.G5,2],
+              [8,F.E5,1],[9,F.G5,1],[10,F.C6,1.5],[11.5,F.A5,.5],[12,F.G5,1],[13,F.F5,1],[14,F.E5,1],[15,F.C5,1]],
+      bass:[[0,F.C3,4],[4,F.F3,4],[8,F.C3,2],[10,F.A3,2],[12,F.F3,2],[14,F.G3,2]] }
+  ];
+
+  function getTrackPool(){
+    if (settings.bgmMode === 'calm') return TRACKS.filter(function(t){ return t.mood === 'calm'; });
+    if (settings.bgmMode === 'fun')  return TRACKS.filter(function(t){ return t.mood === 'fun'; });
+    return TRACKS.slice();
+  }
+  function pickTrack(){
+    var p = getTrackPool();
+    return p[Math.floor(Math.random() * p.length)] || TRACKS[0];
+  }
+
+  function initAudio(){
+    if (ctx) return;
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    ctx = new AC();
+    sfxGain = ctx.createGain();
+    sfxGain.gain.value = getSfxGainValue();
+    sfxGain.connect(ctx.destination);
+  }
+  function playNote(freq, t0, dur, type, dest, vol){
+    if (!ctx || !dest) return;
+    var osc = ctx.createOscillator();
+    var g = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t0);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(Math.max(vol, 0.001), t0 + 0.03);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + Math.max(dur, 0.05));
+    osc.connect(g); g.connect(dest);
+    osc.start(t0); osc.stop(t0 + dur + 0.08);
+  }
+  function scheduleTrack(t0, track){
+    var beat = 60 / track.bpm;
+    var loopDur = 16 * beat;
+    track.melody.forEach(function(n){ playNote(n[1], t0 + n[0] * beat, n[2] * beat * 0.9, 'triangle', bgmGain, 0.5); });
+    track.bass.forEach(function(n){ playNote(n[1], t0 + n[0] * beat, n[2] * beat * 0.85, 'sine', bgmGain, 0.42); });
+    if (track.mood === 'fun'){
+      playNote(F.C6, t0 + 6 * beat,  0.5, 'sine', bgmGain, 0.10);
+      playNote(F.E6, t0 + 14 * beat, 0.5, 'sine', bgmGain, 0.10);
+    }
+    return loopDur;
+  }
+  function pumpBGM(){
+    if (!ctx || !bgmGain) return;
+    if (!currentTrack) currentTrack = pickTrack();
+    while (bgmLoopTime < ctx.currentTime + 2.5){
+      var dur = scheduleTrack(bgmLoopTime, currentTrack);
+      bgmLoopTime += dur;
+    }
+  }
+  function startBGM(){
+    if (!ctx || !settings.soundOn) return;
+    stopBGM();
+    bgmGain = ctx.createGain();
+    bgmGain.gain.value = getBgmGainValue(isDucked);
+    bgmGain.connect(ctx.destination);
+    currentTrack = pickTrack();
+    bgmLoopTime = ctx.currentTime + 0.2;
+    pumpBGM();
+    bgmTimer = setInterval(pumpBGM, 700);
+  }
+  function stopBGM(){
+    if (bgmTimer){ clearInterval(bgmTimer); bgmTimer = null; }
+    if (bgmGain){ try { bgmGain.disconnect(); } catch(e){} bgmGain = null; }
+    currentTrack = null;
+  }
+  function applyBgmGain(){
+    if (!ctx || !bgmGain) return;
+    var target = getBgmGainValue(isDucked);
+    try {
+      bgmGain.gain.cancelScheduledValues(ctx.currentTime);
+      bgmGain.gain.setValueAtTime(bgmGain.gain.value, ctx.currentTime);
+      bgmGain.gain.linearRampToValueAtTime(target, ctx.currentTime + 0.15);
+    } catch(e){ bgmGain.gain.value = target; }
+  }
+  function duckBGM(quiet){ isDucked = quiet; applyBgmGain(); }
+
+  function sfxTap(){ if (!settings.soundOn || !ctx) return; playNote(880, ctx.currentTime, 0.09, 'sine', sfxGain, 0.22); }
+  function sfxCorrect(){
+    if (!settings.soundOn || !ctx) return;
+    var t = ctx.currentTime;
+    [F.C5, F.E5, F.G5, F.C6].forEach(function(f, i){
+      playNote(f, t + i * 0.10, 0.32, 'triangle', sfxGain, 0.20);
+    });
+  }
+  function sfxWrong(){
+    if (!settings.soundOn || !ctx) return;
+    var t = ctx.currentTime;
+    playNote(392, t, 0.22, 'sine', sfxGain, 0.14);
+    playNote(311, t + 0.18, 0.32, 'sine', sfxGain, 0.12);
+  }
+  function sfxComplete(){
+    if (!settings.soundOn || !ctx) return;
+    var t = ctx.currentTime;
+    [523, 659, 784, 1047, 1319].forEach(function(f, i){
+      playNote(f, t + i * 0.11, 0.32, 'triangle', sfxGain, 0.20);
+    });
+  }
+  function sfxShake(){
+    if (!settings.soundOn || !ctx) return;
+    playNote(140, ctx.currentTime, 0.35, 'sawtooth', sfxGain, 0.10);
+    playNote(170, ctx.currentTime + 0.12, 0.28, 'sawtooth', sfxGain, 0.09);
+    playNote(200, ctx.currentTime + 0.24, 0.22, 'sawtooth', sfxGain, 0.08);
+  }
+  function sfxReveal(){
+    if (!settings.soundOn || !ctx) return;
+    var t = ctx.currentTime;
+    playNote(523, t, 0.20, 'sine', sfxGain, 0.18);
+    playNote(784, t + 0.10, 0.25, 'sine', sfxGain, 0.16);
+    playNote(1047, t + 0.22, 0.28, 'sine', sfxGain, 0.14);
+  }
+
+  /* =========================================================
+     読み上げ
+     ========================================================= */
+  var speechSupported = ('speechSynthesis' in window) && ('SpeechSynthesisUtterance' in window);
+  var jaVoice = null;
+  function pickVoice(){
+    if (!speechSupported) return;
+    var voices = window.speechSynthesis.getVoices();
+    jaVoice = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf('ja') === 0; }) || null;
+  }
+  if (speechSupported){
+    pickVoice();
+    window.speechSynthesis.onvoiceschanged = pickVoice;
+  }
+  function speak(text, rate, pitch){
+    if (!settings.soundOn || !speechSupported) return;
+    try {
+      window.speechSynthesis.cancel();
+      setTimeout(function(){
+        var u = new SpeechSynthesisUtterance(text);
+        u.lang = 'ja-JP';
+        if (jaVoice) u.voice = jaVoice;
+        u.rate = rate || 0.95;
+        u.pitch = pitch || 1.35;
+        u.volume = 1;
+        window.speechSynthesis.speak(u);
+      }, 60);
+    } catch(e){}
+  }
+  function cancelSpeech(){
+    if (!speechSupported) return;
+    try { window.speechSynthesis.cancel(); } catch(e){}
+  }
+  function warmupSpeech(){
+    if (!speechSupported) return;
+    try {
+      var u = new SpeechSynthesisUtterance(' ');
+      u.volume = 0;
+      u.lang = 'ja-JP';
+      window.speechSynthesis.speak(u);
+      window.speechSynthesis.cancel();
+    } catch(e){}
+  }
+
+  function notifyParent(msg){
+    try {
+      if (window.parent && window.parent !== window){
+        window.parent.postMessage(msg, '*');
+      }
+    } catch(e){}
+  }
+
+  /* =========================================================
+     スタンプ保存
+     ========================================================= */
+  function loadMyStamps(){
+    try {
+      var raw = localStorage.getItem(STAMP_KEY);
+      if (raw){
+        var arr = JSON.parse(raw);
+        if (Array.isArray(arr)){
+          state.myStamps = arr.filter(function(it){
+            return it && typeof it === 'object' && it.from === 'eye';
+          }).map(function(it){ return it.emoji; }).filter(Boolean);
+        }
+      }
+    } catch(e){}
+  }
+  function saveStamp(emoji, color){
+    try {
+      var raw = localStorage.getItem(STAMP_KEY);
+      var arr = [];
+      if (raw){
+        var parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)){
+          arr = parsed.map(function(it){
+            if (typeof it === 'string') return { emoji: it, from: 'animals' };
+            if (it && typeof it === 'object' && it.emoji){
+              return { emoji: it.emoji, from: it.from || 'animals', color: it.color };
+            }
+            return null;
+          }).filter(Boolean);
+        }
+      }
+      arr.push({ emoji: emoji, from: 'eye', color: color });
+      localStorage.setItem(STAMP_KEY, JSON.stringify(arr));
+      state.myStamps.push(emoji);
+    } catch(e){}
+  }
+  function updateBookBadge(){
+    try {
+      var n = 0;
+      var raw1 = localStorage.getItem(STICKER_KEY);
+      if (raw1){ var a1 = JSON.parse(raw1); if (Array.isArray(a1)) n += a1.length; }
+      var raw2 = localStorage.getItem(STAMP_KEY);
+      if (raw2){ var a2 = JSON.parse(raw2); if (Array.isArray(a2)) n += a2.length; }
+      var badge = $('#bookBadge');
+      if (badge){ badge.textContent = n; badge.classList.toggle('show', n > 0); }
+    } catch(e){}
+  }
+
+  /* =========================================================
+     Canvas
+     ========================================================= */
+  var canvas = $('#ringCanvas');
+  var canvasStage = $('#stage');
+  var cctx = canvas.getContext('2d');
+  var canvasW = 0, canvasH = 0;
+
+  function setupCanvas(){
+    var rect = canvasStage.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    canvasW = rect.width;
+    canvasH = rect.height;
+    canvas.width = Math.floor(rect.width * dpr);
+    canvas.height = Math.floor(rect.height * dpr);
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+    cctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function getRingSizePx(){
+    var minSide = Math.min(canvasW, canvasH);
+    return minSide * state.currentSize;
+  }
+
+  function drawRing(){
+    if (!canvasW || !canvasH) return;
+    cctx.clearRect(0, 0, canvasW, canvasH);
+
+    var cx = canvasW / 2;
+    var cy = canvasH / 2;
+    var size = getRingSizePx();
+    var radius = size / 2;
+    var lineWidth = size / 5;
+
+    var gapAngleDeg = 360 / (5 * Math.PI);
+    var gapHalfDeg = gapAngleDeg / 2;
+
+    var gapCenterDeg;
+    if (state.currentDir === 'up') gapCenterDeg = -90;
+    else if (state.currentDir === 'right') gapCenterDeg = 0;
+    else if (state.currentDir === 'down') gapCenterDeg = 90;
+    else gapCenterDeg = 180;
+
+    var startDeg = gapCenterDeg + gapHalfDeg;
+    var endDeg = gapCenterDeg - gapHalfDeg + 360;
+
+    cctx.save();
+    cctx.translate(cx + animState.offsetX, cy);
+    cctx.rotate(animState.rotate * Math.PI / 180);
+    cctx.scale(animState.scale, animState.scale);
+    cctx.globalAlpha = animState.alpha;
+
+    cctx.beginPath();
+    cctx.arc(0, 0, radius, startDeg * Math.PI / 180, endDeg * Math.PI / 180, false);
+    cctx.strokeStyle = animState.flashing ? animState.flashColor : '#222222';
+    cctx.lineWidth = lineWidth;
+    cctx.lineCap = 'butt';
+    cctx.stroke();
+
+    cctx.restore();
+  }
+
+  function tick(){
+    var needsRedraw = false;
+    var now = performance.now();
+
+    if (animState.animType === 'correct'){
+      var t = (now - animState.animStart) / animState.animDuration;
+      if (t >= 1){
+        animState.rotate = 0;
+        animState.scale = 1;
+        animState.flashing = false;
+        animState.animType = 'idle';
+      } else {
+        animState.rotate = 360 * easeOutCubic(t);
+        animState.scale = 1 + 0.15 * Math.sin(Math.PI * t);
+      }
+      needsRedraw = true;
+    } else if (animState.animType === 'wrong'){
+      var t2 = (now - animState.animStart) / animState.animDuration;
+      if (t2 >= 1){
+        animState.offsetX = 0;
+        animState.animType = 'idle';
+      } else {
+        animState.offsetX = 14 * Math.sin(t2 * Math.PI * 4) * (1 - t2);
+      }
+      needsRedraw = true;
+    } else if (animState.animType === 'fadein'){
+      var t3 = (now - animState.animStart) / animState.animDuration;
+      if (t3 >= 1){
+        animState.alpha = 1;
+        animState.scale = 1;
+        animState.animType = 'idle';
+      } else {
+        animState.alpha = easeOutCubic(t3);
+        animState.scale = 0.7 + 0.3 * easeOutCubic(t3);
+      }
+      needsRedraw = true;
+    }
+
+    if (needsRedraw) drawRing();
+    requestAnimationFrame(tick);
+  }
+
+  function easeOutCubic(t){ return 1 - Math.pow(1 - t, 3); }
+
+  /* =========================================================
+     問題進行
+     ========================================================= */
+  function startSession(){
+    /* ★ 結果画面を確実に隠す */
+    $('#resultScreen').hidden = true;
+
+    state.questionIndex = 0;
+    state.correctCount = 0;
+    state.results = [];
+    state.currentDir = 'up';
+    state.locked = false;
+    state.started = true;
+    state.unknownUsed = false;
+
+    updateStars();
+    buildProgressDots();
+    newQuestion();
+  }
+
+  function newQuestion(){
+    if (state.questionIndex >= TOTAL_Q){
+      finishSession();
+      return;
+    }
+
+    var plan = QUESTION_PLAN[state.questionIndex];
+    var dirs = plan.dirs.slice();
+
+    if (dirs.length > 1 && state.currentDir){
+      var filtered = dirs.filter(function(d){ return d !== state.currentDir; });
+      if (filtered.length > 0) dirs = filtered;
+    }
+    var dir = dirs[Math.floor(Math.random() * dirs.length)];
+
+    state.currentDir = dir;
+    state.currentSize = plan.sizeRatio;
+    state.unknownUsed = false;
+    state.locked = false;
+
+    animState.alpha = 0;
+    animState.scale = 0.7;
+    animState.rotate = 0;
+    animState.offsetX = 0;
+    animState.flashing = false;
+    animState.animType = 'fadein';
+    animState.animStart = performance.now();
+    animState.animDuration = 500;
+
+    updateProgressDots();
+
+    setTimeout(function(){
+      speak('あいてる むきは どこかな', 0.95, 1.35);
+    }, 400);
+  }
+
+  /* =========================================================
+     回答
+     ========================================================= */
+  function answer(dir){
+    if (state.locked) return;
+    if (animState.animType !== 'idle' && animState.animType !== 'fadein') return;
+
+    ensureAudio();
+
+    if (dir === 'unknown'){
+      handleUnknown();
+      return;
+    }
+
+    state.locked = true;
+    flashButton(dir);
+
+    if (dir === state.currentDir){
+      state.correctCount++;
+      state.results.push('correct');
+      updateStars();
+      sfxCorrect();
+      playCorrectAnim();
+      showPraise();
+      setTimeout(function(){
+        speak(pick(PRAISE), 0.95, 1.4);
+      }, 200);
+
+      setTimeout(function(){
+        state.questionIndex++;
+        newQuestion();
+      }, 1400);
+    } else {
+      state.results.push('wrong');
+      sfxWrong();
+      playWrongAnim();
+
+      setTimeout(function(){
+        speak('こっち だったね', 0.95, 1.3);
+        showArrowHint(state.currentDir);
+      }, 500);
+
+      setTimeout(function(){
+        state.questionIndex++;
+        newQuestion();
+      }, 2400);
+    }
+  }
+
+  function handleUnknown(){
+    ensureAudio();
+
+    if (!state.unknownUsed){
+      state.unknownUsed = true;
+      state.locked = true;
+      state.results.push('unknown');
+
+      speak('いっしょに みてみよう', 0.95, 1.3);
+      showArrowHint(state.currentDir);
+
+      setTimeout(function(){
+        state.locked = false;
+        speak('もういちど きいてみよう。あいてる むきは どこかな', 0.95, 1.3);
+      }, 2600);
+    } else {
+      state.locked = true;
+      speak('こっち だよ', 0.95, 1.3);
+      showArrowHint(state.currentDir);
+      setTimeout(function(){
+        state.questionIndex++;
+        newQuestion();
+      }, 2400);
+    }
+  }
+
+  function playCorrectAnim(){
+    animState.animType = 'correct';
+    animState.animStart = performance.now();
+    animState.animDuration = 700;
+    animState.flashing = true;
+    animState.flashColor = '#5cc87a';
+    setTimeout(function(){
+      animState.flashing = false;
+      animState.flashColor = '#222222';
+    }, 700);
+  }
+
+  function playWrongAnim(){
+    animState.animType = 'wrong';
+    animState.animStart = performance.now();
+    animState.animDuration = 600;
+  }
+
+  function flashButton(dir){
+    var btn = document.querySelector('.finger-btn[data-dir="' + dir + '"]');
+    if (!btn) return;
+    btn.classList.add('pressed', 'correct-flash');
+    setTimeout(function(){
+      btn.classList.remove('pressed', 'correct-flash');
+    }, 600);
+  }
+
+  function showArrowHint(dir){
+    var emoji = dir === 'up' ? '👆' :
+                dir === 'down' ? '👇' :
+                dir === 'left' ? '👈' : '👉';
+    var hint = document.createElement('div');
+    hint.className = 'arrow-hint';
+    hint.textContent = emoji;
+    document.body.appendChild(hint);
+    void hint.offsetWidth;
+    hint.classList.add('show');
+    setTimeout(function(){
+      hint.classList.remove('show');
+      setTimeout(function(){ hint.remove(); }, 400);
+    }, 1800);
+  }
+
+  function showPraise(){
+    var pop = document.createElement('div');
+    pop.className = 'praise-pop';
+    pop.textContent = 'せいかい！';
+    document.body.appendChild(pop);
+    void pop.offsetWidth;
+    pop.classList.add('show');
+    setTimeout(function(){ pop.remove(); }, 1400);
+  }
+
+  /* =========================================================
+     星表示
+     ========================================================= */
+  function updateStars(){
+    $('#starCount').textContent = state.correctCount;
+    var row = $('#starRow');
+    row.classList.remove('bump');
+    void row.offsetWidth;
+    row.classList.add('bump');
+  }
+
+  /* =========================================================
+     進行ドット
+     ========================================================= */
+  function buildProgressDots(){
+    var el = $('#progressDots');
+    el.innerHTML = '';
+    for (var i = 0; i < TOTAL_Q; i++){
+      var d = document.createElement('div');
+      d.className = 'pdot';
+      d.dataset.idx = i;
+      el.appendChild(d);
+    }
+  }
+  function updateProgressDots(){
+    document.querySelectorAll('.pdot').forEach(function(d, i){
+      d.classList.remove('current','correct','wrong','unknown');
+      if (i < state.results.length){
+        d.classList.add(state.results[i]);
+      } else if (i === state.questionIndex){
+        d.classList.add('current');
+      }
+    });
+  }
+
+  /* =========================================================
+     セッション終了 → 結果画面
+     ========================================================= */
+  function finishSession(){
+    state.locked = true;
+    cancelSpeech();
+    sfxComplete();
+
+    var starsEl = $('#resultStars');
+    starsEl.innerHTML = '';
+    for (var i = 0; i < TOTAL_Q; i++){
+      var s = document.createElement('span');
+      s.className = 'rs' + (i < state.correctCount ? ' on' : '');
+      s.textContent = '⭐';
+      if (i < state.correctCount){
+        s.style.animationDelay = (i * 0.12) + 's';
+      }
+      starsEl.appendChild(s);
+    }
+
+    var title, emoji;
+    if (state.correctCount >= 7){ title = 'すごい！ ぜんぶ できたね'; emoji = '🌟'; }
+    else if (state.correctCount >= 5){ title = 'じょうずに できたね！'; emoji = '🎉'; }
+    else if (state.correctCount >= 3){ title = 'がんばったね！'; emoji = '😊'; }
+    else { title = 'よく できたね！'; emoji = '💖'; }
+    $('#resultTitle').textContent = title;
+    $('#resultEmoji').textContent = emoji;
+
+    $('#stampGetBtn').hidden = false;
+    $('#retryBtn').hidden = true;
+    $('#resultHomeBtn').hidden = true;
+
+    $('#resultScreen').hidden = false;
+    duckBGM(true);
+
+    setTimeout(function(){
+      speak('ぜんぶ できたね！', 0.95, 1.35);
+    }, 500);
+  }
+
+  /* =========================================================
+     スタンプ獲得
+     ========================================================= */
+  function showStampBox(){
+    state.boxOpened = false;
+
+    var unowned = EYE_STAMP_POOL.filter(function(s){ return state.myStamps.indexOf(s) === -1; });
+    var pool = unowned.length > 0 ? unowned : EYE_STAMP_POOL.slice();
+    var chosen = pool[Math.floor(Math.random() * pool.length)];
+    var color = HANKO_COLORS[Math.floor(Math.random() * HANKO_COLORS.length)];
+    state.pendingStamp = { emoji: chosen, color: color };
+
+    var box = $('#stampBoxBtn');
+    box.classList.remove('opened', 'shaking');
+    var stampEl = $('#boxStamp');
+    stampEl.textContent = '';
+    stampEl.className = 'box-stamp';
+
+    $('#stampBoxScreen').hidden = false;
+    setTimeout(function(){ speak('はこを タップして あけてね', 0.95, 1.3); }, 500);
+  }
+
+  function openStampBox(){
+    if (!state.pendingStamp || state.boxOpened) return;
+    state.boxOpened = true;
+
+    var box = $('#stampBoxBtn');
+    box.classList.add('shaking');
+    sfxShake();
+
+    setTimeout(function(){
+      box.classList.remove('shaking');
+      var stampEl = $('#boxStamp');
+      stampEl.textContent = state.pendingStamp.emoji;
+      stampEl.className = 'box-stamp hanko-' + state.pendingStamp.color;
+      box.classList.add('opened');
+      sfxReveal();
+
+      saveStamp(state.pendingStamp.emoji, state.pendingStamp.color);
+      updateBookBadge();
+      notifyParent({ type: 'updateBadge' });
+
+      setTimeout(function(){
+        speak('スタンプ ゲット', 0.95, 1.35);
+        showConfetti(20);
+      }, 500);
+
+      setTimeout(function(){
+        /* 1. スタンプ箱を隠す */
+        $('#stampBoxScreen').hidden = true;
+        /* 2. ★ 結果画面に戻す（これが抜けていた！） */
+        $('#resultScreen').hidden = false;
+        /* 3. ボタンを入れ替え */
+        $('#stampGetBtn').hidden = true;
+        $('#retryBtn').hidden = false;
+        $('#resultHomeBtn').hidden = false;
+        /* 4. 状態をリセット */
+        state.boxOpened = false;
+        state.pendingStamp = null;
+      }, 2600);
+    }, 600);
+  }
+
+  function showConfetti(count){
+    var marks = ['⭐','✨','🎉','💖','🌸','🎈'];
+    for (var i = 0; i < count; i++){
+      var el = document.createElement('div');
+      el.className = 'confetti';
+      el.textContent = marks[Math.floor(Math.random() * marks.length)];
+      el.style.left = (Math.random() * 100) + 'vw';
+      el.style.fontSize = (16 + Math.random() * 20) + 'px';
+      el.style.animationDelay = (Math.random() * 0.6) + 's';
+      el.style.animationDuration = (1.6 + Math.random() * 1.3) + 's';
+      document.body.appendChild(el);
+      (function(node){ setTimeout(function(){ node.remove(); }, 3400); })(el);
+    }
+  }
+
+  /* =========================================================
+     音声アンロック
+     ========================================================= */
+  function ensureAudio(){
+    if (audioUnlocked && bgmTimer) return;
+    audioUnlocked = true;
+    initAudio();
+    if (ctx && ctx.state === 'suspended'){ try { ctx.resume(); } catch(e){} }
+    warmupSpeech();
+    if (settings.soundOn && !bgmTimer) startBGM();
+  }
+  document.addEventListener('pointerdown', ensureAudio, { passive: true });
+  document.addEventListener('touchstart', ensureAudio, { passive: true });
+
+  /* =========================================================
+     イベント
+     ========================================================= */
+  document.querySelectorAll('.finger-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var dir = this.dataset.dir;
+      sfxTap();
+      answer(dir);
+    });
+  });
+
+  $('#homeBtn').addEventListener('click', function(){
+    sfxTap();
+    cancelSpeech();
+    stopBGM();
+    notifyParent('goHome');
+  });
+  $('#bookBtn').addEventListener('click', function(){
+    sfxTap();
+    cancelSpeech();
+    stopBGM();
+    notifyParent({ type: 'openBook', from: 'eye' });
+  });
+
+  $('#startBtn').addEventListener('click', function(){
+    ensureAudio();
+    sfxTap();
+    $('#introScreen').hidden = true;
+    try { localStorage.setItem(SEEN_KEY, '1'); } catch(e){}
+    startSession();
+  });
+
+  $('#stampGetBtn').addEventListener('click', function(){
+    sfxTap();
+    $('#resultScreen').hidden = true;
+    showStampBox();
+  });
+
+  $('#retryBtn').addEventListener('click', function(){
+    sfxTap();
+    cancelSpeech();
+    duckBGM(false);
+    startSession();
+  });
+
+  $('#resultHomeBtn').addEventListener('click', function(){
+    sfxTap();
+    cancelSpeech();
+    stopBGM();
+    notifyParent('goHome');
+  });
+
+  $('#stampBoxBtn').addEventListener('click', openStampBox);
+
+  /* リサイズ */
+  window.addEventListener('resize', function(){
+    setTimeout(function(){
+      setupCanvas();
+      drawRing();
+    }, 100);
+  });
+  window.addEventListener('orientationchange', function(){
+    setTimeout(function(){
+      setupCanvas();
+      drawRing();
+    }, 300);
+  });
+
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden){
+      stopBGM();
+      cancelSpeech();
+    } else {
+      if (ctx && ctx.state === 'suspended'){ try { ctx.resume(); } catch(e){} }
+      if (settings.soundOn && !bgmTimer && audioUnlocked) startBGM();
+    }
+  });
+
+  document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+  document.addEventListener('gesturestart', function(e){ e.preventDefault(); });
+
+  /* =========================================================
+     起動
+     ========================================================= */
+  loadMyStamps();
+  updateBookBadge();
+
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      setupCanvas();
+      drawRing();
+    });
+  });
+
+  requestAnimationFrame(tick);
+
+  var seen = false;
+  try { seen = localStorage.getItem(SEEN_KEY) === '1'; } catch(e){}
+  if (!seen){
+    $('#introScreen').hidden = false;
+  } else {
+    setTimeout(function(){
+      startSession();
+    }, 300);
+  }
+
+  setTimeout(function(){
+    try {
+      initAudio();
+      if (ctx && ctx.state === 'running'){
+        audioUnlocked = true;
+        if (settings.soundOn && !bgmTimer) startBGM();
+      }
+    } catch(e){}
+  }, 100);
+
+})();
+</script>
+</body>
+</html>
