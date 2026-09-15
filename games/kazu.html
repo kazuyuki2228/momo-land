@@ -138,7 +138,8 @@
     border:5px solid #ffd166;border-radius:26px;
     background:linear-gradient(180deg,#fff,#fff7e0);
     box-shadow:0 7px 0 #e8b93c,0 10px 18px rgba(0,0,0,.12);
-    cursor:pointer;transition:transform .1s,box-shadow .1s;
+    cursor:pointer;
+    transition:transform .1s,box-shadow .1s;
   }
   .num-card .num-digit{font-size:clamp(38px,12vw,60px);font-weight:900;color:#ff7043;line-height:1;}
   .num-card .num-word{font-size:clamp(12px,3.4vw,16px);color:#a89684;font-weight:700;margin-top:3px;}
@@ -293,7 +294,7 @@
   @keyframes fadeOutShrink{to{opacity:.15;transform:scale(.7);}}
 
   @media (prefers-reduced-motion: reduce){
-    .cloud,.sticker-option,.select-header{animation:none!important;}
+    .cloud,.sticker-option,.select-header,.bubble{animation:none!important;}
   }
 </style>
 </head>
@@ -341,6 +342,9 @@
 
 <div id="bubble" class="bubble" role="status" aria-live="polite"></div>
 
+<!-- 共通モジュール -->
+<script src="../shared/momo.js"></script>
+
 <script>
 (function(){
   "use strict";
@@ -353,9 +357,6 @@
   var MAX_LEVEL = 5;
   var LEVEL_MAX_N = [0, 3, 4, 5, 7, 10];
   var STICKERS_PER_UNLOCK = 3;
-
-  var STICKER_KEY = 'momo_stickers_v1';
-  var SETTINGS_KEY = 'momo_settings_v1';
 
   var NUM_WORDS = ['', 'いち', 'に', 'さん', 'よん', 'ご', 'ろく', 'なな', 'はち', 'きゅう', 'じゅう'];
   var COUNT_WORDS = ['いち', 'に', 'さん', 'よん', 'ご', 'ろく', 'なな', 'はち', 'きゅう', 'じゅう'];
@@ -371,7 +372,7 @@
   var REDUCED_MOTION = window.matchMedia
     && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* かずシールプール（ハブ画面と共通） */
+  /* かずシールプール */
   var KAZU_STICKER_POOL = [
     '🌈','⭐','🌸','🎈','🍭','🧸','🐰','🐱','🐶','🦋',
     '🍓','🍎','🌻','🐟','🐸','🦄','🍩','🎀','💖','🌟',
@@ -386,32 +387,7 @@
   var PRAISE = ['せいかい！', 'すごい！', 'やったね！', 'じょうず！', 'あたり！'];
 
   /* =========================================================
-     設定（ハブ画面と共通）
-     ========================================================= */
-  var settings = {
-    bgmMode: 'fun',
-    bgmVol: 50,
-    sfxVol: 70,
-    soundOn: true
-  };
-  function loadSettings(){
-    try {
-      var raw = localStorage.getItem(SETTINGS_KEY);
-      if (raw){
-        var obj = JSON.parse(raw);
-        if (obj && typeof obj === 'object'){
-          if (obj.bgmMode === 'fun' || obj.bgmMode === 'calm' || obj.bgmMode === 'random') settings.bgmMode = obj.bgmMode;
-          if (typeof obj.bgmVol === 'number') settings.bgmVol = Math.max(0, Math.min(100, obj.bgmVol));
-          if (typeof obj.sfxVol === 'number') settings.sfxVol = Math.max(0, Math.min(100, obj.sfxVol));
-          if (typeof obj.soundOn === 'boolean') settings.soundOn = obj.soundOn;
-        }
-      }
-    } catch(e){}
-  }
-  loadSettings();
-
-  /* =========================================================
-     シールの保存（ハブ画面と共有）
+     状態
      ========================================================= */
   var state = {
     stars: 0,
@@ -424,296 +400,24 @@
     wrongStreak: 0,
     correctSinceSticker: 0,
     pendingStickers: null,
-    myStickers: []     // このゲームで獲得したかずシール（重複回避用）
+    myStickers: []
   };
 
-  function loadMyStickers(){
-    try {
-      var raw = localStorage.getItem(STICKER_KEY);
-      if (raw){
-        var arr = JSON.parse(raw);
-        if (Array.isArray(arr)){
-          state.myStickers = arr
-            .map(function(it){
-              if (typeof it === 'string') return it;
-              if (it && typeof it === 'object' && it.emoji) return it.emoji;
-              return null;
-            })
-            .filter(Boolean);
-        }
-      }
-    } catch(e){}
-  }
-  function saveSticker(emoji){
-    try {
-      var raw = localStorage.getItem(STICKER_KEY);
-      var arr = [];
-      if (raw){
-        var parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)){
-          arr = parsed.map(function(it){
-            if (typeof it === 'string') return { emoji: it, from: 'kazu' };
-            if (it && typeof it === 'object' && it.emoji){
-              return { emoji: it.emoji, from: it.from || 'kazu' };
-            }
-            return null;
-          }).filter(Boolean);
-        }
-      }
-      arr.push({ emoji: emoji, from: 'kazu' });
-      localStorage.setItem(STICKER_KEY, JSON.stringify(arr));
-      state.myStickers.push(emoji);
-    } catch(e){}
-  }
-
-  /* =========================================================
-     親（ハブ）へのメッセージ
-     ========================================================= */
-  function notifyParent(msg){
-    try {
-      if (window.parent && window.parent !== window){
-        window.parent.postMessage(msg, '*');
-      }
-    } catch(e){}
-  }
-
-  /* =========================================================
-     音
-     ========================================================= */
-  var ctx = null;
-  var sfxGain = null;
-  var bgmGain = null;
-  var bgmTimer = null;
-  var bgmLoopTime = 0;
-  var currentTrack = null;
-  var isDucked = false;
-  var audioUnlocked = false;
-
-  function getBgmGainValue(quiet){
-    return (settings.bgmVol / 100) * (quiet ? 0.07 : 0.20);
-  }
-  function getSfxGainValue(){
-    return (settings.sfxVol / 100) * 0.70;
-  }
-
-  var F = {
-    C3:130.81, F3:174.61, G3:196.00, A3:220.00,
-    C4:261.63, D4:293.66, E4:329.63, F4:349.23, G4:392.00, A4:440.00,
-    C5:523.25, D5:587.33, E5:659.25, F5:698.46, G5:783.99, A5:880.00,
-    C6:1046.50, E6:1318.51, DS4:311.13
-  };
-
-  var TRACKS = [
-    { name:'おさんぽマーチ', mood:'fun', bpm:116,
-      melody:[[0,F.E5,1],[1,F.G5,1],[2,F.A5,1],[3,F.G5,1],[4,F.E5,1],[5,F.D5,1],[6,F.C5,2],
-              [8,F.D5,1],[9,F.E5,1],[10,F.G5,1],[11,F.E5,1],[12,F.E5,1],[13,F.D5,1],[14,F.C5,2]],
-      bass:[[0,F.C3,4],[4,F.F3,4],[8,F.G3,4],[12,F.C3,4]] },
-    { name:'わくわくジャンプ', mood:'fun', bpm:132,
-      melody:[[0,F.C5,.5],[.5,F.E5,.5],[1,F.G5,.5],[1.5,F.E5,.5],[2,F.G5,.5],[2.5,F.A5,.5],[3,F.G5,1],
-              [4,F.A5,.5],[4.5,F.G5,.5],[5,F.F5,.5],[5.5,F.E5,.5],[6,F.D5,.5],[6.5,F.E5,.5],[7,F.F5,1],
-              [8,F.E5,.5],[8.5,F.G5,.5],[9,F.C6,1],[10,F.A5,.5],[10.5,F.G5,.5],[11,F.E5,1],
-              [12,F.F5,.5],[12.5,F.E5,.5],[13,F.D5,.5],[13.5,F.C5,.5],[14,F.G4,1],[15,F.C5,1]],
-      bass:[[0,F.C3,2],[2,F.C3,2],[4,F.F3,2],[6,F.G3,2],[8,F.C3,2],[10,F.A3,2],[12,F.F3,2],[14,F.G3,2]] },
-    { name:'おひるね', mood:'calm', bpm:76,
-      melody:[[0,F.E5,1.5],[1.5,F.D5,.5],[2,F.C5,2],[4,F.D5,1.5],[5.5,F.E5,.5],[6,F.G5,2],
-              [8,F.G5,1],[9,F.F5,1],[10,F.E5,1],[11,F.D5,1],[12,F.C5,2],[14,F.E5,1],[15,F.C5,1]],
-      bass:[[0,F.C3,4],[4,F.A3,4],[8,F.F3,4],[12,F.G3,4]] },
-    { name:'ゆらゆら', mood:'calm', bpm:88,
-      melody:[[0,F.C5,1],[1,F.E5,1],[2,F.G5,1.5],[3.5,F.E5,.5],[4,F.F5,1],[5,F.A5,1],[6,F.G5,2],
-              [8,F.E5,1],[9,F.G5,1],[10,F.C6,1.5],[11.5,F.A5,.5],[12,F.G5,1],[13,F.F5,1],[14,F.E5,1],[15,F.C5,1]],
-      bass:[[0,F.C3,4],[4,F.F3,4],[8,F.C3,2],[10,F.A3,2],[12,F.F3,2],[14,F.G3,2]] }
-  ];
-
-  function getTrackPool(){
-    if (settings.bgmMode === 'calm') return TRACKS.filter(function(t){ return t.mood === 'calm'; });
-    if (settings.bgmMode === 'fun')  return TRACKS.filter(function(t){ return t.mood === 'fun'; });
-    return TRACKS.slice();
-  }
-  function pickTrack(){
-    var p = getTrackPool();
-    return p[Math.floor(Math.random() * p.length)] || TRACKS[0];
-  }
-
-  function initAudio(){
-    if (ctx) return;
-    var AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return;
-    ctx = new AC();
-    sfxGain = ctx.createGain();
-    sfxGain.gain.value = getSfxGainValue();
-    sfxGain.connect(ctx.destination);
-  }
-
-  function playNote(freq, t0, dur, type, dest, vol){
-    if (!ctx || !dest) return;
-    var osc = ctx.createOscillator();
-    var g = ctx.createGain();
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, t0);
-    g.gain.setValueAtTime(0.0001, t0);
-    g.gain.exponentialRampToValueAtTime(Math.max(vol, 0.001), t0 + 0.03);
-    g.gain.exponentialRampToValueAtTime(0.0001, t0 + Math.max(dur, 0.05));
-    osc.connect(g); g.connect(dest);
-    osc.start(t0); osc.stop(t0 + dur + 0.08);
-  }
-
-  function scheduleTrack(t0, track){
-    var beat = 60 / track.bpm;
-    var loopDur = 16 * beat;
-    track.melody.forEach(function(n){ playNote(n[1], t0 + n[0] * beat, n[2] * beat * 0.9, 'triangle', bgmGain, 0.5); });
-    track.bass.forEach(function(n){ playNote(n[1], t0 + n[0] * beat, n[2] * beat * 0.85, 'sine', bgmGain, 0.42); });
-    if (track.mood === 'fun'){
-      playNote(F.C6, t0 + 6 * beat,  0.5, 'sine', bgmGain, 0.10);
-      playNote(F.E6, t0 + 14 * beat, 0.5, 'sine', bgmGain, 0.10);
-    }
-    return loopDur;
-  }
-
-  function pumpBGM(){
-    if (!ctx || !bgmGain) return;
-    if (!currentTrack) currentTrack = pickTrack();
-    while (bgmLoopTime < ctx.currentTime + 2.5){
-      var dur = scheduleTrack(bgmLoopTime, currentTrack);
-      bgmLoopTime += dur;
-    }
-  }
-
-  function startBGM(){
-    if (!ctx || !settings.soundOn) return;
-    stopBGM();
-    bgmGain = ctx.createGain();
-    bgmGain.gain.value = getBgmGainValue(isDucked);
-    bgmGain.connect(ctx.destination);
-    currentTrack = pickTrack();
-    bgmLoopTime = ctx.currentTime + 0.2;
-    pumpBGM();
-    bgmTimer = setInterval(pumpBGM, 700);
-  }
-  function stopBGM(){
-    if (bgmTimer){ clearInterval(bgmTimer); bgmTimer = null; }
-    if (bgmGain){ try { bgmGain.disconnect(); } catch(e){} bgmGain = null; }
-    currentTrack = null;
-  }
-  function applyBgmGain(){
-    if (!ctx || !bgmGain) return;
-    var target = getBgmGainValue(isDucked);
-    try {
-      bgmGain.gain.cancelScheduledValues(ctx.currentTime);
-      bgmGain.gain.setValueAtTime(bgmGain.gain.value, ctx.currentTime);
-      bgmGain.gain.linearRampToValueAtTime(target, ctx.currentTime + 0.15);
-    } catch(e){ bgmGain.gain.value = target; }
-  }
-  function duckBGM(quiet){ isDucked = quiet; applyBgmGain(); }
-
-  function applySfxGain(){
-    if (!ctx || !sfxGain) return;
-    var target = getSfxGainValue();
-    try {
-      sfxGain.gain.cancelScheduledValues(ctx.currentTime);
-      sfxGain.gain.setValueAtTime(target, ctx.currentTime);
-    } catch(e){ sfxGain.gain.value = target; }
-  }
-
-  /* 効果音 */
-  function sfxTap(){
-    if (!settings.soundOn || !ctx) return;
-    playNote(880, ctx.currentTime, 0.09, 'sine', sfxGain, 0.22);
-  }
-  function sfxPop(){
-    if (!settings.soundOn || !ctx) return;
-    playNote(1250 + Math.random()*250, ctx.currentTime, 0.07, 'sine', sfxGain, 0.10);
-  }
-  function sfxCorrect(){
-    if (!settings.soundOn || !ctx) return;
-    var t = ctx.currentTime;
-    [[F.C5,0],[F.E5,.10],[F.G5,.20],[F.C6,.30]].forEach(function(n){
-      playNote(n[0], t + n[1], 0.42, 'triangle', sfxGain, 0.34);
-    });
-  }
-  function sfxWrong(){
-    if (!settings.soundOn || !ctx) return;
-    var t = ctx.currentTime;
-    playNote(F.G4, t, 0.20, 'sine', sfxGain, 0.20);
-    playNote(F.DS4, t + 0.17, 0.30, 'sine', sfxGain, 0.20);
-  }
-  function sfxLevelUp(){
-    if (!settings.soundOn || !ctx) return;
-    var t = ctx.currentTime;
-    [F.C5, F.E5, F.G5, F.C6, F.E6].forEach(function(f, i){
-      playNote(f, t + i * 0.09, 0.45, 'triangle', sfxGain, 0.30);
-    });
-  }
-
-  /* =========================================================
-     読み上げ
-     ========================================================= */
-  var jaVoice = null;
-  function pickVoice(){
-    if (!('speechSynthesis' in window)) return;
-    var voices = window.speechSynthesis.getVoices();
-    jaVoice = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf('ja') === 0; }) || null;
-  }
-  if ('speechSynthesis' in window){
-    pickVoice();
-    window.speechSynthesis.onvoiceschanged = pickVoice;
-  }
-
-  function buildUtterance(text, rate){
-    var u = new SpeechSynthesisUtterance(text);
-    u.lang = 'ja-JP';
-    if (jaVoice) u.voice = jaVoice;
-    u.rate = rate || 0.9;
-    u.pitch = 1.35;
-    u.volume = 1;
-    return u;
-  }
-  function speak(text, rate){
-    if (!settings.soundOn || !('speechSynthesis' in window)) return;
-    try {
-      window.speechSynthesis.cancel();
-      setTimeout(function(){
-        try { window.speechSynthesis.speak(buildUtterance(text, rate)); } catch(e){}
-      }, 60);
-    } catch(e){}
-  }
-  function speakWithEnd(text, onend, rate){
-    var safeOnend = onend;
-    if (!settings.soundOn || !('speechSynthesis' in window)){
-      setTimeout(safeOnend, 500); return;
-    }
-    try {
-      window.speechSynthesis.cancel();
-      setTimeout(function(){
-        var u = buildUtterance(text, rate);
-        var done = false;
-        var finish = function(){ if (done) return; done = true; safeOnend(); };
-        u.onend = finish; u.onerror = finish;
-        try { window.speechSynthesis.speak(u); } catch(e){ finish(); return; }
-        setTimeout(finish, Math.max(2500, text.length * 260));
-      }, 60);
-    } catch(e){ setTimeout(safeOnend, 500); }
-  }
-  function speakWord(text, onend){
-    if (!settings.soundOn || !('speechSynthesis' in window)){ setTimeout(onend, 380); return; }
-    try {
-      window.speechSynthesis.cancel();
-      setTimeout(function(){
-        var u = buildUtterance(text, 0.82);
-        var done = false;
-        var finish = function(){ if (done) return; done = true; onend(); };
-        u.onend = finish; u.onerror = finish;
-        try { window.speechSynthesis.speak(u); } catch(e){ finish(); return; }
-        setTimeout(finish, 1400);
-      }, 60);
-    } catch(e){ setTimeout(onend, 300); }
-  }
-  function cancelSpeech(){
-    if ('speechSynthesis' in window){ try { window.speechSynthesis.cancel(); } catch(e){} }
-  }
+  /* 起動時に自分のシール履歴を読み込み */
+  state.myStickers = Momo.getMyStickerEmojis('kazu');
 
   /* =========================================================
      問題生成・描画
      ========================================================= */
+  function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
+  function shuffle(a){
+    for (var i = a.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
   function makeNumberChoices(n){
     var pool = [];
     for (var i = 1; i <= MAX_N; i++){ if (i !== n) pool.push(i); }
@@ -727,25 +431,16 @@
     }
     return shuffle([n, others[0], others[1]]);
   }
-  function shuffle(a){
-    for (var i = a.length - 1; i > 0; i--){
-      var j = Math.floor(Math.random() * (i + 1));
-      var t = a[i]; a[i] = a[j]; a[j] = t;
-    }
-    return a;
-  }
-  function rand(n){ return Math.floor(Math.random() * n); }
-  function pick(arr){ return arr[rand(arr.length)]; }
 
   function newQuestion(){
-    cancelSpeech();
+    Momo.cancelSpeech();
     state.locked = false;
     state.counting = false;
     state.wrongStreak = 0;
     state.qCount++;
 
     var maxN = LEVEL_MAX_N[state.level] || MAX_N;
-    var n = 1 + rand(maxN);
+    var n = 1 + Math.floor(Math.random() * maxN);
     var emoji = pick(EMOJI_SETS);
     var mode = (state.qCount <= 2) ? 'count' : (Math.random() < 0.65 ? 'count' : 'find');
 
@@ -754,7 +449,7 @@
 
     setTimeout(function(){
       var text = mode === 'count' ? 'いくつ あるかな' : 'この かずは どれかな';
-      speak(text);
+      Momo.speak(text);
     }, TIMING.Q_SPEAK);
   }
 
@@ -779,7 +474,7 @@
         s.textContent = emoji;
         s.style.animationDelay = (i * 0.11) + 's';
         qBox.appendChild(s);
-        (function(idx){ setTimeout(sfxPop, idx * 110 + 120); })(i);
+        (function(idx){ setTimeout(Momo.sfx.pop, idx * 110 + 120); })(i);
       }
       makeNumberChoices(n).forEach(function(num){
         var b = document.createElement('button');
@@ -788,7 +483,7 @@
         b.innerHTML = '<span class="num-digit">' + num + '</span>' +
                       '<span class="num-word">' + NUM_WORDS[num] + '</span>';
         b.addEventListener('click', function(){
-          if (!state.locked && !state.counting) sfxTap();
+          if (!state.locked && !state.counting) Momo.sfx.tap();
           answer(num === n, b, num);
         });
         chBox.appendChild(b);
@@ -800,7 +495,7 @@
       big.innerHTML = '<span class="num-digit">' + n + '</span>' +
                       '<span class="num-word">' + NUM_WORDS[n] + '</span>';
       qBox.appendChild(big);
-      setTimeout(sfxPop, 150);
+      setTimeout(Momo.sfx.pop, 150);
       makeNumberChoices(n).forEach(function(c){
         var b = document.createElement('button');
         b.className = 'group-card';
@@ -809,7 +504,7 @@
         for (var i = 0; i < c; i++){ html += '<span class="g-emoji">' + emoji + '</span>'; }
         b.innerHTML = html;
         b.addEventListener('click', function(){
-          if (!state.locked && !state.counting) sfxTap();
+          if (!state.locked && !state.counting) Momo.sfx.tap();
           answer(c === n, b, c);
         });
         chBox.appendChild(b);
@@ -817,6 +512,9 @@
     }
   }
 
+  /* =========================================================
+     いっしょに かぞえる
+     ========================================================= */
   function countAlong(){
     if (state.counting || state.locked) return;
     if (!state.current || state.current.mode !== 'count') return;
@@ -832,26 +530,29 @@
         state.counting = false;
         var text = state.current.n + 'こ！';
         showBubble(text);
-        setTimeout(function(){ speak(text); }, 150);
+        setTimeout(function(){ Momo.speak(text); }, 150);
         return;
       }
       items[i].classList.add('counting-hit');
-      sfxPop();
-      speakWord(COUNT_WORDS[i], step);
+      Momo.sfx.pop();
+      Momo.speakWord(COUNT_WORDS[i], step);
       i++;
     }
     step();
   }
 
+  /* =========================================================
+     回答処理
+     ========================================================= */
   function answer(isCorrect, el, val){
     if (state.locked || state.counting) return;
-    cancelSpeech();
+    Momo.cancelSpeech();
 
     if (isCorrect){
       state.locked = true;
       state.wrongStreak = 0;
       el.classList.add('correct');
-      sfxCorrect();
+      Momo.sfx.correct();
       confetti(20);
 
       state.stars++;
@@ -871,13 +572,13 @@
       var countText = words + '。' + state.current.n + 'こ！';
 
       setTimeout(function(){
-        speakWithEnd(countText, function(){
+        Momo.speakWithEnd(countText, function(){
           if (wasLevelUp){
-            sfxLevelUp();
+            Momo.sfx.levelUp();
             showBubble('レベルアップ！');
             confetti(34);
             setTimeout(function(){
-              speakWithEnd('れべるあっぷ！', function(){
+              Momo.speakWithEnd('れべるあっぷ！', function(){
                 finishTurn(earnedSticker);
               });
             }, 550);
@@ -889,7 +590,7 @@
 
     } else {
       el.classList.add('wrong');
-      sfxWrong();
+      Momo.sfx.wrong();
       state.wrongStreak++;
       setTimeout(function(){ el.classList.remove('wrong'); }, TIMING.WRONG_SHAKE);
       if (state.wrongStreak >= 2 && state.current.mode === 'count'){
@@ -903,6 +604,9 @@
     else newQuestion();
   }
 
+  /* =========================================================
+     星・進捗
+     ========================================================= */
   function updateStars(){
     $('#starCount').textContent = state.stars;
     var el = document.querySelector('.stars');
@@ -915,25 +619,6 @@
     dots.forEach(function(d, i){
       d.classList.toggle('filled', i < state.correctSinceSticker);
     });
-  }
-  function updateBookBadge(){
-    try {
-      var raw = localStorage.getItem(STICKER_KEY);
-      var arr = raw ? JSON.parse(raw) : [];
-      var n = 0;
-      if (Array.isArray(arr)){
-        n = arr.length;
-        // スタンプもカウントに含める（ハブと整合）
-        var raw2 = localStorage.getItem('momo_stamps_v1');
-        if (raw2){
-          var arr2 = JSON.parse(raw2);
-          if (Array.isArray(arr2)) n += arr2.length;
-        }
-      }
-      var badge = $('#bookBadge');
-      badge.textContent = n;
-      badge.classList.toggle('show', n > 0);
-    } catch(e){}
   }
 
   /* =========================================================
@@ -961,9 +646,7 @@
       el.style.animationDuration = (1.7 + Math.random() * 1.3) + 's';
       el.style.animationDelay = (Math.random() * 0.35) + 's';
       document.body.appendChild(el);
-      (function(node){
-        setTimeout(function(){ node.remove(); }, 3600);
-      })(el);
+      (function(node){ setTimeout(function(){ node.remove(); }, 3600); })(el);
     }
   }
 
@@ -972,7 +655,7 @@
      ========================================================= */
   function showStickerSelect(){
     state.locked = false;
-    cancelSpeech();
+    Momo.cancelSpeech();
 
     var unowned = KAZU_STICKER_POOL.filter(function(s){ return state.myStickers.indexOf(s) === -1; });
     var pool = unowned.length >= STICKERS_PER_UNLOCK ? unowned : KAZU_STICKER_POOL.slice();
@@ -993,9 +676,9 @@
     });
 
     $('#stickerSelectScreen').classList.remove('hidden');
-    duckBGM(true);
+    Momo.duckBGM(true);
 
-    setTimeout(function(){ speak('シールを えらんでね'); }, 500);
+    setTimeout(function(){ Momo.speak('シールを えらんでね'); }, 500);
   }
 
   function chooseSticker(sticker, card){
@@ -1008,29 +691,29 @@
     });
     card.classList.add('chosen');
 
-    sfxLevelUp();
+    Momo.sfx.levelUp();
     confetti(30);
 
-    saveSticker(sticker);
+    /* ★ 共通モジュールで保存 */
+    Momo.saveSticker(sticker, 'kazu');
+    state.myStickers.push(sticker);
     state.correctSinceSticker = 0;
     updateProgress();
-    updateBookBadge();
-
-    notifyParent({ type: 'updateBadge' });
+    Momo.updateBookBadge();
 
     setTimeout(function(){ showBubble('シール ゲット！'); }, 200);
-    setTimeout(function(){ speak('シール ゲット'); }, 450);
+    setTimeout(function(){ Momo.speak('シール ゲット'); }, 450);
 
     setTimeout(function(){
       $('#stickerSelectScreen').classList.add('hidden');
-      duckBGM(false);
+      Momo.duckBGM(false);
       state.locked = false;
       newQuestion();
     }, TIMING.STICKER_BACK);
   }
 
   /* =========================================================
-     画面サイズ
+     画面サイズ対応
      ========================================================= */
   function applyCompact(){
     var compact = window.innerHeight < 560;
@@ -1038,47 +721,27 @@
   }
 
   /* =========================================================
-     音声アンロック
-     ========================================================= */
-  function unlockAudio(){
-    if (audioUnlocked && bgmTimer) return;
-    audioUnlocked = true;
-    initAudio();
-    if (ctx && ctx.state === 'suspended'){ try { ctx.resume(); } catch(e){} }
-    try {
-      if ('speechSynthesis' in window){
-        var u = new SpeechSynthesisUtterance('');
-        u.volume = 0;
-        window.speechSynthesis.speak(u);
-        window.speechSynthesis.cancel();
-      }
-    } catch(e){}
-    if (settings.soundOn && !bgmTimer) startBGM();
-  }
-  document.addEventListener('pointerdown', unlockAudio, { passive: true });
-  document.addEventListener('touchstart', unlockAudio, { passive: true });
-  document.addEventListener('keydown', unlockAudio);
-  document.addEventListener('click', unlockAudio);
-
-  /* =========================================================
      イベント
      ========================================================= */
   $('#homeBtn').addEventListener('click', function(){
-    sfxTap();
-    cancelSpeech();
-    stopBGM();
-    notifyParent('goHome');
+    Momo.sfx.tap();
+    Momo.cancelSpeech();
+    Momo.stopBGM();
+    Momo.notifyParent('goHome');
   });
 
   $('#bookBtn').addEventListener('click', function(){
-    sfxTap();
-    cancelSpeech();
-    stopBGM();
-    notifyParent({ type: 'openBook', from: 'kazu' });
+    Momo.sfx.tap();
+    Momo.cancelSpeech();
+    Momo.stopBGM();
+    Momo.notifyParent({ type: 'openBook', from: 'kazu' });
   });
 
   $('#countBtn').addEventListener('click', function(){
-    if (!state.locked && !state.counting){ sfxTap(); countAlong(); }
+    if (!state.locked && !state.counting){
+      Momo.sfx.tap();
+      countAlong();
+    }
   });
   $('#questionBox').addEventListener('click', function(e){
     if (e.target.classList.contains('q-emoji')) countAlong();
@@ -1091,16 +754,12 @@
 
   document.addEventListener('visibilitychange', function(){
     if (document.hidden){
-      stopBGM();
-      cancelSpeech();
+      Momo.stopBGM();
+      Momo.cancelSpeech();
     } else {
-      if (ctx && ctx.state === 'suspended'){ try { ctx.resume(); } catch(e){} }
-      if (settings.soundOn && !bgmTimer && audioUnlocked) startBGM();
+      if (Momo.settings.soundOn) Momo.startBGM();
     }
   });
-
-  document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
-  document.addEventListener('gesturestart', function(e){ e.preventDefault(); });
 
   /* =========================================================
      起動
@@ -1115,25 +774,14 @@
     }
   })();
 
-  loadMyStickers();
+  Momo.init();
+  Momo.updateBookBadge();
+
   updateStars();
   updateProgress();
-  updateBookBadge();
   applyCompact();
 
-  // ゲーム開始
-  setTimeout(newQuestion, 400);
-
-  // 早期に音声アンロックを試みる
-  setTimeout(function(){
-    try {
-      initAudio();
-      if (ctx && ctx.state === 'running'){
-        audioUnlocked = true;
-        if (settings.soundOn && !bgmTimer) startBGM();
-      }
-    } catch(e){}
-  }, 100);
+  setTimeout(newQuestion, 500);
 
 })();
 </script>
