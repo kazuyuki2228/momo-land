@@ -1,25 +1,13 @@
 /* =========================================================
    momo.js - ももちゃんのあそぼうランド 共通モジュール
-   =========================================================
-   使い方：
-   1. HTMLに読み込む
-      <script src="../shared/momo.js"></script>
-   2. 起動時に初期化
-      Momo.init();
-   3. 各機能を呼び出す
-      Momo.sfx.tap();
-      Momo.speak('せいかい！');
-      Momo.saveSticker('🍎', 'kazu');
    ========================================================= */
 (function(){
   'use strict';
 
-  /* =========================================================
-     定数
-     ========================================================= */
   var SETTINGS_KEY = 'momo_settings_v1';
   var STICKER_KEY  = 'momo_stickers_v1';
   var STAMP_KEY    = 'momo_stamps_v1';
+  var SCREENTIME_KEY = 'momo_screentime_v1';
 
   /* =========================================================
      設定
@@ -28,7 +16,8 @@
     bgmMode: 'fun',
     bgmVol: 50,
     sfxVol: 70,
-    soundOn: true
+    soundOn: true,
+    screentimeMin: 0
   };
 
   function loadSettings(){
@@ -41,9 +30,13 @@
           if (typeof obj.bgmVol === 'number') settings.bgmVol = Math.max(0, Math.min(100, obj.bgmVol));
           if (typeof obj.sfxVol === 'number') settings.sfxVol = Math.max(0, Math.min(100, obj.sfxVol));
           if (typeof obj.soundOn === 'boolean') settings.soundOn = obj.soundOn;
+          if (typeof obj.screentimeMin === 'number') settings.screentimeMin = Math.max(0, obj.screentimeMin);
         }
       }
     } catch(e){}
+  }
+  function saveSettings(){
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch(e){}
   }
 
   /* =========================================================
@@ -58,15 +51,11 @@
   var isDucked = false;
   var audioUnlocked = false;
   var unlockListenerAttached = false;
+  var screenTimeActive = false;
 
-  function getBgmGainValue(quiet){
-    return (settings.bgmVol / 100) * (quiet ? 0.07 : 0.20);
-  }
-  function getSfxGainValue(){
-    return (settings.sfxVol / 100) * 0.70;
-  }
+  function getBgmGainValue(quiet){ return (settings.bgmVol / 100) * (quiet ? 0.07 : 0.20); }
+  function getSfxGainValue(){ return (settings.sfxVol / 100) * 0.70; }
 
-  /* 音符 */
   var F = {
     C3:130.81, F3:174.61, G3:196.00, A3:220.00,
     C4:261.63, D4:293.66, E4:329.63, F4:349.23, G4:392.00, A4:440.00,
@@ -74,7 +63,6 @@
     C6:1046.50, E6:1318.51, DS4:311.13
   };
 
-  /* 4つのBGMトラック */
   var TRACKS = [
     { mood:'fun', bpm:116,
       melody:[[0,F.E5,1],[1,F.G5,1],[2,F.A5,1],[3,F.G5,1],[4,F.E5,1],[5,F.D5,1],[6,F.C5,2],
@@ -188,32 +176,17 @@
   }
 
   /* =========================================================
-     汎用効果音（ゲーム固有の音を作るための基本API）
+     汎用効果音
      ========================================================= */
-  /* tone(freq, delay, dur, type, vol)
-     - freq  : 周波数 (Hz)
-     - delay : 現在時刻からの遅延 (秒)。0で即時
-     - dur   : 音の長さ (秒)
-     - type  : 'sine' | 'triangle' | 'sawtooth' | 'square'
-     - vol   : 0〜1 の音量（省略時 0.2） */
   function sfxTone(freq, delay, dur, type, vol){
     if (!settings.soundOn || !ctx || !sfxGain) return;
     var t0 = ctx.currentTime + (delay || 0);
     playNote(freq, t0, dur || 0.1, type || 'sine', sfxGain, (vol != null ? vol : 0.2));
   }
 
-  /* =========================================================
-     基本効果音セット
-     ========================================================= */
-  function sfxTap(){
-    sfxTone(880, 0, 0.09, 'sine', 0.22);
-  }
-  function sfxPop(){
-    sfxTone(1250 + Math.random()*250, 0, 0.07, 'sine', 0.10);
-  }
-  function sfxGrab(){
-    sfxTone(660, 0, 0.08, 'sine', 0.20);
-  }
+  function sfxTap(){ sfxTone(880, 0, 0.09, 'sine', 0.22); }
+  function sfxPop(){ sfxTone(1250 + Math.random()*250, 0, 0.07, 'sine', 0.10); }
+  function sfxGrab(){ sfxTone(660, 0, 0.08, 'sine', 0.20); }
   function sfxCorrect(){
     sfxTone(F.C5, 0,    0.42, 'triangle', 0.34);
     sfxTone(F.E5, 0.10, 0.42, 'triangle', 0.34);
@@ -419,7 +392,6 @@
       notifyParent({ type: 'updateBadge' });
     } catch(e){}
   }
-
   function saveStamp(emoji, from, color){
     try {
       var arr = normalizeArray(loadArray(STAMP_KEY));
@@ -437,9 +409,7 @@
     var a = loadArray(STAMP_KEY);
     return Array.isArray(a) ? a.length : 0;
   }
-  function getTotalCount(){
-    return getStickerCount() + getStampCount();
-  }
+  function getTotalCount(){ return getStickerCount() + getStampCount(); }
 
   function getMyStickerEmojis(from){
     var arr = normalizeArray(loadArray(STICKER_KEY));
@@ -463,7 +433,155 @@
   }
 
   /* =========================================================
-     アンロック（初回タップで音を有効化）
+     スクリーンタイム
+     ========================================================= */
+  var screenTime = {
+    dateKey: null,
+    accumulatedMs: 0,
+    runningSince: 0,
+    limitMin: 0,
+    warningFired: false,
+    expiredFired: false,
+    onWarning: null,
+    onExpired: null,
+    checkTimer: null
+  };
+
+  function getTodayKey(){
+    var d = new Date();
+    var y = d.getFullYear();
+    var m = String(d.getMonth() + 1);
+    if (m.length < 2) m = '0' + m;
+    var day = String(d.getDate());
+    if (day.length < 2) day = '0' + day;
+    return y + '-' + m + '-' + day;
+  }
+
+  function loadScreenTime(){
+    try {
+      var raw = localStorage.getItem(SCREENTIME_KEY);
+      if (raw){
+        var obj = JSON.parse(raw);
+        if (obj && typeof obj === 'object'){
+          screenTime.dateKey = obj.dateKey || null;
+          screenTime.accumulatedMs = (typeof obj.accumulatedMs === 'number') ? obj.accumulatedMs : 0;
+        }
+      }
+    } catch(e){}
+    var today = getTodayKey();
+    if (screenTime.dateKey !== today){
+      screenTime.dateKey = today;
+      screenTime.accumulatedMs = 0;
+    }
+    screenTime.runningSince = 0;
+    screenTime.limitMin = settings.screentimeMin || 0;
+    screenTime.warningFired = false;
+    screenTime.expiredFired = false;
+  }
+
+  function saveScreenTime(){
+    try {
+      localStorage.setItem(SCREENTIME_KEY, JSON.stringify({
+        dateKey: screenTime.dateKey,
+        accumulatedMs: screenTime.accumulatedMs
+      }));
+    } catch(e){}
+  }
+
+  function getCurrentAccumulatedMs(){
+    var total = screenTime.accumulatedMs;
+    if (screenTime.runningSince > 0){
+      total += Date.now() - screenTime.runningSince;
+    }
+    return total;
+  }
+
+  function startScreenTimer(){
+    if (!screenTimeActive) return;
+    if (screenTime.limitMin <= 0) return;
+    if (screenTime.expiredFired) return;
+    if (screenTime.runningSince > 0) return;
+    screenTime.runningSince = Date.now();
+  }
+
+  function stopScreenTimer(){
+    if (screenTime.runningSince > 0){
+      screenTime.accumulatedMs += Date.now() - screenTime.runningSince;
+      screenTime.runningSince = 0;
+      saveScreenTime();
+    }
+  }
+
+  function checkScreenTime(){
+    if (!screenTimeActive) return;
+    if (screenTime.limitMin <= 0) return;
+    if (screenTime.expiredFired) return;
+
+    var totalMs = getCurrentAccumulatedMs();
+    var limitMs = screenTime.limitMin * 60 * 1000;
+    var remainingMs = limitMs - totalMs;
+
+    /* 残り1分前の警告（1回だけ） */
+    if (!screenTime.warningFired && remainingMs > 0 && remainingMs <= 60 * 1000){
+      screenTime.warningFired = true;
+      if (screenTime.onWarning){
+        try { screenTime.onWarning(); } catch(e){}
+      }
+    }
+
+    /* 時間切れ */
+    if (remainingMs <= 0){
+      screenTime.expiredFired = true;
+      stopScreenTimer();
+      if (screenTime.onExpired){
+        try { screenTime.onExpired(); } catch(e){}
+      }
+    }
+  }
+
+  function startScreenTimeChecker(){
+    if (screenTime.checkTimer) return;
+    screenTime.checkTimer = setInterval(checkScreenTime, 1000);
+    /* 起動直後にも1回チェック */
+    checkScreenTime();
+  }
+
+  function resetScreenTime(){
+    screenTime.accumulatedMs = 0;
+    screenTime.runningSince = 0;
+    screenTime.warningFired = false;
+    screenTime.expiredFired = false;
+    screenTime.dateKey = getTodayKey();
+    saveScreenTime();
+    startScreenTimer();
+  }
+
+  function setScreenTimeLimit(min){
+    settings.screentimeMin = min;
+    screenTime.limitMin = min;
+    resetScreenTime();
+    saveSettings();
+  }
+
+  function getScreenTimeRemaining(){
+    if (screenTime.limitMin <= 0) return Infinity;
+    var totalMs = getCurrentAccumulatedMs();
+    var limitMs = screenTime.limitMin * 60 * 1000;
+    return Math.max(0, limitMs - totalMs);
+  }
+
+  function isScreenTimeExpired(){
+    return screenTime.expiredFired;
+  }
+
+  function setScreenTimeCallbacks(cbs){
+    cbs = cbs || {};
+    if (typeof cbs.onWarning === 'function') screenTime.onWarning = cbs.onWarning;
+    if (typeof cbs.onExpired === 'function') screenTime.onExpired = cbs.onExpired;
+  }
+
+  /* =========================================================
+     アンロック
      ========================================================= */
   function unlockAudio(){
     if (audioUnlocked && bgmTimer) return;
@@ -472,6 +590,7 @@
     if (ctx && ctx.state === 'suspended'){ try { ctx.resume(); } catch(e){} }
     warmupSpeech();
     if (settings.soundOn && !bgmTimer) startBGM();
+    if (screenTimeActive) startScreenTimer();
   }
 
   function attachUnlockListeners(){
@@ -484,16 +603,21 @@
   }
 
   /* =========================================================
-     画面の可視状態に応じてBGMを自動停止/再開
+     可視状態
      ========================================================= */
   function attachVisibilityHandler(){
     document.addEventListener('visibilitychange', function(){
       if (document.hidden){
         stopBGM();
         cancelSpeech();
+        if (screenTimeActive) stopScreenTimer();
       } else {
         if (ctx && ctx.state === 'suspended'){ try { ctx.resume(); } catch(e){} }
         if (settings.soundOn && !bgmTimer && audioUnlocked) startBGM();
+        if (screenTimeActive){
+          startScreenTimer();
+          checkScreenTime();
+        }
       }
     });
     document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
@@ -506,12 +630,19 @@
   function init(options){
     options = options || {};
     loadSettings();
+    loadScreenTime();
 
     initAudio();
     attachUnlockListeners();
 
     if (options.visibility !== false){
       attachVisibilityHandler();
+    }
+
+    /* screenTime オプションが true のときだけタイマー起動 */
+    if (options.screenTime === true){
+      screenTimeActive = true;
+      startScreenTimeChecker();
     }
 
     if (settings.soundOn){
@@ -533,21 +664,15 @@
 
     settings: settings,
 
-    /* BGM */
     startBGM: startBGM,
     stopBGM: stopBGM,
     duckBGM: duckBGM,
     applyBgmGain: applyBgmGain,
 
-    /* AudioContext 時刻（ゲーム固有音を作る際に使用） */
     now: function(){ return ctx ? ctx.currentTime : 0; },
 
-    /* 効果音 */
     sfx: {
-      /* ★ 汎用：ゲーム固有の音を作るための基本関数 */
       tone: sfxTone,
-
-      /* 基本セット */
       tap: sfxTap,
       pop: sfxPop,
       grab: sfxGrab,
@@ -562,17 +687,14 @@
       start: sfxStart
     },
 
-    /* 音声合成 */
     speak: speak,
     speakWithEnd: speakWithEnd,
     speakWord: speakWord,
     cancelSpeech: cancelSpeech,
     warmupSpeech: warmupSpeech,
 
-    /* 親への通知 */
     notifyParent: notifyParent,
 
-    /* シール・スタンプ保存 */
     saveSticker: saveSticker,
     saveStamp: saveStamp,
     getStickerCount: getStickerCount,
@@ -580,7 +702,17 @@
     getTotalCount: getTotalCount,
     getMyStickerEmojis: getMyStickerEmojis,
     getMyStampEmojis: getMyStampEmojis,
-    updateBookBadge: updateBookBadge
+    updateBookBadge: updateBookBadge,
+
+    /* ★ スクリーンタイム API */
+    screenTime: {
+      setCallbacks: setScreenTimeCallbacks,
+      getLimitMin: function(){ return screenTime.limitMin; },
+      setLimitMin: setScreenTimeLimit,
+      getRemainingMs: getScreenTimeRemaining,
+      isExpired: isScreenTimeExpired,
+      reset: resetScreenTime
+    }
   };
 
   window.Momo = Momo;
