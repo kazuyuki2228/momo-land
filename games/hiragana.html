@@ -185,6 +185,7 @@
     filter:drop-shadow(0 3px 3px rgba(0,0,0,.15));
     pointer-events:none;
   }
+  .kana-card-inner svg{width:1em;height:1em;display:block;}
   .kana-card.grabbed{
     cursor:grabbing;
     z-index:100;
@@ -446,7 +447,11 @@
     margin:6px 0 4px;
     animation:float 2s ease-in-out infinite;
     filter:drop-shadow(0 8px 12px rgba(0,0,0,.18));
+    display:flex;
+    align-items:center;
+    justify-content:center;
   }
+  .kana-detail-emoji svg{width:1em;height:1em;display:block;}
   .kana-detail-text{
     font-size:clamp(16px,4.8vw,21px);
     font-weight:900;
@@ -570,6 +575,45 @@
   var $ = function(s){ return document.querySelector(s); };
 
   /* =========================================================
+     アイコンヘルパー（絵文字 + SVG 両対応）
+     ========================================================= */
+  function isSvg(val){
+    return typeof val === 'string' && val.indexOf('<svg') === 0;
+  }
+  function setIcon(el, val){
+    if (val == null) val = '';
+    if (isSvg(val)){
+      el.innerHTML = val;
+    } else {
+      el.textContent = val;
+    }
+  }
+
+  /* =========================================================
+     ルビーの手描きSVG（赤い宝石）
+     ========================================================= */
+  var RUBY_SVG = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'+
+    /* 外枠のシルエット */
+    '<polygon points="50,8 85,32 50,92 15,32" fill="#c81540"/>'+
+    /* 上面の明るいファセット */
+    '<polygon points="50,8 75,22 60,30 40,30 25,22" fill="#ff5577"/>'+
+    '<polygon points="50,8 60,30 50,33 40,30" fill="#ff8899"/>'+
+    /* 中間の帯 */
+    '<polygon points="25,22 75,22 85,32 60,38 40,38 15,32" fill="#e61a44"/>'+
+    /* 下面のファセット */
+    '<polygon points="15,32 40,38 50,92" fill="#a10a32"/>'+
+    '<polygon points="85,32 60,38 50,92" fill="#b01035"/>'+
+    '<polygon points="40,38 50,38 50,92" fill="#8a0828"/>'+
+    '<polygon points="50,38 60,38 50,92" fill="#9a0a2c"/>'+
+    /* 上部の輪郭 */
+    '<polygon points="50,8 60,30 40,30" fill="#ff8899" opacity="0.6"/>'+
+    /* キラキラの光 */
+    '<circle cx="38" cy="20" r="1.8" fill="#fff" opacity="0.9"/>'+
+    '<circle cx="62" cy="20" r="1.4" fill="#fff" opacity="0.75"/>'+
+    '<circle cx="45" cy="55" r="1.2" fill="#ffd0d8" opacity="0.7"/>'+
+    '</svg>';
+
+  /* =========================================================
      定数
      ========================================================= */
   var STICKERS_PER_UNLOCK = 3;
@@ -586,13 +630,13 @@
     && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* =========================================================
-     ひらがなデータ（清音44字）
+     ひらがなデータ（清音46字）
      ========================================================= */
   var KANA_DATA = [
     { kana:'あ', word:'あり', emoji:'🐜' },
     { kana:'い', word:'いちご', emoji:'🍓' },
     { kana:'う', word:'うさぎ', emoji:'🐰' },
-    { kana:'え', word:'えんぴつ', emoji:'✏️' },
+    { kana:'え', word:'えび', emoji:'🦐' },
     { kana:'お', word:'おにぎり', emoji:'🍙' },
     { kana:'か', word:'かさ', emoji:'☂️' },
     { kana:'き', word:'きりん', emoji:'🦒' },
@@ -602,7 +646,7 @@
     { kana:'さ', word:'さかな', emoji:'🐟' },
     { kana:'し', word:'しまうま', emoji:'🦓' },
     { kana:'す', word:'すいか', emoji:'🍉' },
-    { kana:'せ', word:'せみ', emoji:'🦗' },
+    { kana:'せ', word:'せっけん', emoji:'🧼' },
     { kana:'そ', word:'そら', emoji:'☁️' },
     { kana:'た', word:'たいこ', emoji:'🥁' },
     { kana:'ち', word:'ちょうちょ', emoji:'🦋' },
@@ -629,13 +673,15 @@
     { kana:'よ', word:'よつば', emoji:'🍀' },
     { kana:'ら', word:'らいおん', emoji:'🦁' },
     { kana:'り', word:'りんご', emoji:'🍎' },
-    { kana:'る', word:'るびー', emoji:'💎' },
+    { kana:'る', word:'るびー', emoji:RUBY_SVG },
     { kana:'れ', word:'れもん', emoji:'🍋' },
     { kana:'ろ', word:'ろうそく', emoji:'🕯️' },
-    { kana:'わ', word:'わに', emoji:'🐊' }
+    { kana:'わ', word:'わに', emoji:'🐊' },
+    { kana:'を', word:'じをかく', emoji:'✏️' },
+    { kana:'ん', word:'ぱんだ', emoji:'🐼' }
   ];
 
-  /* ひらがな帳のレイアウト（5列×10行、44字+空欄6） */
+  /* ひらがな帳のレイアウト（5列×10行） */
   var KANA_ROWS = [
     ['あ','い','う','え','お'],
     ['か','き','く','け','こ'],
@@ -646,7 +692,7 @@
     ['ま','み','む','め','も'],
     ['や','ゆ','よ',null,null],
     ['ら','り','る','れ','ろ'],
-    ['わ',null,null,null,null]
+    ['わ','を','ん',null,null]
   ];
 
   var KANA_STARTERS = ['り','く','ね','さ','と','は'];
@@ -718,7 +764,6 @@
     saveProgress();
   }
 
-  /* 出題の重み */
   function getWeight(count){
     if (count === 0) return 10;
     if (count === 1) return 6;
@@ -1077,7 +1122,8 @@
       el.className = 'kana-card';
       var inner = document.createElement('div');
       inner.className = 'kana-card-inner';
-      inner.textContent = choice.emoji;
+      /* ★ SVG対応： setIcon を使う */
+      setIcon(inner, choice.emoji);
       el.appendChild(inner);
       playfield.appendChild(el);
 
@@ -1266,7 +1312,6 @@
       setTimeout(function(){ $('#basket').classList.remove('happy'); }, 700);
       confetti(20);
 
-      /* ★ 進捗カウント：正解時にその字を「遊んだ」としてカウント */
       incrementKanaCount(state.current.kana);
 
       var pfRect = $('#playfield').getBoundingClientRect();
@@ -1519,7 +1564,8 @@
 
     currentDetailKana = kana;
     $('#kanaDetailChar').textContent = data.kana;
-    $('#kanaDetailEmoji').textContent = data.emoji;
+    /* ★ SVG対応： setIcon を使う */
+    setIcon($('#kanaDetailEmoji'), data.emoji);
     $('#kanaDetailText').textContent = data.word + 'の ' + data.kana;
 
     var count = progress.counts[kana] || 0;
@@ -1538,7 +1584,6 @@
     currentDetailKana = null;
     $('#kanaDetailModal').classList.add('hidden');
     cancelSpeech();
-    /* ひらがな帳が開いていればBGMは小さめのまま */
     if ($('#kanaChartScreen').classList.contains('hidden')){
       duckBGM(false);
     }
@@ -1603,7 +1648,6 @@
     setTimeout(function(){ q.classList.remove('playing'); }, 2200);
   });
 
-  /* かな詳細モーダル */
   $('#kanaDetailCloseBtn').addEventListener('click', function(e){
     e.stopPropagation();
     sfxTap();
