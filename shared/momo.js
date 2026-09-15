@@ -291,27 +291,49 @@
     return u;
   }
 
-  function speak(text, rate, pitch){
+　function speak(text, rateOrOpts, pitch){
     if (!settings.soundOn || !speechSupported) return;
+    var opts = {};
+    if (rateOrOpts && typeof rateOrOpts === 'object'){
+      opts = rateOrOpts;
+    } else {
+      opts.rate = rateOrOpts;
+      opts.pitch = pitch;
+    }
+    var finalRate = (opts.rate != null) ? opts.rate :
+                    (opts.voice && opts.voice.rate != null) ? opts.voice.rate : 0.9;
+    var finalPitch = (opts.pitch != null) ? opts.pitch :
+                     (opts.voice && opts.voice.pitch != null) ? opts.voice.pitch : 1.35;
     try {
-      window.speechSynthesis.cancel();
+      if (opts.queue !== true) window.speechSynthesis.cancel();
       setTimeout(function(){
         try {
-          window.speechSynthesis.speak(buildUtterance(text, rate, pitch));
+          window.speechSynthesis.speak(buildUtterance(text, finalRate, finalPitch));
         } catch(e){}
       }, 60);
     } catch(e){}
   }
 
-  function speakWithEnd(text, onend, rate, pitch){
+  function speakWithEnd(text, onend, rateOrOpts, pitch){
     var safeOnend = onend || function(){};
     if (!settings.soundOn || !speechSupported){
       setTimeout(safeOnend, 500); return;
     }
+    var opts = {};
+    if (rateOrOpts && typeof rateOrOpts === 'object'){
+      opts = rateOrOpts;
+    } else {
+      opts.rate = rateOrOpts;
+      opts.pitch = pitch;
+    }
+    var finalRate = (opts.rate != null) ? opts.rate :
+                    (opts.voice && opts.voice.rate != null) ? opts.voice.rate : 0.9;
+    var finalPitch = (opts.pitch != null) ? opts.pitch :
+                     (opts.voice && opts.voice.pitch != null) ? opts.voice.pitch : 1.35;
     try {
-      window.speechSynthesis.cancel();
+      if (opts.queue !== true) window.speechSynthesis.cancel();
       setTimeout(function(){
-        var u = buildUtterance(text, rate, pitch);
+        var u = buildUtterance(text, finalRate, finalPitch);
         var done = false;
         var finish = function(){ if (done) return; done = true; safeOnend(); };
         u.onend = finish;
