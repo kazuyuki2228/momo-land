@@ -7,7 +7,7 @@
 <title>ももちゃんの おえかき</title>
 <style>
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-  html,body{margin:0;height:100%;overflow:hidden;}
+  html,body{height:100%;margin:0;padding:0;overflow:hidden;}
   body{
     font-family:"Hiragino Maru Gothic ProN","Yu Gothic UI","Meiryo",system-ui,sans-serif;
     background:linear-gradient(170deg,#fff8ec 0%,#ffeef5 50%,#eaf6ff 100%);
@@ -67,7 +67,6 @@
     touch-action:none;
   }
 
-  /* ===== 道具エリア ===== */
   #toolArea{
     flex:0 0 auto;
     display:flex;flex-direction:column;
@@ -138,7 +137,7 @@
     transform:translateY(-1px);
   }
 
-  /* ===== 色パレット：2行 × 8列 全幅 ===== */
+  /* 色パレット：2行×8列 */
   #palette{
     flex:0 0 auto;
     display:grid;
@@ -169,7 +168,6 @@
     z-index:2;
   }
 
-  /* ===== 操作バー ===== */
   .action-bar{
     display:flex;gap:6px;
     flex:0 0 auto;
@@ -226,7 +224,7 @@
   }
   .action-btn.gallery:active{box-shadow:0 1px 0 #6f45c4;}
 
-  /* ===== ギャラリー ===== */
+  /* ギャラリー */
   .screen-overlay{
     position:fixed;inset:0;z-index:50;
     display:flex;flex-direction:column;
@@ -530,17 +528,22 @@
   </div>
 </div>
 
+<!-- 共通モジュール -->
+<script src="../shared/momo.js"></script>
+
 <script>
 (function(){
   'use strict';
   var $ = function(s){ return document.querySelector(s); };
 
+  /* =========================================================
+     定数
+     ========================================================= */
   var STORAGE_KEY = 'momo_drawings_v1';
-  var SETTINGS_KEY = 'momo_settings_v1';
   var MAX_SAVED = 30;
   var MAX_HISTORY = 10;
 
-  /* ★ 16色（2行×8列） */
+  /* 16色（2行×8列） */
   var COLORS = [
     /* 1段目 */
     { name: 'くろ',         color: '#222222' },
@@ -571,23 +574,6 @@
     { id: 'diamond', name: 'ひしがた' }
   ];
 
-  var settings = { bgmMode:'fun', bgmVol:50, sfxVol:70, soundOn:true };
-  function loadSettings(){
-    try {
-      var raw = localStorage.getItem(SETTINGS_KEY);
-      if (raw){
-        var obj = JSON.parse(raw);
-        if (obj && typeof obj === 'object'){
-          if (obj.bgmMode === 'fun' || obj.bgmMode === 'calm' || obj.bgmMode === 'random') settings.bgmMode = obj.bgmMode;
-          if (typeof obj.bgmVol === 'number') settings.bgmVol = Math.max(0, Math.min(100, obj.bgmVol));
-          if (typeof obj.sfxVol === 'number') settings.sfxVol = Math.max(0, Math.min(100, obj.sfxVol));
-          if (typeof obj.soundOn === 'boolean') settings.soundOn = obj.soundOn;
-        }
-      }
-    } catch(e){}
-  }
-  loadSettings();
-
   var state = {
     tool: 'pen',
     stampShape: 'star',
@@ -600,169 +586,34 @@
     hasDrawn: false
   };
 
-  /* ===== 音 ===== */
-  var ctx = null, sfxGain = null, bgmGain = null, bgmTimer = null, bgmLoopTime = 0;
-  var currentTrack = null, isDucked = false, audioUnlocked = false;
-
-  function getBgmGainValue(quiet){ return (settings.bgmVol / 100) * (quiet ? 0.07 : 0.20); }
-  function getSfxGainValue(){ return (settings.sfxVol / 100) * 0.70; }
-
-  var F = {
-    C3:130.81, F3:174.61, G3:196.00, A3:220.00,
-    C4:261.63, D4:293.66, E4:329.63, F4:349.23, G4:392.00, A4:440.00,
-    C5:523.25, D5:587.33, E5:659.25, F5:698.46, G5:783.99, A5:880.00,
-    C6:1046.50, E6:1318.51, DS4:311.13
-  };
-
-  var TRACKS = [
-    { mood:'fun', bpm:116,
-      melody:[[0,F.E5,1],[1,F.G5,1],[2,F.A5,1],[3,F.G5,1],[4,F.E5,1],[5,F.D5,1],[6,F.C5,2],
-              [8,F.D5,1],[9,F.E5,1],[10,F.G5,1],[11,F.E5,1],[12,F.E5,1],[13,F.D5,1],[14,F.C5,2]],
-      bass:[[0,F.C3,4],[4,F.F3,4],[8,F.G3,4],[12,F.C3,4]] },
-    { mood:'fun', bpm:132,
-      melody:[[0,F.C5,.5],[.5,F.E5,.5],[1,F.G5,.5],[1.5,F.E5,.5],[2,F.G5,.5],[2.5,F.A5,.5],[3,F.G5,1],
-              [4,F.A5,.5],[4.5,F.G5,.5],[5,F.F5,.5],[5.5,F.E5,.5],[6,F.D5,.5],[6.5,F.E5,.5],[7,F.F5,1],
-              [8,F.E5,.5],[8.5,F.G5,.5],[9,F.C6,1],[10,F.A5,.5],[10.5,F.G5,.5],[11,F.E5,1],
-              [12,F.F5,.5],[12.5,F.E5,.5],[13,F.D5,.5],[13.5,F.C5,.5],[14,F.G4,1],[15,F.C5,1]],
-      bass:[[0,F.C3,2],[2,F.C3,2],[4,F.F3,2],[6,F.G3,2],[8,F.C3,2],[10,F.A3,2],[12,F.F3,2],[14,F.G3,2]] },
-    { mood:'calm', bpm:76,
-      melody:[[0,F.E5,1.5],[1.5,F.D5,.5],[2,F.C5,2],[4,F.D5,1.5],[5.5,F.E5,.5],[6,F.G5,2],
-              [8,F.G5,1],[9,F.F5,1],[10,F.E5,1],[11,F.D5,1],[12,F.C5,2],[14,F.E5,1],[15,F.C5,1]],
-      bass:[[0,F.C3,4],[4,F.A3,4],[8,F.F3,4],[12,F.G3,4]] },
-    { mood:'calm', bpm:88,
-      melody:[[0,F.C5,1],[1,F.E5,1],[2,F.G5,1.5],[3.5,F.E5,.5],[4,F.F5,1],[5,F.A5,1],[6,F.G5,2],
-              [8,F.E5,1],[9,F.G5,1],[10,F.C6,1.5],[11.5,F.A5,.5],[12,F.G5,1],[13,F.F5,1],[14,F.E5,1],[15,F.C5,1]],
-      bass:[[0,F.C3,4],[4,F.F3,4],[8,F.C3,2],[10,F.A3,2],[12,F.F3,2],[14,F.G3,2]] }
-  ];
-
-  function getTrackPool(){
-    if (settings.bgmMode === 'calm') return TRACKS.filter(function(t){ return t.mood === 'calm'; });
-    if (settings.bgmMode === 'fun')  return TRACKS.filter(function(t){ return t.mood === 'fun'; });
-    return TRACKS.slice();
+  /* =========================================================
+     ゲーム固有の効果音
+     ========================================================= */
+  function sfxDrawStart(){
+    Momo.sfx.tone(660, 0, 0.06, 'sine', 0.10);
   }
-  function pickTrack(){
-    var p = getTrackPool();
-    return p[Math.floor(Math.random() * p.length)] || TRACKS[0];
+  function sfxStamp(){
+    Momo.sfx.tone(1047, 0,    0.10, 'sine', 0.18);
+    Momo.sfx.tone(1568, 0.06, 0.14, 'sine', 0.14);
   }
-
-  function initAudio(){
-    if (ctx) return;
-    var AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return;
-    ctx = new AC();
-    sfxGain = ctx.createGain();
-    sfxGain.gain.value = getSfxGainValue();
-    sfxGain.connect(ctx.destination);
+  function sfxClear(){
+    Momo.sfx.tone(1200, 0,    0.18, 'sawtooth', 0.10);
+    Momo.sfx.tone(400,  0.12, 0.22, 'sawtooth', 0.09);
   }
-  function playNote(freq, t0, dur, type, dest, vol){
-    if (!ctx || !dest) return;
-    var osc = ctx.createOscillator();
-    var g = ctx.createGain();
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, t0);
-    g.gain.setValueAtTime(0.0001, t0);
-    g.gain.exponentialRampToValueAtTime(Math.max(vol, 0.001), t0 + 0.03);
-    g.gain.exponentialRampToValueAtTime(0.0001, t0 + Math.max(dur, 0.05));
-    osc.connect(g); g.connect(dest);
-    osc.start(t0); osc.stop(t0 + dur + 0.08);
+  function sfxUndo(){
+    Momo.sfx.tone(700, 0,    0.10, 'sine', 0.14);
+    Momo.sfx.tone(520, 0.08, 0.12, 'sine', 0.12);
   }
-  function scheduleTrack(t0, track){
-    var beat = 60 / track.bpm;
-    var loopDur = 16 * beat;
-    track.melody.forEach(function(n){ playNote(n[1], t0 + n[0] * beat, n[2] * beat * 0.9, 'triangle', bgmGain, 0.5); });
-    track.bass.forEach(function(n){ playNote(n[1], t0 + n[0] * beat, n[2] * beat * 0.85, 'sine', bgmGain, 0.42); });
-    if (track.mood === 'fun'){
-      playNote(F.C6, t0 + 6 * beat,  0.5, 'sine', bgmGain, 0.10);
-      playNote(F.E6, t0 + 14 * beat, 0.5, 'sine', bgmGain, 0.10);
-    }
-    return loopDur;
-  }
-  function pumpBGM(){
-    if (!ctx || !bgmGain) return;
-    if (!currentTrack) currentTrack = pickTrack();
-    while (bgmLoopTime < ctx.currentTime + 2.5){
-      var dur = scheduleTrack(bgmLoopTime, currentTrack);
-      bgmLoopTime += dur;
-    }
-  }
-  function startBGM(){
-    if (!ctx || !settings.soundOn) return;
-    stopBGM();
-    bgmGain = ctx.createGain();
-    bgmGain.gain.value = getBgmGainValue(isDucked);
-    bgmGain.connect(ctx.destination);
-    currentTrack = pickTrack();
-    bgmLoopTime = ctx.currentTime + 0.2;
-    pumpBGM();
-    bgmTimer = setInterval(pumpBGM, 700);
-  }
-  function stopBGM(){
-    if (bgmTimer){ clearInterval(bgmTimer); bgmTimer = null; }
-    if (bgmGain){ try { bgmGain.disconnect(); } catch(e){} bgmGain = null; }
-    currentTrack = null;
-  }
-  function applyBgmGain(){
-    if (!ctx || !bgmGain) return;
-    var target = getBgmGainValue(isDucked);
-    try {
-      bgmGain.gain.cancelScheduledValues(ctx.currentTime);
-      bgmGain.gain.setValueAtTime(bgmGain.gain.value, ctx.currentTime);
-      bgmGain.gain.linearRampToValueAtTime(target, ctx.currentTime + 0.15);
-    } catch(e){ bgmGain.gain.value = target; }
-  }
-  function duckBGM(quiet){ isDucked = quiet; applyBgmGain(); }
-
-  function sfxTap(){ if (!settings.soundOn || !ctx) return; playNote(880, ctx.currentTime, 0.09, 'sine', sfxGain, 0.22); }
-  function sfxDrawStart(){ if (!settings.soundOn || !ctx) return; playNote(660, ctx.currentTime, 0.06, 'sine', sfxGain, 0.10); }
-  function sfxStamp(){ if (!settings.soundOn || !ctx) return; playNote(1047, ctx.currentTime, 0.10, 'sine', sfxGain, 0.18); playNote(1568, ctx.currentTime + 0.06, 0.14, 'sine', sfxGain, 0.14); }
-  function sfxClear(){ if (!settings.soundOn || !ctx) return; playNote(1200, ctx.currentTime, 0.18, 'sawtooth', sfxGain, 0.10); playNote(400, ctx.currentTime + 0.12, 0.22, 'sawtooth', sfxGain, 0.09); }
-  function sfxUndo(){ if (!settings.soundOn || !ctx) return; playNote(700, ctx.currentTime, 0.10, 'sine', sfxGain, 0.14); playNote(520, ctx.currentTime + 0.08, 0.12, 'sine', sfxGain, 0.12); }
   function sfxDone(){
-    if (!settings.soundOn || !ctx) return;
-    var t = ctx.currentTime;
-    [523,659,784,1047,1319].forEach(function(f, i){ playNote(f, t + i*0.11, 0.32, 'triangle', sfxGain, 0.20); });
+    var notes = [523, 659, 784, 1047, 1319];
+    notes.forEach(function(f, i){
+      Momo.sfx.tone(f, i * 0.11, 0.32, 'triangle', 0.20);
+    });
   }
 
-  /* ===== 音声合成 ===== */
-  var speechSupported = ('speechSynthesis' in window) && ('SpeechSynthesisUtterance' in window);
-  var jaVoice = null;
-  function pickVoice(){
-    if (!speechSupported) return;
-    var voices = window.speechSynthesis.getVoices();
-    jaVoice = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf('ja') === 0; }) || null;
-  }
-  if (speechSupported){
-    pickVoice();
-    window.speechSynthesis.onvoiceschanged = pickVoice;
-  }
-  function speak(text, rate){
-    if (!settings.soundOn || !speechSupported) return;
-    try {
-      window.speechSynthesis.cancel();
-      setTimeout(function(){
-        var u = new SpeechSynthesisUtterance(text);
-        u.lang = 'ja-JP';
-        if (jaVoice) u.voice = jaVoice;
-        u.rate = rate || 1.0;
-        u.pitch = 1.35;
-        u.volume = 1;
-        window.speechSynthesis.speak(u);
-      }, 60);
-    } catch(e){}
-  }
-  function cancelSpeech(){
-    if (!speechSupported) return;
-    try { window.speechSynthesis.cancel(); } catch(e){}
-  }
-  function notifyParent(msg){
-    try {
-      if (window.parent && window.parent !== window){
-        window.parent.postMessage(msg, '*');
-      }
-    } catch(e){}
-  }
-
-  /* ===== キャンバス ===== */
+  /* =========================================================
+     キャンバス
+     ========================================================= */
   var canvas = $('#canvas');
   var canvasWrap = $('#canvasWrap');
   var ctx2d = canvas.getContext('2d');
@@ -822,7 +673,6 @@
 
   function startDraw(e){
     e.preventDefault();
-    ensureAudio();
     var p = getPos(e);
     state.isDrawing = true;
     state.lastX = p.x;
@@ -879,7 +729,9 @@
     pushHistory();
   }
 
-  /* ===== 図形スタンプ ===== */
+  /* =========================================================
+     図形スタンプ
+     ========================================================= */
   function drawStamp(cx, cy){
     var size = getStampSize();
     var half = size / 2;
@@ -954,7 +806,9 @@
   canvas.addEventListener('touchstart', function(e){ e.preventDefault(); }, { passive: false });
   canvas.addEventListener('contextmenu', function(e){ e.preventDefault(); });
 
-  /* ===== リサイズ ===== */
+  /* =========================================================
+     リサイズ
+     ========================================================= */
   var resizeTimer = null;
   function onResize(){
     if (resizeTimer) clearTimeout(resizeTimer);
@@ -975,7 +829,9 @@
   window.addEventListener('resize', onResize);
   window.addEventListener('orientationchange', function(){ setTimeout(onResize, 300); });
 
-  /* ===== スタンプボタンSVG ===== */
+  /* =========================================================
+     スタンプボタンのSVG
+     ========================================================= */
   function shapeSvg(shape, color){
     var c = color || '#666';
     if (shape === 'star')     return '<svg viewBox="0 0 100 100"><path d="M50 8 L61 38 L94 40 L68 60 L78 92 L50 74 L22 92 L32 60 L6 40 L39 38 Z" fill="'+c+'"/></svg>';
@@ -987,7 +843,9 @@
     return '';
   }
 
-  /* ===== UI構築 ===== */
+  /* =========================================================
+     UI構築
+     ========================================================= */
   function buildStamps(){
     var el = $('#stamps');
     el.innerHTML = '';
@@ -999,9 +857,9 @@
       btn.setAttribute('aria-label', s.name);
       btn.innerHTML = shapeSvg(s.id, '#666');
       btn.addEventListener('click', function(){
-        sfxTap();
+        Momo.sfx.tap();
         selectStamp(s.id);
-        speak(s.name, 1.1);
+        Momo.speak(s.name, 1.1);
       });
       el.appendChild(btn);
     });
@@ -1048,9 +906,9 @@
       if (c.border) btn.style.borderColor = c.border;
       btn.setAttribute('aria-label', c.name);
       btn.addEventListener('click', function(){
-        sfxTap();
+        Momo.sfx.tap();
         selectColor(c.color);
-        speak(c.name, 1.1);
+        Momo.speak(c.name, 1.1);
       });
       el.appendChild(btn);
     });
@@ -1065,13 +923,27 @@
     updateStampColors();
   }
 
-  $('#penBtn').addEventListener('click', function(){ sfxTap(); selectPen(); speak('ペン', 1.1); });
-  $('#eraserBtn').addEventListener('click', function(){ sfxTap(); selectEraser(); speak('けす', 1.1); });
+  $('#penBtn').addEventListener('click', function(){
+    Momo.sfx.tap(); selectPen(); Momo.speak('ペン', 1.1);
+  });
+  $('#eraserBtn').addEventListener('click', function(){
+    Momo.sfx.tap(); selectEraser(); Momo.speak('けす', 1.1);
+  });
 
-  $('#undoBtn').addEventListener('click', function(){ sfxTap(); undo(); });
+  /* =========================================================
+     操作ボタン
+     ========================================================= */
+  $('#undoBtn').addEventListener('click', function(){
+    Momo.sfx.tap();
+    undo();
+  });
+
   $('#clearBtn').addEventListener('click', function(){
-    sfxTap();
-    showConfirm('ぜんぶ けしても いい？', '🗑️', function(){ clearCanvas(); sfxClear(); });
+    Momo.sfx.tap();
+    showConfirm('ぜんぶ けしても いい？', '🗑️', function(){
+      clearCanvas();
+      sfxClear();
+    });
   });
   function clearCanvas(){
     ctx2d.fillStyle = '#ffffff';
@@ -1080,37 +952,53 @@
     state.hasDrawn = false;
     pushHistory();
   }
-  $('#doneBtn').addEventListener('click', function(){ sfxTap(); saveDrawing(); });
-  $('#galleryBtn').addEventListener('click', function(){ sfxTap(); openGallery(); });
 
+  $('#doneBtn').addEventListener('click', function(){
+    Momo.sfx.tap();
+    saveDrawing();
+  });
+  $('#galleryBtn').addEventListener('click', function(){
+    Momo.sfx.tap();
+    openGallery();
+  });
+
+  /* =========================================================
+     確認モーダル
+     ========================================================= */
   function showConfirm(text, emoji, onYes){
     $('#confirmText').textContent = text;
     $('#confirmEmoji').textContent = emoji;
     state.pendingConfirm = onYes;
     $('#confirmModal').hidden = false;
-    cancelSpeech();
-    speak(text, 1.0);
+    Momo.cancelSpeech();
+    Momo.speak(text, 1.0);
   }
   function hideConfirm(){
     $('#confirmModal').hidden = true;
     state.pendingConfirm = null;
   }
-  $('#confirmNoBtn').addEventListener('click', function(){ sfxTap(); hideConfirm(); });
+  $('#confirmNoBtn').addEventListener('click', function(){
+    Momo.sfx.tap();
+    hideConfirm();
+  });
   $('#confirmYesBtn').addEventListener('click', function(){
-    sfxTap();
+    Momo.sfx.tap();
     var fn = state.pendingConfirm;
     hideConfirm();
     if (fn) fn();
   });
 
+  /* =========================================================
+     保存
+     ========================================================= */
   function saveDrawing(){
     if (!state.hasDrawn){
-      speak('まだ なにも かいてないよ', 1.0);
+      Momo.speak('まだ なにも かいてないよ', 1.0);
       return;
     }
     var dataUrl;
     try { dataUrl = canvas.toDataURL('image/jpeg', 0.72); }
-    catch(e){ speak('ほぞん できなかったよ', 1.0); return; }
+    catch(e){ Momo.speak('ほぞん できなかったよ', 1.0); return; }
 
     var list = loadDrawings();
     list.unshift({ id: Date.now(), data: dataUrl });
@@ -1126,11 +1014,11 @@
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); success = true; break; } catch(err){}
       }
     }
-    if (!success){ speak('ほぞん できなかったよ', 1.0); return; }
+    if (!success){ Momo.speak('ほぞん できなかったよ', 1.0); return; }
 
     showDoneCelebration();
     sfxDone();
-    speak('すてきに かけたね', 1.0);
+    Momo.speak('すてきに かけたね', 1.0);
     setTimeout(function(){ clearCanvas(); }, 1200);
   }
 
@@ -1166,18 +1054,23 @@
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); } catch(e){}
   }
 
+  /* =========================================================
+     ギャラリー
+     ========================================================= */
   function openGallery(){
     renderGallery();
     $('#galleryScreen').hidden = false;
-    duckBGM(true);
-    cancelSpeech();
+    Momo.duckBGM(true);
+    Momo.cancelSpeech();
     var list = loadDrawings();
-    if (list.length > 0){ setTimeout(function(){ speak('おえかきちょう だよ', 1.0); }, 300); }
+    if (list.length > 0){
+      setTimeout(function(){ Momo.speak('おえかきちょう だよ', 1.0); }, 300);
+    }
   }
   function closeGallery(){
     $('#galleryScreen').hidden = true;
-    duckBGM(false);
-    cancelSpeech();
+    Momo.duckBGM(false);
+    Momo.cancelSpeech();
   }
 
   function renderGallery(){
@@ -1206,29 +1099,38 @@
       img.src = item.data;
       img.alt = 'おえかき ' + (idx + 1);
       btn.appendChild(img);
-      btn.addEventListener('click', function(){ sfxTap(); openView(idx); });
+      btn.addEventListener('click', function(){ Momo.sfx.tap(); openView(idx); });
       grid.appendChild(btn);
     });
   }
 
-  $('#closeGalleryBtn').addEventListener('click', function(){ sfxTap(); closeGallery(); });
+  $('#closeGalleryBtn').addEventListener('click', function(){
+    Momo.sfx.tap();
+    closeGallery();
+  });
 
+  /* =========================================================
+     拡大モーダル
+     ========================================================= */
   function openView(idx){
     var list = loadDrawings();
     if (idx < 0 || idx >= list.length) return;
     state.viewingIndex = idx;
     $('#viewImage').src = list[idx].data;
     $('#viewModal').hidden = false;
-    duckBGM(true);
+    Momo.duckBGM(true);
   }
   function closeView(){
     $('#viewModal').hidden = true;
     state.viewingIndex = -1;
-    if ($('#galleryScreen').hidden){ duckBGM(false); }
+    if ($('#galleryScreen').hidden){ Momo.duckBGM(false); }
   }
-  $('#viewBackBtn').addEventListener('click', function(){ sfxTap(); closeView(); });
+  $('#viewBackBtn').addEventListener('click', function(){
+    Momo.sfx.tap();
+    closeView();
+  });
   $('#viewDelBtn').addEventListener('click', function(){
-    sfxTap();
+    Momo.sfx.tap();
     showConfirm('この えを けしても いい？', '🗑️', function(){ deleteView(); });
   });
   function deleteView(){
@@ -1242,44 +1144,26 @@
     sfxClear();
   }
 
-  function ensureAudio(){
-    if (audioUnlocked && bgmTimer) return;
-    audioUnlocked = true;
-    initAudio();
-    if (ctx && ctx.state === 'suspended'){ try { ctx.resume(); } catch(e){} }
-    if (speechSupported){
-      try {
-        var u = new SpeechSynthesisUtterance(' ');
-        u.volume = 0;
-        window.speechSynthesis.speak(u);
-        window.speechSynthesis.cancel();
-      } catch(e){}
-    }
-    if (settings.soundOn && !bgmTimer) startBGM();
-  }
-  document.addEventListener('pointerdown', ensureAudio, { passive: true });
-  document.addEventListener('touchstart', ensureAudio, { passive: true });
-
+  /* =========================================================
+     ハブ連携
+     ========================================================= */
   $('#homeBtn').addEventListener('click', function(){
-    sfxTap(); cancelSpeech(); stopBGM();
-    notifyParent('goHome');
+    Momo.sfx.tap();
+    Momo.cancelSpeech();
+    Momo.stopBGM();
+    Momo.notifyParent('goHome');
   });
   $('#bookBtn').addEventListener('click', function(){
-    sfxTap(); cancelSpeech(); stopBGM();
-    notifyParent({ type: 'openBook', from: 'drawing' });
+    Momo.sfx.tap();
+    Momo.cancelSpeech();
+    Momo.stopBGM();
+    Momo.notifyParent({ type: 'openBook', from: 'drawing' });
   });
 
-  document.addEventListener('visibilitychange', function(){
-    if (document.hidden){
-      stopBGM();
-      cancelSpeech();
-    } else {
-      if (ctx && ctx.state === 'suspended'){ try { ctx.resume(); } catch(e){} }
-      if (settings.soundOn && !bgmTimer && audioUnlocked) startBGM();
-    }
-  });
-  document.addEventListener('gesturestart', function(e){ e.preventDefault(); });
-  document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+  /* =========================================================
+     起動
+     ========================================================= */
+  Momo.init();
 
   buildStamps();
   buildPalette();
@@ -1288,17 +1172,7 @@
     requestAnimationFrame(function(){ setupCanvas(); });
   });
 
-  setTimeout(function(){ speak('すきな いろで かいてね', 1.0); }, 800);
-
-  setTimeout(function(){
-    try {
-      initAudio();
-      if (ctx && ctx.state === 'running'){
-        audioUnlocked = true;
-        if (settings.soundOn && !bgmTimer) startBGM();
-      }
-    } catch(e){}
-  }, 100);
+  setTimeout(function(){ Momo.speak('すきな いろで かいてね', 1.0); }, 800);
 
 })();
 </script>
