@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="peach" cx="35%" cy="30%">
+      <stop offset="0%" stop-color="#ffd1b3"/>
+      <stop offset="60%" stop-color="#ff9a76"/>
+      <stop offset="100%" stop-color="#e85d3a"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="100" fill="#b8e6ff"/>
+  <!-- 桃の本体 -->
+  <path d="M 256 130 
+           C 180 130, 130 190, 130 280 
+           C 130 380, 180 440, 256 440 
+           C 332 440, 382 380, 382 280 
+           C 382 190, 332 130, 256 130 Z" 
+        fill="url(#peach)"/>
+  <!-- 割れ目 -->
+  <path d="M 256 130 Q 250 280 256 440" 
+        stroke="#c84a2a" stroke-width="4" fill="none" opacity="0.35"/>
+  <!-- 葉っぱ -->
+  <path d="M 256 130 Q 230 90 200 80 Q 230 110 250 125 Z" fill="#4caf50"/>
+  <path d="M 256 130 Q 270 80 310 70 Q 280 100 260 125 Z" fill="#4caf50"/>
+  <!-- 目 -->
+  <circle cx="215" cy="270" r="14" fill="#3a2010"/>
+  <circle cx="297" cy="270" r="14" fill="#3a2010"/>
+  <circle cx="220" cy="265" r="5" fill="#fff"/>
+  <circle cx="302" cy="265" r="5" fill="#fff"/>
+  <!-- ほっぺ -->
+  <circle cx="180" cy="310" r="18" fill="#ff88a0" opacity="0.5"/>
+  <circle cx="332" cy="310" r="18" fill="#ff88a0" opacity="0.5"/>
+  <!-- 口 -->
+  <path d="M 235 315 Q 256 340 277 315" 
+        stroke="#3a2010" stroke-width="6" fill="none" stroke-linecap="round"/>
+</svg>

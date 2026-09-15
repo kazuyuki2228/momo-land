@@ -1,0 +1,20 @@
+{
+  "name": "ももちゃんの あそぼうランド",
+  "short_name": "ももちゃん",
+  "description": "3〜4歳児向けの知育ゲーム",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#b8e6ff",
+  "theme_color": "#ffe4f0",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
