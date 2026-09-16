@@ -157,8 +157,8 @@
     height:clamp(46px,13vw,64px);
   }
   .book-icon-img{
-    width:2.2em;
-    height:2.2em;
+    width:2.5em;
+    height:2.25em;
     object-fit:contain;
     display:inline-block;
     vertical-align:-0.55em;
@@ -1227,19 +1227,16 @@
     showLaunchBubble('いってきます！');
     Momo.sfx.tap();
 
-    /* 音声は短く、演出優先 */
+    /* ★ 読み上げを最後まで聞いてからゲーム起動 */
     setTimeout(function(){
-      Momo.speak('いってきます', 1.0, 1.35);
+      Momo.speakWithEnd('いってきます', function(){
+        Momo.stopBGM();
+        $('#gameIframe').src = url;
+        $('#gameFrame').classList.remove('hidden');
+        $('#hub').classList.add('hidden');
+        state.isLaunching = false;
+      }, 1.0, 1.35);
     }, 100);
-
-    setTimeout(function(){
-      Momo.stopBGM();
-      Momo.cancelSpeech();
-      $('#gameIframe').src = url;
-      $('#gameFrame').classList.remove('hidden');
-      $('#hub').classList.add('hidden');
-      state.isLaunching = false;
-    }, 800);
   }
 
   function closeGame(){
