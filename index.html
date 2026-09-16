@@ -7,6 +7,7 @@
 <meta name="theme-color" content="#ffe4f0">
 <title>ももちゃんの あそぼうランド</title>
 <link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ももちゃん">
@@ -70,6 +71,7 @@
   #settingsBtn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.12);}
   @keyframes gearSpin{0%,70%{transform:rotate(0);}80%{transform:rotate(18deg);}90%{transform:rotate(-18deg);}100%{transform:rotate(0);}}
 
+  /* ★ マスコット（1枚の画像を切り替え） */
   .mascot{
     width:clamp(80px,24vw,130px);
     height:clamp(80px,24vw,130px);
@@ -88,16 +90,7 @@
     object-fit:contain;
     display:block;
     pointer-events:none;
-    position:absolute;
-    top:0;left:0;
-    transition:opacity .5s ease;
   }
-  /* 通常時：笑顔の桃を表示 */
-  .mascot-img-normal{ opacity:1; }
-  .mascot-img-sleep{ opacity:0; }
-  /* 休憩モード：寝ている桃に切り替え */
-  #hub.resting .mascot-img-normal{ opacity:0; }
-  #hub.resting .mascot-img-sleep{ opacity:1; }
   .mascot::after{
     content:"✨";
     position:absolute;
@@ -218,7 +211,7 @@
   .attr-eye{background:linear-gradient(180deg,#80deea,#26c6da);box-shadow:0 5px 0 #00838f,0 8px 14px rgba(0,131,143,.28);}
   .attr-eye:active{box-shadow:0 1px 0 #00838f;}
 
-  /* ★ 休憩モード */
+  /* 休憩モード */
   #hub.resting .attr,
   #hub.resting #bookBtn{
     opacity:0.4;
@@ -529,10 +522,21 @@
   }
   @keyframes popIn{from{transform:scale(.6) rotate(-8deg);opacity:0;}to{transform:scale(1) rotate(0);opacity:1;}}
   .modal-emoji{
-    font-size:clamp(72px,22vw,110px);line-height:1;
-    margin-bottom:4px;display:inline-block;
+    line-height:1;
+    margin-bottom:4px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:clamp(72px,22vw,110px);
     animation:float 2s ease-in-out infinite;
     filter:drop-shadow(0 8px 12px rgba(0,0,0,.18));
+  }
+  /* ★ モーダル内の桃画像 */
+  .modal-mascot-img{
+    width:clamp(100px,28vw,140px);
+    height:clamp(100px,28vw,140px);
+    object-fit:contain;
+    display:block;
   }
   .modal-text{
     font-size:clamp(15px,4.4vw,19px);font-weight:900;
@@ -572,7 +576,7 @@
   .confirm-btn.danger{background:linear-gradient(180deg,#ff8a8a,#e74c3c);box-shadow:0 5px 0 #b03a2e;}
   .confirm-btn:active{transform:translateY(4px);}
 
-  /* ★ スクリーンタイム：警告トースト */
+  /* スクリーンタイム：警告トースト */
   .screentime-warning{
     position:fixed;
     bottom:calc(20px + env(safe-area-inset-bottom));
@@ -597,7 +601,7 @@
     transform:translateX(-50%) translateY(0);
   }
 
-  /* ★ スクリーンタイム：時間切れオーバーレイ */
+  /* スクリーンタイム：時間切れオーバーレイ */
   #screentimeOverlay{
     position:fixed;inset:0;z-index:800;
     background:
@@ -675,6 +679,37 @@
   }
   .st-btn:active{transform:translateY(5px);box-shadow:0 1px 0 #b08840;}
 
+  /* ゲーム起動時の演出 */
+  .launch-bubble{
+    position:fixed;
+    left:50%;
+    top:calc(50% + 100px);
+    transform:translate(-50%, -50%) scale(.4);
+    background:#fff;
+    color:#ff6b9d;
+    font-weight:900;
+    font-size:clamp(20px,6.4vw,32px);
+    letter-spacing:3px;
+    padding:14px 34px;
+    border-radius:999px;
+    border:5px solid #ffd9e6;
+    box-shadow:0 8px 0 rgba(255,107,157,.35), 0 14px 34px rgba(0,0,0,.2);
+    pointer-events:none;
+    z-index:250;
+    opacity:0;
+    white-space:nowrap;
+  }
+  .launch-bubble.show{
+    animation:launchBubblePop 1.0s ease-out forwards;
+  }
+  @keyframes launchBubblePop{
+    0%{opacity:0;transform:translate(-50%,-50%) scale(.4);}
+    20%{opacity:1;transform:translate(-50%,-50%) scale(1.15);}
+    40%{transform:translate(-50%,-50%) scale(1);}
+    80%{opacity:1;transform:translate(-50%,-50%) scale(1);}
+    100%{opacity:0;transform:translate(-50%,-60%) scale(1);}
+  }
+
   @media (max-width:360px){
     .attr{min-height:112px;}
     .attr.small{min-height:78px;}
@@ -686,7 +721,7 @@
   }
   @media (prefers-reduced-motion: reduce){
     .park-item,.mascot,.mascot::after,#settingsBtn,.modal-emoji,
-    .st-moon,.st-star{animation:none!important;}
+    .st-moon,.st-star,.launch-bubble.show{animation:none!important;}
   }
 </style>
 </head>
@@ -745,13 +780,11 @@
 
   <div class="hub-inner">
     <div class="mascot" id="mascot">
-<img src="momo_happy.png" alt="ももちゃん" class="mascot-img mascot-img-normal">
-      <img src="momo_sleep.png" alt="ねている ももちゃん" class="mascot-img mascot-img-sleep">
+      <img src="momo_happy.png" alt="ももちゃん" class="mascot-img" id="mascotImg">
     </div>
     <h1 class="title" id="hubTitle"><span class="momo">ももちゃん</span>の<br>あそぼうランド</h1>
     <p class="subtitle" id="hubSubtitle">すきな アトラクションを えらんでね</p>
 
-    <!-- 休憩モード用メッセージ -->
     <div class="resting-message">
       <div class="rm-1">きょうは おしまい。</div>
       <div class="rm-2">あした また あそぼうね</div>
@@ -883,7 +916,6 @@
       </div>
     </div>
 
-    <!-- ★ スクリーンタイム設定 -->
     <div class="setting-card">
       <div class="setting-label">⏱️ スクリーンタイム</div>
       <div class="segmented grid-3" id="screentimeSeg">
@@ -917,10 +949,13 @@
   </div>
 </div>
 
-<!-- 確認モーダル -->
+<!-- 確認モーダル（リセット） -->
 <div id="confirmModal" class="modal-bg hidden">
   <div class="modal-card">
-    <div class="modal-emoji">📖</div>
+    <!-- ★ 泣き顔の桃画像 -->
+    <div class="modal-emoji" id="confirmEmoji">
+      <img src="momo_crying.png" alt="" class="modal-mascot-img" id="confirmMascotImg">
+    </div>
     <div class="modal-text">シールと スタンプを<br>ぜんぶ けしても いい？</div>
     <div class="confirm-buttons">
       <button class="confirm-btn cancel" id="confirmNoBtn" type="button">やめる</button>
@@ -929,12 +964,12 @@
   </div>
 </div>
 
-<!-- ★ スクリーンタイム：警告トースト -->
+<!-- スクリーンタイム：警告トースト -->
 <div id="screentimeWarning" class="screentime-warning hidden">
   🌙 もうすぐ おしまいだよ
 </div>
 
-<!-- ★ スクリーンタイム：時間切れオーバーレイ -->
+<!-- スクリーンタイム：時間切れオーバーレイ -->
 <div id="screentimeOverlay" hidden>
   <div class="st-stars" id="stStars"></div>
   <div class="st-moon">🌙</div>
@@ -942,6 +977,9 @@
   <div class="st-text-2">あした また あそぼうね</div>
   <button class="st-btn" id="screentimeOkBtn" type="button">わかった</button>
 </div>
+
+<!-- ゲーム起動時の吹き出し -->
+<div id="launchBubble" class="launch-bubble">いってきます！</div>
 
 <!-- 共通モジュール -->
 <script src="shared/momo.js"></script>
@@ -951,9 +989,6 @@
   "use strict";
   var $ = function(s){ return document.querySelector(s); };
 
-  /* =========================================================
-     定数
-     ========================================================= */
   var STICKER_KEY = 'momo_stickers_v1';
   var STAMP_KEY   = 'momo_stamps_v1';
   var PER_PAGE    = 12;
@@ -1062,8 +1097,49 @@
     detailEmoji: '',
     resting: false,
     screentimeTimer: null,
-    warningTimer: null
+    warningTimer: null,
+    timeExpression: 'momo_happy',
+    isLaunching: false
   };
+
+  /* =========================================================
+     ★ マスコット画像の切り替え
+     ========================================================= */
+  var MASCOT_FALLBACK = 'momo_happy.png';
+
+  function setMascot(name){
+    var img = document.getElementById('mascotImg');
+    if (!img) return;
+    var src = name + '.png';
+    img.onerror = function(){
+      /* 画像が無い場合は happy にフォールバック */
+      img.onerror = null;
+      if (img.src.indexOf(MASCOT_FALLBACK) === -1){
+        img.src = MASCOT_FALLBACK;
+      }
+    };
+    if (img.getAttribute('src') !== src){
+      img.src = src;
+    }
+  }
+
+  function getTimeExpression(){
+    var h = new Date().getHours();
+    if (h >= 5 && h < 10) return 'momo_greeting';   // 朝
+    if (h >= 10 && h < 16) return 'momo_happy';     // 昼
+    if (h >= 16 && h < 19) return 'momo_eating';    // 夕
+    return 'momo_sleep';                             // 夜
+  }
+
+  function applyMascotForTime(){
+    if (state.resting){
+      setMascot('momo_sleep');
+      return;
+    }
+    if (state.isLaunching) return; /* 起動演出中は上書きしない */
+    state.timeExpression = getTimeExpression();
+    setMascot(state.timeExpression);
+  }
 
   /* =========================================================
      コレクション
@@ -1077,22 +1153,14 @@
       return null;
     }).filter(Boolean);
   }
-
   function loadCollection(){
     try {
       var rawS = localStorage.getItem(STICKER_KEY);
-      if (rawS){
-        var a = JSON.parse(rawS);
-        if (Array.isArray(a)) state.stickers = normalizeItems(a);
-      }
+      if (rawS){ var a = JSON.parse(rawS); if (Array.isArray(a)) state.stickers = normalizeItems(a); }
       var rawT = localStorage.getItem(STAMP_KEY);
-      if (rawT){
-        var b = JSON.parse(rawT);
-        if (Array.isArray(b)) state.stamps = normalizeItems(b);
-      }
+      if (rawT){ var b = JSON.parse(rawT); if (Array.isArray(b)) state.stamps = normalizeItems(b); }
     } catch(e){}
   }
-
   function updateBadge(){
     var n = state.stickers.length + state.stamps.length;
     $('#bookBadge').textContent = n;
@@ -1110,27 +1178,68 @@
     eye:        'games/eye.html'
   };
 
+  var launchBubbleTimer = null;
+  function showLaunchBubble(text){
+    var b = $('#launchBubble');
+    b.textContent = text;
+    b.classList.remove('show');
+    void b.offsetWidth;
+    b.classList.add('show');
+    clearTimeout(launchBubbleTimer);
+    launchBubbleTimer = setTimeout(function(){ b.classList.remove('show'); }, 1100);
+  }
+
   function openGame(name){
-    if (state.resting){
-      showRestingBubble();
-      return;
-    }
+    if (state.resting){ showRestingBubble(); return; }
+    if (state.isLaunching) return;
     var url = GAME_URLS[name];
     if (!url) return;
-    Momo.stopBGM();
-    Momo.cancelSpeech();
-    $('#gameIframe').src = url;
-    $('#gameFrame').classList.remove('hidden');
-    $('#hub').classList.add('hidden');
+
+    state.isLaunching = true;
+
+    /* ★ 起動演出：マスコットを「いってきます」ポーズに */
+    setMascot('momo_greeting');
+    showLaunchBubble('いってきます！');
+    Momo.sfx.tap();
+
+    /* 音声は短く、演出優先 */
+    setTimeout(function(){
+      Momo.speak('いってきます', 1.0, 1.35);
+    }, 100);
+
+    setTimeout(function(){
+      Momo.stopBGM();
+      Momo.cancelSpeech();
+      $('#gameIframe').src = url;
+      $('#gameFrame').classList.remove('hidden');
+      $('#hub').classList.add('hidden');
+      state.isLaunching = false;
+    }, 800);
   }
 
   function closeGame(){
     try { $('#gameIframe').src = 'about:blank'; } catch(e){}
     $('#gameFrame').classList.add('hidden');
     $('#hub').classList.remove('hidden');
+
     if (!state.resting){
       if (Momo.settings.soundOn) Momo.startBGM();
+
+      /* ★ 戻ってきたときの歓迎演出 */
+      setMascot('momo_heart');
+      showLaunchBubble('おかえり！');
+      setTimeout(function(){
+        Momo.speak('おかえり', 1.0, 1.35);
+      }, 100);
+
+      /* 2秒後に時間帯の表情に戻す */
+      setTimeout(function(){
+        if (!state.resting && !state.isLaunching){
+          applyMascotForTime();
+        }
+      }, 2200);
     }
+
     loadCollection();
     updateBadge();
   }
@@ -1293,13 +1402,11 @@
     st.textContent = Momo.settings.soundOn ? 'ON' : 'OFF';
     st.classList.toggle('off', !Momo.settings.soundOn);
   }
-
   function updateScreenTimeUI(){
     var min = Momo.screenTime.getLimitMin();
     document.querySelectorAll('#screentimeSeg .seg-btn').forEach(function(b){
       b.classList.toggle('active', parseInt(b.dataset.min, 10) === min);
     });
-
     var status = $('#screentimeStatus');
     var resetBtn = $('#screentimeResetBtn');
     if (min <= 0){
@@ -1318,65 +1425,27 @@
   }
 
   /* =========================================================
-     スクリーンタイム：休憩モード
+     休憩モード
      ========================================================= */
   function enterRestingMode(){
     state.resting = true;
     $('#hub').classList.add('resting');
-    /* マスコットは画像のまま、CSSで休憩風の見た目に */
+    setMascot('momo_sleep');
     $('#hubTitle').innerHTML = 'きょうは おしまい';
     $('#hubSubtitle').textContent = 'また あした あそぼうね';
     Momo.stopBGM();
   }
-
   function exitRestingMode(){
     state.resting = false;
     $('#hub').classList.remove('resting');
     $('#hubTitle').innerHTML = '<span class="momo">ももちゃん</span>の<br>あそぼうランド';
     $('#hubSubtitle').textContent = 'すきな アトラクションを えらんでね';
+    applyMascotForTime();
     if (Momo.settings.soundOn) Momo.startBGM();
   }
-
   function showRestingBubble(){
-    showBubble('きょうは おしまい。あした また あそぼうね');
+    showLaunchBubble('きょうは おしまい');
     Momo.speak('きょうは おしまい。あした また あそぼうね', 0.9, 1.15);
-  }
-
-  /* 吹き出し */
-  var bubbleTimer = null;
-  function showBubble(text){
-    var b = document.getElementById('bubble') || createBubble();
-    b.textContent = text;
-    b.classList.remove('show');
-    void b.offsetWidth;
-    b.classList.add('show');
-    clearTimeout(bubbleTimer);
-    bubbleTimer = setTimeout(function(){ b.classList.remove('show'); }, 2400);
-  }
-  function createBubble(){
-    var b = document.createElement('div');
-    b.id = 'bubble';
-    b.className = 'st-text-2';
-    b.style.position = 'fixed';
-    b.style.bottom = '60px';
-    b.style.left = '50%';
-    b.style.transform = 'translateX(-50%)';
-    b.style.background = 'rgba(255,255,255,.95)';
-    b.style.color = '#7a6ac8';
-    b.style.fontWeight = '900';
-    b.style.fontSize = 'clamp(14px,4vw,18px)';
-    b.style.padding = '12px 24px';
-    b.style.borderRadius = '999px';
-    b.style.boxShadow = '0 4px 12px rgba(0,0,0,.2)';
-    b.style.zIndex = '900';
-    b.style.whiteSpace = 'nowrap';
-    b.style.opacity = '0';
-    b.style.transition = 'opacity .3s, transform .3s';
-    document.body.appendChild(b);
-    var style = document.createElement('style');
-    style.textContent = '#bubble.show{opacity:1!important;transform:translateX(-50%) translateY(-8px)!important;}';
-    document.head.appendChild(style);
-    return b;
   }
 
   /* =========================================================
@@ -1395,7 +1464,6 @@
   }
 
   function showExpiredOverlay(){
-    /* 星空を生成 */
     var starsBox = $('#stStars');
     starsBox.innerHTML = '';
     for (var i = 0; i < 20; i++){
@@ -1408,26 +1476,16 @@
       s.style.fontSize = (10 + Math.random() * 10) + 'px';
       starsBox.appendChild(s);
     }
-
     Momo.stopBGM();
     Momo.cancelSpeech();
     $('#screentimeOverlay').hidden = false;
-
-    /* 優しい読み上げ */
     setTimeout(function(){
       Momo.speak('きょうは おしまい。あした また あそぼうね', 0.85, 1.15);
     }, 600);
   }
+  function hideExpiredOverlay(){ $('#screentimeOverlay').hidden = true; }
 
-  function hideExpiredOverlay(){
-    $('#screentimeOverlay').hidden = true;
-  }
-
-  /* =========================================================
-     スクリーンタイム：状態チェック
-     ========================================================= */
   function refreshRestingState(){
-    /* 起動時、または復帰時に呼ぶ：時間切れなら休憩モードへ */
     if (Momo.screenTime.isExpired() && !state.resting){
       enterRestingMode();
     } else if (!Momo.screenTime.isExpired() && state.resting){
@@ -1435,15 +1493,12 @@
     }
   }
 
-  /* 定期チェック（残り時間表示更新 + 時間切れ判定） */
   function startHubScreenTimeLoop(){
     if (state.screentimeTimer) return;
     state.screentimeTimer = setInterval(function(){
-      /* 設定画面が開いていれば残り時間を更新 */
       if (!$('#settingsScreen').classList.contains('hidden')){
         updateScreenTimeUI();
       }
-      /* 時間切れなら休憩モードへ */
       if (Momo.screenTime.isExpired() && !state.resting){
         enterRestingMode();
       }
@@ -1456,7 +1511,6 @@
   document.querySelectorAll('.attr').forEach(function(btn){
     btn.addEventListener('click', function(){
       if (state.resting){ showRestingBubble(); return; }
-      Momo.sfx.tap();
       openGame(btn.dataset.game);
     });
   });
@@ -1501,7 +1555,7 @@
       updateSettingsUI();
       Momo.sfx.tap();
       Momo.stopBGM();
-      if (Momo.settings.soundOn) Momo.startBGM();
+      if (Momo.settings.soundOn && !state.resting) Momo.startBGM();
     });
   });
   $('#bgmVolSlider').addEventListener('input', function(){
@@ -1529,19 +1583,14 @@
     }
   });
 
-  /* スクリーンタイム選択 */
   document.querySelectorAll('#screentimeSeg .seg-btn').forEach(function(btn){
     btn.addEventListener('click', function(){
       var min = parseInt(this.dataset.min, 10) || 0;
       Momo.screenTime.setLimitMin(min);
       updateScreenTimeUI();
       Momo.sfx.tap();
-      if (min > 0){
-        Momo.speak('スクリーンタイムを ' + min + 'ふんに しました', 0.95);
-      } else {
-        Momo.speak('じかん せいげんを なくしました', 0.95);
-      }
-      /* リセット後は休憩モード解除 */
+      if (min > 0){ Momo.speak('スクリーンタイムを ' + min + 'ふんに しました', 0.95); }
+      else { Momo.speak('じかん せいげんを なくしました', 0.95); }
       exitRestingMode();
     });
   });
@@ -1553,16 +1602,22 @@
     Momo.speak('じかんを リセットしました', 0.95);
   });
 
-  /* 時間切れオーバーレイのOKボタン */
   $('#screentimeOkBtn').addEventListener('click', function(){
     Momo.sfx.tap();
     hideExpiredOverlay();
-    /* 休憩モードは維持される（reset するまで遊べない） */
   });
 
-  /* シール/スタンプリセット */
   $('#resetBtn').addEventListener('click', function(){
     Momo.sfx.tap();
+    /* ★ 泣き顔モーダルを表示 */
+    var img = document.getElementById('confirmMascotImg');
+    if (img){
+      img.onerror = function(){
+        img.onerror = null;
+        this.src = MASCOT_FALLBACK;
+      };
+      img.src = 'momo_crying.png';
+    }
     $('#confirmModal').classList.remove('hidden');
   });
   $('#confirmNoBtn').addEventListener('click', function(){
@@ -1604,8 +1659,19 @@
     } else {
       if (!state.resting && Momo.settings.soundOn) Momo.startBGM();
       refreshRestingState();
+      /* 復帰時に時間帯の表情を再評価 */
+      if (!state.resting && !state.isLaunching){
+        applyMascotForTime();
+      }
     }
   });
+
+  /* 1分ごとに時間帯の表情を更新 */
+  setInterval(function(){
+    if (!state.resting && !state.isLaunching){
+      applyMascotForTime();
+    }
+  }, 60000);
 
   /* =========================================================
      起動
@@ -1614,13 +1680,12 @@
   loadCollection();
   updateBadge();
 
-  /* スクリーンタイムのコールバックを登録 */
+  /* 時間帯で初期マスコット決定 */
+  applyMascotForTime();
+
   Momo.screenTime.setCallbacks({
     onWarning: function(){
-      /* ハブ画面が表示されているときだけ警告を出す */
-      if (!$('#hub').classList.contains('hidden')){
-        showWarningToast();
-      }
+      if (!$('#hub').classList.contains('hidden')) showWarningToast();
     },
     onExpired: function(){
       showExpiredOverlay();
@@ -1628,10 +1693,7 @@
     }
   });
 
-  /* 起動時に既に時間切れなら休憩モードへ */
   refreshRestingState();
-
-  /* ハブ画面の定期チェック開始 */
   startHubScreenTimeLoop();
 
 })();
