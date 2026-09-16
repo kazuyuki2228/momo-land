@@ -470,6 +470,8 @@
     border-radius:999px;padding:10px 4px;
     cursor:pointer;letter-spacing:.5px;white-space:nowrap;
     transition:all .2s;
+    text-align:center;
+    width:100%;
   }
   .seg-btn.active{
     background:linear-gradient(180deg,#ffb74d,#ff8a3d);
@@ -907,7 +909,7 @@
   <main class="settings-main">
     <div class="setting-card">
       <div class="setting-label">🎵 きょくの かんじ</div>
-      <div class="segmented" id="bgmModeSeg">
+      <div class="segmented grid-3" id="bgmModeSeg">
         <button class="seg-btn" data-mode="fun" type="button">たのしい</button>
         <button class="seg-btn" data-mode="calm" type="button">おだやか</button>
         <button class="seg-btn" data-mode="random" type="button">ランダム</button>
